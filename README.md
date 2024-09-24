@@ -29,6 +29,5 @@ A mobile Android app aimed to transform Saudi tourism using AI to provide tailor
 2.  Navigate to the extracted folder and open it in your preferred development environment. Ensure you have all necessary dependencies installed. <br>
 3.  Start the app using your local server or the Flutter command line tools. <br><br>
 
--- 
 
 And there you go! **Localize** should now be up and running on your local machine. Enjoy discovering the hidden gems of Saudi Arabia! 💎🏜️
