@@ -1,21 +1,21 @@
-# 🌍 Localize App - AI-powered Tourism Platform
+# 🌍 Localize
 
 **Welcome to Localize!**  
-A mobile Android application designed to revolutionize tourism in Saudi Arabia, providing personalized travel recommendations and local guide matching through AI. This project is developed as part of the graduation and final-year university requirements for King Saud University
+A mobile Android app aimed to transform Saudi tourism using AI to provide tailored vacation ideas and match you with local guides. This project was created as part of the graduation and final-year university requirements for King Saud University.
 
 ---
 
 ## 🚀 Introduction
 
-Localize aims to enhance travel experiences by offering customized suggestions based on user preferences. Whether you enjoy exploring historical landmarks or modern attractions, our app ensures you immerse yourself in the culture, history, and unique flavors of each destination.  
-Aligned with Vision 2030, Localize supports Saudi Arabia’s thriving tourism sector by simplifying the discovery of hidden gems and making local expertise more accessible.
+**Localize** seeks to improve travel experiences by providing personalized recommendations based on user interests. Whether you love visiting ancient landmarks or modern attractions, our app will help you immerse yourself in each location's culture, history, and distinct cuisines.  
+Localize, which aligns with Vision 2030, contributes to Saudi Arabia's expanding tourism sector by making it easier to find hidden jewels and access local expertise.
 
 ---
 
 ## 🔧 Technologies Used
 
 - **Frontend:** 
-- **Backend:** 
+- **Backend:** Python
 - **Database:** MySQL
 - **AI Integration:** 
 - **Development Environment:** VS Code with Android Studio Emulator
