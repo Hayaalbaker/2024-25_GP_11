@@ -5,7 +5,7 @@ A mobile Android app aimed to transform Saudi tourism using AI to provide tailor
 
 ---
 
-## 🚀 Introduction
+## 🏜️ Introduction
 
 **Localize** seeks to improve travel experiences by providing personalized recommendations based on user interests. Whether you love visiting ancient landmarks or modern attractions, our app will help you immerse yourself in each location's culture, history, and distinct cuisines.  
 Localize, which aligns with Vision 2030, contributes to Saudi Arabia's expanding tourism sector by making it easier to find hidden jewels and access local expertise.
@@ -14,12 +14,16 @@ Localize, which aligns with Vision 2030, contributes to Saudi Arabia's expanding
 
 ## 🔧 Technologies Used
 
-- **Frontend:** 
-- **Backend:** Python
-- **Database:** MySQL
+- **Programming Language**: Python
+- **Frontend**: Flutter (Dart)
+- **Backend**: Python
+- **Database:** Firebase (NoSQL database)
 - **AI Integration:** 
 - **Development Environment:** VS Code with Android Studio Emulator
 - **Version Control:** Git and GitHub
 
+---
+
+## 🚀 Launching Instructions
 
 
