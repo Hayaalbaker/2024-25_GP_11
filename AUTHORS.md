@@ -1,4 +1,4 @@
-# 🖋️ AUTHORS
+# 🖋️ LOCALIZE AUTHORS
 
 **Developers:**
 - Haya AlBaker | haya.aalbaker@gmail.com
