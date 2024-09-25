@@ -4,6 +4,8 @@
 **Welcome to Localize!**  
 A mobile Android app designed to redefine Saudi tourism by incorporating artificial intelligence to deliver personalized trip suggestions and connect you with local guides. This project was constructed as part of King Saud University's graduation and final-year requirements.
 
+> **"Wherever you go, *Localize* makes it home!"** – We personalize your travel experience, making every trip feel like you belong.
+
 ---
 
 ## 🏜️ Introduction
@@ -26,7 +28,11 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 
 ## 🚀 Launching Instructions
 
-To set up **Localize**, begin by downloading the ZIP file from the Code button. After unzipping the file, open Android Studio or Visual Studio Code. Ensure that an Android emulator is running, or connect your Android device via USB, then proceed to run **Localize**!
+1. *Download the Project:* Click the “Code” button and download the ZIP file.
+2. *Unzip the Files:* Extract the downloaded ZIP file.
+3. *Open the Project:* Use Android Studio or Visual Studio Code to open the project folder.
+4. *Run an Emulator:* Ensure an Android emulator is running, or connect an Android device via USB.
+5. *Launch* the App: In your development environment, run **Localize**!
 
 And there you go! **Localize** should now be up and running. Enjoy discovering the hidden gems of Saudi Arabia! 💎🏜️
 
