@@ -1,5 +1,5 @@
-![Project Logo](images/logo.png)
 # 🌍 Localize
+![Project Logo](images/logo.png)
 
 **Welcome to Localize!**  
 A mobile Android app designed to redefine Saudi tourism by incorporating artificial intelligence to deliver personalized trip suggestions and connect you with local guides. This project was constructed as part of King Saud University's graduation and final-year requirements.
@@ -11,7 +11,7 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 
 **Localize** aims to enhance travel experiences by offering personalized recommendations based on user preferences. Whether you enjoy visiting old landmarks or modern attractions, our app will help you immerse yourself in each location's culture, history, and unique cuisines. **Localize**, aligned with Vision 2030 🇸🇦, helps Saudi Arabia's tourist sector grow by facilitating access to hidden gems and local expertise.
 
----
+
 
 ## 🔧 Technologies Used
 
