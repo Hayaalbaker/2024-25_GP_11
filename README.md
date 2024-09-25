@@ -29,3 +29,5 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 To set up **Localize**, begin by downloading the ZIP file from the Code button. After unzipping the file, open Android Studio or Visual Studio Code. Ensure that an Android emulator is running, or connect your Android device via USB, then proceed to run **Localize**!
 
 And there you go! **Localize** should now be up and running. Enjoy discovering the hidden gems of Saudi Arabia! 💎🏜️
+
+![Project Logo](images/headerlogo.png)
