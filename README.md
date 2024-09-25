@@ -29,7 +29,7 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 
 ## 🚀 Launching Instructions
 
-1. *Download the Project:* Click the “Code” button and download the ZIP file.
+1. *Download the Project:* Click the `<> Code` button and download the ZIP file.
 2. *Unzip the Files:* Extract the downloaded ZIP file.
 3. *Open the Project:* Use Android Studio or Visual Studio Code to open the project folder.
 4. *Run an Emulator:* Ensure an Android emulator is running, or connect an Android device via USB.
