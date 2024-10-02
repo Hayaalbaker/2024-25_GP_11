@@ -20,7 +20,7 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 - **Backend**: Python
 - **Database:** Firebase (NoSQL database)
 - **AI Integration:** 
-- **Development Environment:** VS Code with Android Studio Emulator
+- **Development Environment:** VS Code
 - **Version Control:** Git and GitHub
 
 
