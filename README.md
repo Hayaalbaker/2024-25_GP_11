@@ -1,4 +1,3 @@
-# 🌍 Localize
 ![Project Logo](images/name_header.png)
 
 **Welcome to Localize!**  
