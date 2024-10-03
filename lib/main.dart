@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart'; 
 import 'firebase_options.dart'; 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 
 void main() async {
   // Ensure the Flutter environment is initialized before Firebase
