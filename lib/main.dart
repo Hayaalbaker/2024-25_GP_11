@@ -1,18 +1,15 @@
 import 'package:firebase_core/firebase_core.dart'; 
 import 'firebase_options.dart'; 
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'database.dart'; 
 
 void main() async {
-  // Ensure the Flutter environment is initialized before Firebase
   WidgetsFlutterBinding.ensureInitialized(); 
 
-  // Initialize Firebase with platform-specific options
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Run the Flutter app
   runApp(const MyApp()); 
 }
 
@@ -32,13 +29,14 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// ignore: must_be_immutable
 class MyHomePage extends StatelessWidget {
+  final FirestoreService _firestoreService = FirestoreService(); // Create an instance of FirestoreService
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Localize'),
+        title: const Text('Localize'),
       ),
       body: Center(
         child: Column(
@@ -46,40 +44,22 @@ class MyHomePage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                addUser(); // Trigger Firestore add user
+                // Add a user to Firestore
+                _firestoreService.addUser('userId', 'password123', 'John Doe', 'USA', 'New York', 'john@example.com', ['traveling', 'food']);
               },
-              child: Text('Add User to Firestore'),
+              child: const Text('Add User to Firestore'),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () {
-                getUsers(); // Trigger Firestore fetch users
+              onPressed: () async {
+                // Fetch users from Firestore
+                await _firestoreService.getUsers(); 
               },
-              child: Text('Get Users from Firestore'),
+              child: const Text('Get Users from Firestore'),
             ),
           ],
         ),
       ),
     );
-  }
-
-  // Firestore instance
-  FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-  // Add user to Firestore
-  Future<void> addUser() async {
-    await firestore.collection('users').add({
-      'name': 'John Doe',
-      'email': 'johndoe@example.com',
-    });
-    print('User added to Firestore');
-  }
-
-  // Fetch users from Firestore
-  Future<void> getUsers() async {
-    QuerySnapshot snapshot = await firestore.collection('users').get();
-    for (var doc in snapshot.docs) {
-      print('User: ${doc['name']}'); // Log users' names
-    }
   }
 }
