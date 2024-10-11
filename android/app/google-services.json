@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "409368116299",
+    "project_id": "localize-db046",
+    "storage_bucket": "localize-db046.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:409368116299:android:71a29974a4e20400ef21ce",
+        "android_client_info": {
+          "package_name": "com.example.localize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChcAE6J-3lTtRREov0srVJeiiUDMzyxp4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
