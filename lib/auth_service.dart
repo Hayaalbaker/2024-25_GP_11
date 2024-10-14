@@ -5,30 +5,23 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Stream to listen to authentication state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Register with Email & Password and save user data in Firestore
   Future<User?> registerWithEmailAndPassword(
       String email, String password, String userName, bool isLocalGuide) async {
     try {
-      // طباعة القيمة للتحقق
-      print('Registering user: $userName, Local Guide: $isLocalGuide');
-
-      // إنشاء المستخدم
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential result =
+          await _auth.createUserWithEmailAndPassword(email: email, password: password);
       User? user = result.user;
 
-      // تخزين بيانات المستخدم في Firestore
-      await _firestore.collection('users').doc(user!.uid).set({
-        'email': email,
-        'userName': userName,
-        'local_guide': isLocalGuide ? 'yes' : 'no', // حفظ حالة الدليل المحلي
-        'created_at': FieldValue.serverTimestamp(),
-      });
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': email,
+          'userName': userName,
+          'local_guide': isLocalGuide ? 'yes' : 'no',
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      }
 
       return user;
     } on FirebaseAuthException catch (e) {
@@ -40,9 +33,7 @@ class AuthService {
     }
   }
 
-  // Sign in with Email & Password
-  Future<User?> signInWithEmailAndPassword(
-      String email, String password) async {
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -58,7 +49,6 @@ class AuthService {
     }
   }
 
-  // Sign Out
   Future<void> signOut() async {
     try {
       await _auth.signOut();
