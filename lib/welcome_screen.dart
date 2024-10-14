@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'signin_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -42,7 +42,7 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      MaterialPageRoute(builder: (context) => SignInScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

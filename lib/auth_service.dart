@@ -5,8 +5,13 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Stream that provides the current authentication state.
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
+  /// Registers a new user with the given email and password,
+  /// and stores user information in Firestore.
+  ///
+  /// Returns the User if registration is successful, or throws an exception on error.
   Future<User?> registerWithEmailAndPassword(
       String email, String password, String userName, bool isLocalGuide) async {
     try {
@@ -25,14 +30,15 @@ class AuthService {
 
       return user;
     } on FirebaseAuthException catch (e) {
-      print('Registration Error: ${e.code} - ${e.message}');
-      return null;
+      throw Exception('Registration failed: ${e.message}');
     } catch (e) {
-      print('Registration Error: $e');
-      return null;
+      throw Exception('Registration failed: $e');
     }
   }
 
+  /// Signs in an existing user with the given email and password.
+  ///
+  /// Returns the User if sign in is successful, or throws an exception on error.
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -41,19 +47,33 @@ class AuthService {
       );
       return result.user;
     } on FirebaseAuthException catch (e) {
-      print('Sign In Error: ${e.code} - ${e.message}');
-      return null;
+      throw Exception('Sign in failed: ${e.message}');
     } catch (e) {
-      print('Sign In Error: $e');
-      return null;
+      throw Exception('Sign in failed: $e');
     }
   }
 
+  /// Sends a password reset email to the given email address.
+  ///
+  /// Throws an exception if sending the email fails.
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw Exception('Password reset failed: ${e.message}');
+    } catch (e) {
+      throw Exception('Password reset failed: $e');
+    }
+  }
+
+  /// Signs out the currently authenticated user.
+  ///
+  /// Throws an exception if an error occurs during sign out.
   Future<void> signOut() async {
     try {
       await _auth.signOut();
     } catch (e) {
-      print('Sign Out Error: $e');
+      throw Exception('Sign out failed: $e');
     }
   }
 }

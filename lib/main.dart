@@ -2,9 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'login_screen.dart';
+import 'signin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'welcome_screen.dart'; 
+//import 'welcome_screen.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
-      home: WelcomeScreen(), 
+      home: AuthenticationWrapper(), // Set AuthenticationWrapper as the home
     );
   }
 }
@@ -40,9 +40,9 @@ class AuthenticationWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.active) {
           User? user = snapshot.data;
           if (user == null) {
-            return LoginScreen();
+            return SignInScreen(); // User is not logged in
           } else {
-            return MyHomePage();
+            return MyHomePage(); // User is logged in
           }
         }
 

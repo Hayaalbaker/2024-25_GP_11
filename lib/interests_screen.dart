@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'database.dart';
-import 'HomePage.dart';
+import 'home_page.dart';
 
 class InterestsScreen extends StatefulWidget {
   final String email;
@@ -24,11 +24,11 @@ class InterestsScreen extends StatefulWidget {
 class _InterestsScreenState extends State<InterestsScreen> {
   List<String> interests = ['Restaurants', 'Parks', 'Shopping', 'Children'];
 
-  Map<String, bool> selectedInterests = {
-    'Restaurants': false,
-    'Parks': false,
-    'Shopping': false,
-    'Children': false,
+  Map<String, List<String>> selectedSubInterests = {
+    'Restaurants': [],
+    'Parks': [],
+    'Shopping': [],
+    'Children': [],
   };
 
   List<String> restaurantTypes = [
@@ -65,13 +65,6 @@ class _InterestsScreenState extends State<InterestsScreen> {
     'Sports Facilities',
     'Educational Workshops',
   ];
-
-  Map<String, List<String>> selectedSubInterests = {
-    'Restaurants': [],
-    'Parks': [],
-    'Shopping': [],
-    'Children': [],
-  };
 
   final FirestoreService firestoreService = FirestoreService();
 
@@ -148,12 +141,16 @@ class _InterestsScreenState extends State<InterestsScreen> {
     switch (interest) {
       case 'Restaurants':
         types = restaurantTypes;
+// Add break statement
       case 'Parks':
         types = parkTypes;
+// Add break statement
       case 'Shopping':
         types = shoppingTypes;
+// Add break statement
       case 'Children':
         types = childrenTypes;
+// Add break statement
       default:
         types = [];
     }
