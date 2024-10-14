@@ -25,13 +25,8 @@ dev_dependencies:
   flutter_lints: ^2.0.0
 
 flutter:
-<<<<<<< HEAD
   uses-material-design: true
-
 
   assets:
     - images/Logo.png
     - images/image1.jpg
-=======
-  uses-material-design: true
->>>>>>> b98597e08ee073937e9b31fd88433cfca6413514
