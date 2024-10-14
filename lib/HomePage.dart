@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'edit_profile_screen.dart'; // تأكد من استيراد صفحة التعديل
+import 'edit_profile_screen.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -9,10 +9,9 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
-  // قائمة الصفحات
   static List<Widget> _pages = <Widget>[
     Center(child: Text('Welcome to the Home Page!')),
-    EditProfileScreen(), // صفحة تعديل الملف الشخصي
+    EditProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -27,7 +26,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('Home Page'),
       ),
-      body: _pages[_selectedIndex], // تحديد الصفحة حسب الفهرس
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
