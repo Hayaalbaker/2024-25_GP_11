@@ -15,7 +15,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
   bool obscureText = true; // For show/hide password functionality
-  String? _errorMessage; // Variable to hold error messages
+  String? emailError; // Error message for email
+  String? passwordError; // Error message for password
 
   @override
   void dispose() {
@@ -34,15 +35,15 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       await _authService.sendPasswordResetEmail(emailController.text.trim());
-      if (mounted) { // Check if the widget is still in the widget tree
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset email sent.'))
+          SnackBar(content: Text('Password reset email sent.')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'))
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
       }
     }
@@ -61,7 +62,7 @@ class _SignInScreenState extends State<SignInScreen> {
               controller: emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
-                errorText: _errorMessage, // Show error message here
+                errorText: emailError, // Show error message here
               ),
               keyboardType: TextInputType.emailAddress,
             ),
@@ -70,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
               obscureText: obscureText,
               decoration: InputDecoration(
                 labelText: 'Password',
-                errorText: _errorMessage, // Show error message here
+                errorText: passwordError, // Show error message here
                 suffixIcon: IconButton(
                   icon: Icon(
                     obscureText ? Icons.visibility : Icons.visibility_off,
@@ -88,28 +89,31 @@ class _SignInScreenState extends State<SignInScreen> {
                 ? CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: () async {
+                      // Reset all error messages
+                      emailError = null;
+                      passwordError = null;
+
                       // Validate email
                       if (emailController.text.isEmpty ||
                           !RegExp(r'^[^@]+@[^@]+\.[^@]+')
                               .hasMatch(emailController.text)) {
-                        setState(() {
-                          _errorMessage = 'Please enter a valid email.';
-                        });
-                        return;
+                        emailError = 'Please enter a valid email.';
                       }
 
                       // Validate password
                       if (passwordController.text.length < 6) {
-                        setState(() {
-                          _errorMessage =
-                              'Password must be at least 6 characters long.';
-                        });
-                        return;
+                        passwordError =
+                            'Password must be at least 6 characters long.';
+                      }
+
+                      // Check if there are any errors
+                      if (emailError != null || passwordError != null) {
+                        setState(() {}); // Trigger UI update
+                        return; // Exit if there are errors
                       }
 
                       setState(() {
                         isLoading = true;
-                        _errorMessage = null; // Reset error message
                       });
 
                       try {
@@ -118,7 +122,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           passwordController.text.trim(),
                         );
 
-                        if (mounted) { // Guarding the use of context
+                        if (mounted) {
                           if (user != null) {
                             Navigator.pushReplacement(
                               context,
@@ -126,7 +130,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             );
                           } else {
                             setState(() {
-                              _errorMessage =
+                              emailError =
                                   'Log in failed. Please check your credentials.';
                             });
                           }
@@ -134,7 +138,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       } catch (e) {
                         if (mounted) {
                           setState(() {
-                            _errorMessage = e.toString(); // Update error message
+                            emailError = e.toString(); // Update error message
                           });
                         }
                       } finally {

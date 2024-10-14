@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'signin_screen.dart';
+import 'authentication_wrapper.dart'; 
 
 class WelcomeScreen extends StatelessWidget {
   @override
@@ -31,9 +31,8 @@ class WelcomeScreen extends StatelessWidget {
                   fontSize: 33,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
-
                 ),
-                 textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
               ),
               SizedBox(height: 40),
               Padding(
@@ -42,7 +41,7 @@ class WelcomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => SignInScreen()),
+                      MaterialPageRoute(builder: (context) => AuthenticationWrapper()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
