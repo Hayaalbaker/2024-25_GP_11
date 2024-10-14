@@ -1,18 +1,36 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   // Stream to listen to authentication state changes
   Stream<User?> get authStateChanges => _auth.authStateChanges();
-  // Register with Email & Password
+
+  // Register with Email & Password and save user data in Firestore
   Future<User?> registerWithEmailAndPassword(
-      String email, String password) async {
+      String email, String password, String userName, bool isLocalGuide) async {
     try {
+      // طباعة القيمة للتحقق
+      print('Registering user: $userName, Local Guide: $isLocalGuide');
+
+      // إنشاء المستخدم
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return result.user;
+      User? user = result.user;
+
+      // تخزين بيانات المستخدم في Firestore
+      await _firestore.collection('users').doc(user!.uid).set({
+        'email': email,
+        'userName': userName,
+        'local_guide': isLocalGuide ? 'yes' : 'no', // حفظ حالة الدليل المحلي
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
+      return user;
     } on FirebaseAuthException catch (e) {
       print('Registration Error: ${e.code} - ${e.message}');
       return null;

@@ -1,7 +1,22 @@
 import 'package:flutter/material.dart';
+import 'database.dart';
 import 'HomePage.dart';
 
 class InterestsScreen extends StatefulWidget {
+  final String email;
+  final String userName;
+  final String country;
+  final String city;
+  final bool isLocalGuide;
+
+  InterestsScreen({
+    required this.email,
+    required this.userName,
+    required this.country,
+    required this.city,
+    required this.isLocalGuide,
+  });
+
   @override
   _InterestsScreenState createState() => _InterestsScreenState();
 }
@@ -58,6 +73,8 @@ class _InterestsScreenState extends State<InterestsScreen> {
     'Children': [],
   };
 
+  final FirestoreService firestoreService = FirestoreService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +102,24 @@ class _InterestsScreenState extends State<InterestsScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                List<String> finalInterests = [];
+                selectedSubInterests.forEach((interest, subInterests) {
+                  if (subInterests.isNotEmpty) {
+                    finalInterests.addAll(subInterests);
+                  }
+                });
+
+                print(finalInterests);
+
+                await saveUserDetails(finalInterests);
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Your interests have been saved successfully!')),
+                );
+
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => HomePage()),
@@ -99,21 +133,27 @@ class _InterestsScreenState extends State<InterestsScreen> {
     );
   }
 
+  Future<void> saveUserDetails(List<String> finalInterests) {
+    return firestoreService.addUserDetails(
+      widget.userName,
+      widget.country,
+      widget.city,
+      finalInterests,
+      widget.isLocalGuide,
+    );
+  }
+
   List<Widget> getSubInterests(String interest) {
     List<String> types;
     switch (interest) {
       case 'Restaurants':
         types = restaurantTypes;
-        break;
       case 'Parks':
         types = parkTypes;
-        break;
       case 'Shopping':
         types = shoppingTypes;
-        break;
       case 'Children':
         types = childrenTypes;
-        break;
       default:
         types = [];
     }

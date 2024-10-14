@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:localize/HomePage.dart';
 import 'auth_service.dart';
 import 'interests_screen.dart';
 
@@ -12,6 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -33,26 +36,42 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: true,
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                User? user = await _authService.signInWithEmailAndPassword(
-                  emailController.text.trim(),
-                  passwordController.text.trim(),
-                );
-                if (mounted) {
-                  if (user != null) {
-                    print('Signed in: ${user.email}');
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'Sign in failed. Please check your credentials.')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Login'),
-            ),
+            isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      User? user =
+                          await _authService.signInWithEmailAndPassword(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
+                      );
+                      setState(() {
+                        isLoading = false;
+                      });
+
+                      if (mounted) {
+                        if (user != null) {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomePage(),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Log in failed. Please check your credentials.'),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Login'),
+                  ),
             TextButton(
               onPressed: () {
                 Navigator.push(
@@ -79,9 +98,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController userNameController = TextEditingController();
+
   String? selectedCountry;
   String? selectedCity;
-  bool agreeToLocalGuide = false;
+  bool agreeToLocalGuide = false; // Local guide option
+  bool isLoading = false;
 
   final Map<String, List<String>> countryCityMap = {
     'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam'],
@@ -120,8 +141,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedCountry = newValue;
-                    selectedCity = null;
-                    agreeToLocalGuide = false;
+                    selectedCity = null; // Reset city when country changes
                   });
                 },
                 items: countryCityMap.keys
@@ -139,9 +159,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedCity = newValue;
-                    if (newValue != 'Riyadh') {
-                      agreeToLocalGuide = false;
-                    }
                   });
                 },
                 items: selectedCountry != null
@@ -154,47 +171,83 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       }).toList()
                     : [],
               ),
-              if (selectedCity == 'Riyadh')
-                Row(
-                  children: [
-                    Checkbox(
-                      value: agreeToLocalGuide,
-                      onChanged: (bool? value) {
-                        setState(() {
-                          agreeToLocalGuide = value ?? false;
-                        });
-                      },
-                    ),
-                    const Text('I agree to become a local guide'),
-                  ],
+              if (selectedCountry == 'Saudi Arabia' && selectedCity == 'Riyadh')
+                CheckboxListTile(
+                  title: const Text('I agree to become a local guide'),
+                  value: agreeToLocalGuide,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      agreeToLocalGuide = value ?? false;
+                    });
+                  },
                 ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  User? user = await _authService.registerWithEmailAndPassword(
-                    emailController.text.trim(),
-                    passwordController.text.trim(),
-                  );
-                  if (mounted) {
+              if (isLoading)
+                CircularProgressIndicator()
+              else
+                ElevatedButton(
+                  onPressed: () async {
+                    if (selectedCountry == null || selectedCity == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Please select a country and a city.'),
+                      ));
+                      return;
+                    }
+
+                    setState(() {
+                      isLoading = true;
+                    });
+
+                    User? user =
+                        await _authService.registerWithEmailAndPassword(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                      userNameController.text.trim(),
+                      agreeToLocalGuide,
+                    );
+
+                    setState(() {
+                      isLoading = false;
+                    });
+
                     if (user != null) {
+                      String userId = user.uid;
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(userId)
+                          .set({
+                        'email': emailController.text.trim(),
+                        'userName': userNameController.text.trim(),
+                        'country': selectedCountry,
+                        'city': selectedCity,
+                        'agreeToLocalGuide': agreeToLocalGuide,
+                      });
+
                       print('Registered successfully');
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => InterestsScreen()),
+                          builder: (context) {
+                            return InterestsScreen(
+                              email: emailController.text.trim(),
+                              userName: userNameController.text.trim(),
+                              country: selectedCountry!,
+                              city: selectedCity!,
+                              isLocalGuide: agreeToLocalGuide,
+                            );
+                          },
+                        ),
                       );
                     } else {
-                      print('Registration failed');
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                             content:
                                 Text('Registration failed. Please try again.')),
                       );
                     }
-                  }
-                },
-                child: const Text('Register'),
-              ),
+                  },
+                  child: const Text('Register'),
+                ),
             ],
           ),
         ),
