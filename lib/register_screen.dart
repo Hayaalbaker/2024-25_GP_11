@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
-import 'home_page.dart'; // Ensure the correct filename is used
+import 'home_page.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -16,16 +16,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController userNameController = TextEditingController();
 
   bool isLoading = false;
-  bool obscureText = true; // For show/hide password functionality
-  String? userNameError; // Error message for username
-  String? emailError; // Error message for email
-  String? passwordError; // Error message for password
-  String? countryError; // Error message for country
-  String? cityError; // Error message for city
-  String? selectedCountry; // For country dropdown
-  String? selectedCity; // For city dropdown
+  bool obscureText = true; 
+  String? userNameError; 
+  String? emailError; 
+  String? passwordError; 
+  String? countryError; 
+  String? cityError; 
+  String? selectedCountry; 
+  String? selectedCity; 
+  
 
-  // Sample data for dropdowns
+
   List<String> countries = [
     'Saudi Arabia',
     'Egypt',
