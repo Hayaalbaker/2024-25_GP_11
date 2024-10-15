@@ -33,33 +33,54 @@ class _PlaceFormState extends State<PlaceForm> {
   String location = '';
   String description = '';
   String category = '';
-
-  // List of categories
-  final List<String> categories = [
-    'Seafood Restaurants',
-    'Vegan Restaurants',
-    'Indian Restaurants',
-    'Italian Restaurants',
-    'Lebanese Restaurants',
-    'Traditional Saudi Restaurants',
-    'Fast Food',
-    'Family Parks',
-    'Water Parks',
-    'Public Parks',
-    'Traditional Markets',
-    'Modern Markets',
-    'Food Markets',
-    'Clothing Markets',
-    'Perfume Markets',
-    'Jewelry Markets',
-    'Electronics Markets',
-    'Pet Markets',
-    'Gift and Souvenir Markets',
-    'Home Goods Markets',
-    'Recreational Centers',
-    'Sports Facilities',
-    'Educational Workshops',
+  String? subcategory;
+// Main categories for the first dropdown
+  final List<String> mainCategories = [
+    'Restaurants',
+    'Parks',
+    'Shopping',
+    'Children',
   ];
+
+ // Subcategories map
+  final Map<String, List<String>> subCategories = {
+    'Restaurants': [
+      'Seafood Restaurants',
+      'Vegan Restaurants',
+      'Indian Restaurants',
+      'Italian Restaurants',
+      'Lebanese Restaurants',
+      'Traditional Saudi Restaurants',
+      'Fast Food',
+    ],
+    'Parks': [
+      'Family Parks',
+      'Water Parks',
+      'Public Parks',
+    ],
+    'Shopping': [
+      'Traditional Markets',
+      'Modern Markets',
+      'Food Markets',
+      'Clothing Markets',
+      'Perfume Markets',
+      'Jewelry Markets',
+      'Electronics Markets',
+      'Pet Markets',
+      'Gift and Souvenir Markets',
+      'Home Goods Markets',
+    ],
+    'Children': [
+      'Recreational Centers',
+      'Sports Facilities',
+      'Educational Workshops',
+    ],
+  };
+
+  String? selectedMainCategory;
+  List<String>? availableSubCategories;
+  String? selectedSubCategory;
+
   final FirestoreService _firestoreService = FirestoreService(); // Create an instance of FirestoreService
   @override
   Widget build(BuildContext context) {
@@ -86,17 +107,23 @@ class _PlaceFormState extends State<PlaceForm> {
                 },
               ),
               TextFormField(
-                decoration: const InputDecoration(labelText: 'Location'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a location';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  location = value!;
-                },
-              ),
+  decoration: const InputDecoration(labelText: 'Location (Provide Google Maps Link)'),
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a location';
+    }
+    String pattern = r"^(https:\/\/www\.google\.com\/maps\/(place|dir)\/|https:\/\/maps\.app\.goo\.gl\/|https:\/\/goo\.gl\/maps\/).+";
+    RegExp regex = RegExp(pattern);
+    if (!regex.hasMatch(value)) {
+      return 'Please enter a valid Google Maps link';
+    }
+    return null;
+  },
+  onSaved: (value) {
+    location = value!;
+  },
+),
+
               TextFormField(
                 decoration: InputDecoration(labelText: 'Description'),
                 validator: (value) {
@@ -109,29 +136,61 @@ class _PlaceFormState extends State<PlaceForm> {
                   description = value!;
                 },
               ),
+              // First Dropdown (Main Category)
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(labelText: 'Category'),
-                items: categories.map((String category) {
+                value: selectedMainCategory,
+                items: mainCategories.map((String category) {
                   return DropdownMenuItem<String>(
                     value: category,
                     child: Text(category),
                   );
                 }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedMainCategory = value!;
+                    availableSubCategories = subCategories[value]; // Update available subcategories
+                    selectedSubCategory = null; // Reset subcategory when main category changes
+                  });
+                },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please select a category';
                   }
                   return null;
                 },
-                onChanged: (value) {
-                  setState(() {
-                    category = value!;
-                  });
-                },
                 onSaved: (value) {
                   category = value!;
                 },
               ),
+
+              // Second Dropdown (Sub Category), shown only when a main category is selected
+              if (availableSubCategories != null)
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(labelText: 'Subcategory'),
+                  value: selectedSubCategory,
+                  items: availableSubCategories!.map((String subCategory) {
+                    return DropdownMenuItem<String>(
+                      value: subCategory,
+                      child: Text(subCategory),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedSubCategory = value!;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a subcategory';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) {
+                    subcategory = value!;
+                  },
+                ),
+
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -143,11 +202,12 @@ class _PlaceFormState extends State<PlaceForm> {
 
                     
                     newPlaceRef.set({
-                      'placeId': newPlaceRef.id,  // Save the generated place ID
+                      'placeId': newPlaceRef.id, // Save the generated place ID
                       'place_name': placeName,
                       'description': description,
                       'location': location,
                       'category': category,
+                      'subcategory': subcategory, // Save selected subcategory
                       'created_at': FieldValue.serverTimestamp(),
                     });
 
