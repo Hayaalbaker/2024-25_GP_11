@@ -1,0 +1,167 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'firebase_options.dart';
+import 'database.dart';
+
+void main() {
+  runApp(AddPlacePage());
+}
+
+class AddPlacePage extends StatelessWidget {
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Add a Place',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: PlaceForm(),
+    );
+  }
+}
+
+class PlaceForm extends StatefulWidget {
+  @override
+  _PlaceFormState createState() => _PlaceFormState();
+}
+
+class _PlaceFormState extends State<PlaceForm> {
+  final _formKey = GlobalKey<FormState>();
+  String placeName = '';
+  String location = '';
+  String description = '';
+  String category = '';
+
+  // List of categories
+  final List<String> categories = [
+    'Seafood Restaurants',
+    'Vegan Restaurants',
+    'Indian Restaurants',
+    'Italian Restaurants',
+    'Lebanese Restaurants',
+    'Traditional Saudi Restaurants',
+    'Fast Food',
+    'Family Parks',
+    'Water Parks',
+    'Public Parks',
+    'Traditional Markets',
+    'Modern Markets',
+    'Food Markets',
+    'Clothing Markets',
+    'Perfume Markets',
+    'Jewelry Markets',
+    'Electronics Markets',
+    'Pet Markets',
+    'Gift and Souvenir Markets',
+    'Home Goods Markets',
+    'Recreational Centers',
+    'Sports Facilities',
+    'Educational Workshops',
+  ];
+  final FirestoreService _firestoreService = FirestoreService(); // Create an instance of FirestoreService
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Add a Place'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Place Name'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a place name';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  placeName = value!;
+                },
+              ),
+              TextFormField(
+                decoration: const InputDecoration(labelText: 'Location'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a location';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  location = value!;
+                },
+              ),
+              TextFormField(
+                decoration: InputDecoration(labelText: 'Description'),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  description = value!;
+                },
+              ),
+              DropdownButtonFormField<String>(
+                decoration: InputDecoration(labelText: 'Category'),
+                items: categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please select a category';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  setState(() {
+                    category = value!;
+                  });
+                },
+                onSaved: (value) {
+                  category = value!;
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    _formKey.currentState!.save();
+                    
+                    
+                    DocumentReference newPlaceRef = FirebaseFirestore.instance.collection('places').doc();
+
+                    
+                    newPlaceRef.set({
+                      'placeId': newPlaceRef.id,  // Save the generated place ID
+                      'place_name': placeName,
+                      'description': description,
+                      'location': location,
+                      'category': category,
+                      'created_at': FieldValue.serverTimestamp(),
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Place Added: $placeName, ID: ${newPlaceRef.id}'),
+                    ));
+                  }
+                },
+                child: Text('Add Place'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

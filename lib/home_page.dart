@@ -3,6 +3,7 @@ import 'edit_profile_screen.dart';
 import 'search_page.dart'; // Import the search page
 import 'create_post_page.dart'; // Import the create post page
 import 'activity_page.dart'; // Import the activity page
+import 'Add_Place.dart'; // Import your Add Place page here
 
 class HomePage extends StatefulWidget {
   @override
@@ -35,10 +36,57 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _onCreatePost() {
-    // Action for creating a post
-    print('Create a post button pressed');
-  }
+  // Inside your _onCreatePost function:
+void _onCreatePost() {
+  // Show a modal bottom sheet with options
+  showModalBottomSheet(
+    context: context,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return Container(
+        padding: EdgeInsets.all(16),
+        height: 180, // Set height for modal
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Choose an action',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 20),
+            ListTile(
+              leading: Icon(Icons.rate_review),
+              title: Text('Post a Review'),
+              onTap: () {
+                Navigator.pop(context); // Close the modal
+                // Navigate to Create Post Page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CreatePostPage()), 
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.add_location_alt),
+              title: Text('Add a Place'),
+              onTap: () {
+                Navigator.pop(context); // Close the modal
+                // Navigate to Add Place Page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddPlacePage()), // Ensure this points to your AddPlacePage
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -90,13 +138,15 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: GestureDetector(
-        onTap: _onCreatePost, // Make the plus sign tappable
-        child: FloatingActionButton(
-          onPressed: null, // Use the plus icon for the post action
-          elevation: 4.0, // Disable the default onPressed
-          child: Icon(Icons.add), // Floating effect
-        ),
-      ),
+  onTap: _onCreatePost, // Show the modal when the plus button is tapped
+  child: FloatingActionButton(
+    elevation: 4.0, 
+    onPressed:_onCreatePost,
+    child: Icon(Icons.add), // Floating plus icon
+  ),
+),
+
+
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked, // Centers the button above the nav bar
     );
   }
