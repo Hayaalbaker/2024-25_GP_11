@@ -1,3 +1,5 @@
+// signin_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
@@ -29,22 +31,94 @@ class _SignInScreenState extends State<SignInScreen> {
     if (emailController.text.isEmpty ||
         !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Please enter a valid email.')));
+        SnackBar(content: Text('Please enter a valid email.')),
+      );
       return;
     }
 
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      await _authService.sendPasswordResetEmail(emailController.text.trim());
+      await _authService.sendPasswordResetEmail(email: emailController.text.trim());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Password reset email sent.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password reset email sent.')),
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleLogin() async {
+    // Reset all error messages
+    setState(() {
+      emailError = null;
+      passwordError = null;
+    });
+
+    // Validate email
+    if (emailController.text.isEmpty ||
+        !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text)) {
+      setState(() {
+        emailError = 'Please enter a valid email.';
+      });
+    }
+
+    // Validate password
+    if (passwordController.text.length < 6) {
+      setState(() {
+        passwordError = 'Password must be at least 6 characters long.';
+      });
+    }
+
+    // Check if there are any errors
+    if (emailError != null || passwordError != null) {
+      return; // Exit if there are errors
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      User? user = await _authService.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      if (user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
+      } else {
+        setState(() {
+          emailError = 'Log in failed. Please check your credentials.';
+        });
       }
     } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        emailError = e.toString(); // Update error message
+      });
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        setState(() {
+          isLoading = false;
+        });
       }
     }
   }
@@ -55,116 +129,64 @@ class _SignInScreenState extends State<SignInScreen> {
       appBar: AppBar(title: const Text('Sign In')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                errorText: emailError, // Show error message here
+        child: SingleChildScrollView( // Prevent overflow on smaller screens
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Email Field
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  errorText: emailError, // Show error message here
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: passwordController,
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                errorText: passwordError, // Show error message here
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility : Icons.visibility_off,
+              SizedBox(height: 10),
+              // Password Field
+              TextField(
+                controller: passwordController,
+                obscureText: obscureText,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  errorText: passwordError, // Show error message here
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscureText ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        obscureText = !obscureText;
+                      });
+                    },
                   ),
-                  onPressed: () {
-                    setState(() {
-                      obscureText = !obscureText;
-                    });
-                  },
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: () async {
-                      // Reset all error messages
-                      emailError = null;
-                      passwordError = null;
-
-                      // Validate email
-                      if (emailController.text.isEmpty ||
-                          !RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                              .hasMatch(emailController.text)) {
-                        emailError = 'Please enter a valid email.';
-                      }
-
-                      // Validate password
-                      if (passwordController.text.length < 6) {
-                        passwordError =
-                            'Password must be at least 6 characters long.';
-                      }
-
-                      // Check if there are any errors
-                      if (emailError != null || passwordError != null) {
-                        setState(() {}); // Trigger UI update
-                        return; // Exit if there are errors
-                      }
-
-                      setState(() {
-                        isLoading = true;
-                      });
-
-                      try {
-                        User? user = await _authService.signInWithEmailAndPassword(
-                          emailController.text.trim(),
-                          passwordController.text.trim(),
-                        );
-
-                        if (mounted) {
-                          if (user != null) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => HomePage()),
-                            );
-                          } else {
-                            setState(() {
-                              emailError =
-                                  'Log in failed. Please check your credentials.';
-                            });
-                          }
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          setState(() {
-                            emailError = e.toString(); // Update error message
-                          });
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            isLoading = false;
-                          });
-                        }
-                      }
-                    },
-                    child: const Text('Login'),
-                  ),
-            TextButton(
-              onPressed: _resetPassword,
-              child: const Text('Forgot Password?'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RegisterScreen()),
-                );
-              },
-              child: const Text('Don\'t have an account? Register'),
-            ),
-          ],
+              SizedBox(height: 20),
+              // Login Button
+              isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _handleLogin,
+                      child: const Text('Login'),
+                    ),
+              // Forgot Password Button
+              TextButton(
+                onPressed: _resetPassword,
+                child: const Text('Forgot Password?'),
+              ),
+              // Register Button
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  );
+                },
+                child: const Text('Don\'t have an account? Register'),
+              ),
+            ],
+          ),
         ),
       ),
     );

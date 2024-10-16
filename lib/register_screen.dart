@@ -1,8 +1,6 @@
-// register_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart'; // Removed 'welcome_screen.dart' import since it's unused
+import 'auth_service.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -14,16 +12,18 @@ class RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController userNameController = TextEditingController();
+  final TextEditingController displayNameController = TextEditingController();
 
   bool isLoading = false;
   bool obscureText = true;
-  bool isLocalGuide = false; // State variable for Checkbox
+  bool isLocalGuide = false;
 
   String? userNameError;
   String? emailError;
   String? passwordError;
   String? countryError;
   String? cityError;
+  String? displayNameError;
   String? selectedCountry;
   String? selectedCity;
 
@@ -46,6 +46,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     emailController.dispose();
     passwordController.dispose();
     userNameController.dispose();
+    displayNameController.dispose();
     super.dispose();
   }
 
@@ -56,6 +57,7 @@ class RegisterScreenState extends State<RegisterScreen> {
       passwordError = null;
       countryError = null;
       cityError = null;
+      displayNameError = null;
     });
   }
 
@@ -66,6 +68,13 @@ class RegisterScreenState extends State<RegisterScreen> {
     if (userNameController.text.trim().isEmpty) {
       setState(() {
         userNameError = 'Please enter a username.';
+      });
+      hasError = true;
+    }
+
+    if (displayNameController.text.trim().isEmpty) {
+      setState(() {
+        displayNameError = 'Please enter a display name.';
       });
       hasError = true;
     }
@@ -112,13 +121,42 @@ class RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Pass isLocalGuide as a bool, not a String
+      // Initialize variables to track errors
+      bool emailExists = false;
+      bool usernameExists = false;
+
+      // Check if email already exists
+      emailExists = await _authService.checkEmailExists(emailController.text.trim());
+
+      // Check if username already exists
+      usernameExists = await _authService.checkUsernameExists(userNameController.text.trim());
+
+      // If both exist, update the respective error messages
+      if (emailExists) {
+        setState(() {
+          emailError = 'Email already exists.';
+        });
+      }
+
+      if (usernameExists) {
+        setState(() {
+          userNameError = 'Username already exists.';
+        });
+      }
+
+      // If either exists, return early to prevent registration
+      if (emailExists || usernameExists) {
+        return;
+      }
+
+      // Proceed with registration if no errors
       User? user = await _authService.registerWithEmailAndPassword(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-        userNameController.text.trim(),
-        isLocalGuide as String, // Correct type: bool
-        selectedCity! as bool,  // Ensure selectedCity is not null
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        userName: userNameController.text.trim(),
+        displayName: displayNameController.text.trim(),
+        isLocalGuide: isLocalGuide,
+        city: selectedCity!,
       );
 
       if (user != null) {
@@ -131,8 +169,7 @@ class RegisterScreenState extends State<RegisterScreen> {
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Verify your email'),
-            content: const Text(
-                'A verification link has been sent to your email. Please verify your email before logging in.'),
+            content: const Text('A verification link has been sent to your email. Please verify your email before logging in.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -150,7 +187,11 @@ class RegisterScreenState extends State<RegisterScreen> {
       }
     } on FirebaseAuthException catch (e) {
       setState(() {
-        emailError = e.message;
+        if (e.code == 'email-already-in-use') {
+          emailError = 'Email already exists.'; // This might already be handled above, ensure no duplication
+        } else {
+          emailError = e.message;
+        }
       });
     } catch (e) {
       setState(() {
@@ -165,7 +206,6 @@ class RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine if the Checkbox should be displayed
     bool showLocalGuideCheckbox = selectedCity == 'Riyadh';
 
     return Scaffold(
@@ -176,24 +216,50 @@ class RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Display Name Field
+              TextField(
+                controller: displayNameController,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  errorText: displayNameError, // Adjusted here
+                ),
+              ),
+              SizedBox(height: 10),
               // Username Field
               TextField(
                 controller: userNameController,
                 decoration: InputDecoration(
                   labelText: 'Username',
-                  errorText: userNameError, // Show error for username
+                  errorText: userNameError, // Adjusted here
                 ),
               ),
+              if (userNameError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5.0),
+                  child: Text(
+                    userNameError!,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               SizedBox(height: 10),
+
               // Email Field
               TextField(
                 controller: emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
-                  errorText: emailError, // Show error for email
+                  errorText: emailError, // Adjusted here
                 ),
                 keyboardType: TextInputType.emailAddress,
               ),
+              if (emailError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 5.0),
+                  child: Text(
+                    emailError!,
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               SizedBox(height: 10),
               // Password Field
               TextField(
@@ -201,7 +267,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                 obscureText: obscureText,
                 decoration: InputDecoration(
                   labelText: 'Password',
-                  errorText: passwordError, // Show error for password
+                  errorText: passwordError, // Adjusted here
                   suffixIcon: IconButton(
                     icon: Icon(
                       obscureText ? Icons.visibility : Icons.visibility_off,
@@ -219,7 +285,7 @@ class RegisterScreenState extends State<RegisterScreen> {
               DropdownButton<String>(
                 value: selectedCountry,
                 hint: const Text('Select Country'),
-                isExpanded: true, // Make dropdown full width
+                isExpanded: true,
                 items: countries.map((String country) {
                   return DropdownMenuItem<String>(
                     value: country,
@@ -248,7 +314,7 @@ class RegisterScreenState extends State<RegisterScreen> {
               DropdownButton<String>(
                 value: selectedCity,
                 hint: const Text('Select City'),
-                isExpanded: true, // Make dropdown full width
+                isExpanded: true,
                 items: selectedCountry == null
                     ? []
                     : cities[selectedCountry]!.map((String city) {
@@ -263,7 +329,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                     cityError = null; // Reset city error
                     if (newValue != 'Riyadh') {
                       isLocalGuide = false; // Reset Checkbox if not Riyadh
-                    }
+                                        }
                   });
                 },
               ),
@@ -276,32 +342,31 @@ class RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               SizedBox(height: 10),
-              // Checkbox for Local Guide (only visible if city is Riyadh)
+              // Local Guide Checkbox (only shows for Riyadh)
               if (showLocalGuideCheckbox)
-                CheckboxListTile(
-                  title: const Text('I agree to be a Local Guide'),
-                  value: isLocalGuide,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      isLocalGuide = value ?? false;
-                    });
-                  },
-                  controlAffinity: ListTileControlAffinity.leading,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Checkbox(
+                      value: isLocalGuide,
+                      onChanged: (bool? value) {
+                        setState(() {
+                          isLocalGuide = value!;
+                        });
+                      },
+                    ),
+                    const Text('I agree to be a local guide'),
+                  ],
                 ),
               SizedBox(height: 20),
               // Register Button
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: handleRegister,
-                      child: const Text('Register'),
-                    ),
-              // Sign-In Button
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Go back to sign-in screen
-                },
-                child: const Text('Already have an account? Sign In'),
+              ElevatedButton(
+                onPressed: isLoading ? null : handleRegister,
+                child: isLoading
+                    ? CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : const Text('Register'),
               ),
             ],
           ),

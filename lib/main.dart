@@ -1,10 +1,12 @@
+// main.dart
+
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import 'home_page.dart';
 import 'welcome_screen.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'auth_service.dart'; // Import AuthService
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,73 +29,33 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
       home: AuthenticationWrapper(), // Use AuthenticationWrapper for navigation
+      debugShowCheckedModeBanner: false, // Remove debug banner
     );
   }
 }
 
 class AuthenticationWrapper extends StatelessWidget {
+  final AuthService _authService = AuthService(); // Instantiate AuthService
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
+      stream: _authService.authStateChanges, // Use AuthService's authStateChanges
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           User? user = snapshot.data;
           if (user == null) {
             return WelcomeScreen(); // Navigate to WelcomeScreen if not logged in
           } else {
-            return MyHomePage(); // Navigate to MyHomePage if logged in
+            return HomePage(); // Navigate to HomePage if logged in
           }
         }
 
-        // Loading state
-        return Scaffold(
+        // While checking the auth state, show a loading indicator
+        return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );
       },
-    );
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  final AuthService _authService = AuthService();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Localize'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () async {
-              await _authService.signOut();
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                // Example: Add user details (should be handled during registration)
-                // _firestoreService.addUserDetails(...);
-              },
-              child: const Text('Add User Details to Firestore'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                // Fetch users from Firestore
-                // await _firestoreService.getUsers();
-              },
-              child: const Text('Get Users from Firestore'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

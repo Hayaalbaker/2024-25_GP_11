@@ -3,7 +3,9 @@ import 'edit_profile_screen.dart';
 import 'search_page.dart'; // Import the search page
 import 'create_post_page.dart'; // Import the create post page
 import 'activity_page.dart'; // Import the activity page
-import 'Add_Place.dart'; // Import your Add Place page here
+import 'add_place.dart'; // Import your Add Place page here
+import 'welcome_screen.dart'; // Import your welcome screen here
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -35,58 +37,71 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = index;
     });
   }
-
-  // Inside your _onCreatePost function:
-void _onCreatePost() {
-  // Show a modal bottom sheet with options
-  showModalBottomSheet(
-    context: context,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (BuildContext context) {
-      return Container(
-        padding: EdgeInsets.all(16),
-        height: 180, // Set height for modal
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Choose an action',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 20),
-            ListTile(
-              leading: Icon(Icons.rate_review),
-              title: Text('Post a Review'),
-              onTap: () {
-                Navigator.pop(context); // Close the modal
-                // Navigate to Create Post Page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CreatePostPage()), 
-                );
-              },
-            ),
-            ListTile(
-              leading: Icon(Icons.add_location_alt),
-              title: Text('Add a Place'),
-              onTap: () {
-                Navigator.pop(context); // Close the modal
-                // Navigate to Add Place Page
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddPlacePage()), // Ensure this points to your AddPlacePage
-                );
-              },
-            ),
-          ],
-        ),
-      );
-    },
-  );
+// Method to handle sign out
+void _signOut() async {
+  try {
+    await FirebaseAuth.instance.signOut(); // Sign out from Firebase
+    print("User signed out");
+    
+    // Navigate to the welcome screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => WelcomeScreen()), // Navigate to WelcomeScreen
+    );
+  } catch (e) {
+    print("Error signing out: $e"); // Print any errors to the console
+  }
 }
 
+  // Inside your _onCreatePost function:
+  void _onCreatePost() {
+    // Show a modal bottom sheet with options
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          height: 180, // Set height for modal
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Choose an action',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 20),
+              ListTile(
+                leading: Icon(Icons.rate_review),
+                title: Text('Post a Review'),
+                onTap: () {
+                  Navigator.pop(context); // Close the modal
+                  // Navigate to Create Post Page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => CreatePostPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.add_location_alt),
+                title: Text('Add a Place'),
+                onTap: () {
+                  Navigator.pop(context); // Close the modal
+                  // Navigate to Add Place Page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddPlacePage()), // Ensure this points to your AddPlacePage
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +118,23 @@ void _onCreatePost() {
             ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: Column(
+        children: [
+          Expanded(child: _pages[_selectedIndex]), // Use Expanded to take full height for the pages
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              onPressed: _signOut, // Text for the button
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, // Use backgroundColor instead of primary
+                padding: EdgeInsets.symmetric(vertical: 16.0), // Padding
+                textStyle: TextStyle(fontSize: 18), // Text style
+              ), // Call sign-out method
+              child: Text('Sign Out'),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: Container(
         margin: EdgeInsets.only(left: 10, right: 10, bottom: 10), // Margin for the floating effect
         decoration: BoxDecoration(
@@ -138,15 +169,13 @@ void _onCreatePost() {
         ),
       ),
       floatingActionButton: GestureDetector(
-  onTap: _onCreatePost, // Show the modal when the plus button is tapped
-  child: FloatingActionButton(
-    elevation: 4.0, 
-    onPressed:_onCreatePost,
-    child: Icon(Icons.add), // Floating plus icon
-  ),
-),
-
-
+        onTap: _onCreatePost, // Show the modal when the plus button is tapped
+        child: FloatingActionButton(
+          elevation: 4.0,
+          onPressed: _onCreatePost,
+          child: Icon(Icons.add), // Floating plus icon
+        ),
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked, // Centers the button above the nav bar
     );
   }
