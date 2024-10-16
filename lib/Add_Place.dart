@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'firebase_options.dart';
 import 'database.dart';
 
 void main() {
