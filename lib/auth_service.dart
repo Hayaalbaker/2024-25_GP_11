@@ -13,7 +13,7 @@ class AuthService {
   ///
   /// Returns the User if registration is successful, or throws an exception on error.
   Future<User?> registerWithEmailAndPassword(
-      String email, String password, String userName, bool isLocalGuide) async {
+      String email, String password, String userName, String displayName, bool isLocalGuide) async {
     try {
       UserCredential result =
           await _auth.createUserWithEmailAndPassword(email: email, password: password);
@@ -23,6 +23,7 @@ class AuthService {
         await _firestore.collection('users').doc(user.uid).set({
           'email': email,
           'userName': userName,
+          'displayName': displayName,
           'local_guide': isLocalGuide ? 'yes' : 'no',
           'created_at': FieldValue.serverTimestamp(),
         });

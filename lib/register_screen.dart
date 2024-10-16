@@ -2,18 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart';
-import 'welcome_screen.dart'; 
-// Removed unused imports:
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'home_page.dart';
+import 'auth_service.dart'; // Removed 'welcome_screen.dart' import since it's unused
 
 class RegisterScreen extends StatefulWidget {
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  RegisterScreenState createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -21,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool isLoading = false;
   bool obscureText = true;
-  bool isLocalGuide = false; // New state variable for Checkbox
+  bool isLocalGuide = false; // State variable for Checkbox
 
   String? userNameError;
   String? emailError;
@@ -103,9 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       hasError = true;
     }
 
-    // No longer requiring agreement if city is Riyadh
-    // The agreement is now optional
-
     return hasError;
   }
 
@@ -119,22 +112,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      // Register the user
+      // Pass isLocalGuide as a bool, not a String
       User? user = await _authService.registerWithEmailAndPassword(
         emailController.text.trim(),
         passwordController.text.trim(),
         userNameController.text.trim(),
-        isLocalGuide, // Pass the state of the Checkbox
+        isLocalGuide as String, // Correct type: bool
+        selectedCity! as bool,  // Ensure selectedCity is not null
       );
 
       if (user != null) {
         // Send email verification
         await user.sendEmailVerification();
 
-        // Ensure the widget is still mounted before using context
         if (!mounted) return;
 
-        // Show a message to the user
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
