@@ -111,44 +111,43 @@ class RegisterScreenState extends State<RegisterScreen> {
     return hasError;
   }
 
-  Future<void> handleRegister() async {
-    if (validateInputs()) {
-      return; // Exit if there are validation errors
-    }
+Future<void> handleRegister() async {
+  if (validateInputs()) {
+    return; // Exit if there are validation errors
+  }
 
-    setState(() {
-      isLoading = true;
-    });
+  setState(() {
+    isLoading = true;
+    emailError = null; // Clear previous errors
+    userNameError = null;
+  });
 
-    try {
-      // Initialize variables to track errors
-      bool emailExists = false;
-      bool usernameExists = false;
+  try {
+    // Initialize variables to track errors
+    bool emailExists = false;
+    bool usernameExists = false;
 
-      // Check if email already exists
-      emailExists = await _authService.checkEmailExists(emailController.text.trim());
+    // Check if email already exists
+    emailExists = await _authService.checkEmailExists(emailController.text.trim());
 
-      // Check if username already exists
-      usernameExists = await _authService.checkUsernameExists(userNameController.text.trim());
+    // Check if username already exists
+    usernameExists = await _authService.checkUsernameExists(userNameController.text.trim());
 
-      // If both exist, update the respective error messages
-      if (emailExists) {
-        setState(() {
-          emailError = 'Email already exists.';
-        });
-      }
-
-      if (usernameExists) {
-        setState(() {
-          userNameError = 'Username already exists.';
-        });
-      }
-
-      // If either exists, return early to prevent registration
-      if (emailExists || usernameExists) {
-        return;
-      }
-
+    // Use if statements to set error messages based on conditions
+    if (emailExists && usernameExists) {
+      setState(() {
+        emailError = 'Email already exists.';
+        userNameError = 'Username already exists.';
+      });
+    } else if (emailExists) {
+      setState(() {
+        emailError = 'Email already exists.';
+      });
+    } else if (usernameExists) {
+      setState(() {
+        userNameError = 'Username already exists.';
+      });
+    } else {
       // Proceed with registration if no errors
       User? user = await _authService.registerWithEmailAndPassword(
         email: emailController.text.trim(),
@@ -185,24 +184,25 @@ class RegisterScreenState extends State<RegisterScreen> {
           emailError = 'Registration failed. Please try again.';
         });
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        if (e.code == 'email-already-in-use') {
-          emailError = 'Email already exists.'; // This might already be handled above, ensure no duplication
-        } else {
-          emailError = e.message;
-        }
-      });
-    } catch (e) {
-      setState(() {
-        emailError = 'An unexpected error occurred.';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
     }
+  } on FirebaseAuthException catch (e) {
+    setState(() {
+      if (e.code == 'email-already-in-use') {
+        emailError = 'Email already exists.';
+      } else {
+        emailError = e.message;
+      }
+    });
+  } catch (e) {
+    setState(() {
+      emailError = 'An unexpected error occurred.';
+    });
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
   }
+}
 
   @override
   Widget build(BuildContext context) {
