@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
-import 'home_page.dart'; 
+import 'interests_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  RegisterScreenState createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController userNameController = TextEditingController();
+  final TextEditingController displayNameController = TextEditingController();
 
-  bool isLoading = false;
-  bool obscureText = true; 
-  String? userNameError; 
-  String? emailError; 
-  String? passwordError; 
-  String? countryError; 
-  String? cityError; 
-  String? selectedCountry; 
-  String? selectedCity; 
-  
+  bool isLoading = false; // Tracks if registration is in progress
+  bool obscureText = true; // Controls password visibility
+  bool isLocalGuide = false; // Tracks if the user is a local guide
 
+  String? userNameError;
+  String? emailError;
+  String? passwordError;
+  String? countryError;
+  String? cityError;
+  String? displayNameError;
+  String? selectedCountry;
+  String? selectedCity;
 
+  // List of available countries
   List<String> countries = [
     'Saudi Arabia',
     'Egypt',
@@ -34,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     'Kuwait',
   ];
 
+  // Map of cities by country
   Map<String, List<String>> cities = {
     'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam'],
     'Egypt': ['Cairo', 'Alexandria', 'Giza'],
@@ -46,193 +49,325 @@ class _RegisterScreenState extends State<RegisterScreen> {
     emailController.dispose();
     passwordController.dispose();
     userNameController.dispose();
+    displayNameController.dispose();
     super.dispose();
+  }
+
+  void resetErrors() {
+    setState(() {
+      userNameError = null;
+      emailError = null;
+      passwordError = null;
+      countryError = null;
+      cityError = null;
+      displayNameError = null;
+    });
+  }
+
+  bool validateInputs() {
+    bool hasError = false;
+    resetErrors();
+
+    if (userNameController.text.trim().isEmpty) {
+      setState(() {
+        userNameError = 'Please enter a username.';
+      });
+      hasError = true;
+    }
+
+    if (displayNameController.text.trim().isEmpty) {
+      setState(() {
+        displayNameError = 'Please enter a display name.';
+      });
+      hasError = true;
+    }
+
+    if (emailController.text.trim().isEmpty ||
+        !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text.trim())) {
+      setState(() {
+        emailError = 'Please enter a valid email.';
+      });
+      hasError = true;
+    }
+
+    if (passwordController.text.trim().length < 6) {
+      setState(() {
+        passwordError = 'Password must be at least 6 characters long.';
+      });
+      hasError = true;
+    }
+
+    if (selectedCountry == null) {
+      setState(() {
+        countryError = 'Please select a country.';
+      });
+      hasError = true;
+    }
+
+    if (selectedCity == null) {
+      setState(() {
+        cityError = 'Please select a city.';
+      });
+      hasError = true;
+    }
+
+    return hasError;
+  }
+
+  Future<void> handleRegister() async {
+    if (validateInputs()) {
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      bool emailExists = false;
+      bool usernameExists = false;
+
+      emailExists =
+          await _authService.checkEmailExists(emailController.text.trim());
+
+      usernameExists = await _authService
+          .checkUsernameExists(userNameController.text.trim());
+
+      if (emailExists) {
+        setState(() {
+          emailError = 'Email already exists.';
+        });
+      }
+
+      if (usernameExists) {
+        setState(() {
+          userNameError = 'Username already exists.';
+        });
+      }
+
+      if (emailExists || usernameExists) {
+        return;
+      }
+
+      User? user = await _authService.registerWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        userName: userNameController.text.trim(),
+        displayName: displayNameController.text.trim(),
+        isLocalGuide: isLocalGuide,
+        city: selectedCity!,
+        country: selectedCountry!,
+      );
+
+      if (user != null) {
+        await user.sendEmailVerification();
+
+        if (!mounted) return;
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => InterestsScreen(
+              email: emailController.text.trim(),
+              userName: userNameController.text.trim(),
+              country: selectedCountry!,
+              city: selectedCity!,
+              isLocalGuide: isLocalGuide,
+            ),
+          ),
+        );
+      } else {
+        setState(() {
+          emailError = 'Registration failed. Please try again.';
+        });
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'email-already-in-use') {
+          emailError = 'Email already exists.';
+        } else {
+          emailError = e.message;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        emailError = 'An unexpected error occurred.';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    bool showLocalGuideCheckbox = selectedCity == 'Riyadh';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: userNameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                errorText: userNameError, // Show error for username
-              ),
-            ),
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                errorText: emailError, // Show error for email
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: passwordController,
-              obscureText: obscureText,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                errorText: passwordError, // Show error for password
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      obscureText = !obscureText;
-                    });
-                  },
+      body: Stack(
+        children: [
+          // Background image with transparency
+          Opacity(
+            opacity: 0.2,
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('images/Riyadh.webp'), // Background image
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
-            DropdownButton<String>(
-              value: selectedCountry,
-              hint: const Text('Select Country'),
-              items: countries.map((String country) {
-                return DropdownMenuItem<String>(
-                  value: country,
-                  child: Text(country),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedCountry = newValue;
-                  selectedCity = null; // Reset city when country changes
-                  countryError = null; // Reset country error
-                });
-              },
-            ),
-            if (countryError != null) // Show error for country
-              Text(
-                countryError!,
-                style: TextStyle(color: Colors.red),
-              ),
-            DropdownButton<String>(
-              value: selectedCity,
-              hint: const Text('Select City'),
-              items: selectedCountry == null
-                  ? []
-                  : cities[selectedCountry]!.map((String city) {
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: displayNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      errorText: displayNameError,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: userNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Username',
+                      errorText: userNameError,
+                    ),
+                  ),
+                  if (userNameError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: Text(
+                        userNameError!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      errorText: emailError,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  if (emailError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: Text(
+                        emailError!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscureText,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      errorText: passwordError,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscureText ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            obscureText = !obscureText;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  DropdownButton<String>(
+                    value: selectedCountry,
+                    hint: const Text('Select Country'),
+                    isExpanded: true,
+                    items: countries.map((String country) {
                       return DropdownMenuItem<String>(
-                        value: city,
-                        child: Text(city),
+                        value: country,
+                        child: Text(country),
                       );
                     }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedCity = newValue;
-                  cityError = null; // Reset city error
-                });
-              },
-            ),
-            if (cityError != null) // Show error for city
-              Text(
-                cityError!,
-                style: TextStyle(color: Colors.red),
-              ),
-            const SizedBox(height: 20),
-            isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: () async {
-                      // Reset all error messages
-                      userNameError = null;
-                      emailError = null;
-                      passwordError = null;
-                      countryError = null;
-                      cityError = null;
-
-                      // Validate username
-                      if (userNameController.text.isEmpty) {
-                        userNameError = 'Please enter a username.';
-                      }
-
-                      // Validate email
-                      if (emailController.text.isEmpty ||
-                          !RegExp(r'^[^@]+@[^@]+\.[^@]+')
-                              .hasMatch(emailController.text)) {
-                        emailError = 'Please enter a valid email.';
-                      }
-
-                      // Validate password
-                      if (passwordController.text.length < 6) {
-                        passwordError =
-                            'Password must be at least 6 characters long.';
-                      }
-
-                      // Validate country and city
-                      if (selectedCountry == null) {
-                        countryError = 'Please select a country.';
-                      }
-
-                      if (selectedCity == null) {
-                        cityError = 'Please select a city.';
-                      }
-
-                      // Check if there are any errors
-                      if (userNameError != null ||
-                          emailError != null ||
-                          passwordError != null ||
-                          countryError != null ||
-                          cityError != null) {
-                        setState(() {}); // Trigger UI update
-                        return; // Exit if there are errors
-                      }
-
+                    onChanged: (String? newValue) {
                       setState(() {
-                        isLoading = true;
+                        selectedCountry = newValue;
+                        selectedCity = null;
+                        countryError = null;
+                        isLocalGuide = false;
                       });
-
-                      try {
-                        User? user = await _authService.registerWithEmailAndPassword(
-                          emailController.text.trim(),
-                          passwordController.text.trim(),
-                          userNameController.text.trim(),
-                          selectedCity == 'Local Guide', // Example condition
-                        );
-
-                        if (mounted) {
-                          if (user != null) {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => HomePage()),
-                            );
-                          } else {
-                            setState(() {
-                              emailError = 'Registration failed. Please try again.'; // You can choose to show this under email
-                            });
-                          }
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          setState(() {
-                            emailError = e.toString(); // Update error message under email
-                          });
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            isLoading = false;
-                          });
-                        }
-                      }
                     },
-                    child: const Text('Register'),
                   ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Go back to sign-in screen
-              },
-              child: const Text('Already have an account? Sign In'),
+                  if (countryError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: Text(
+                        countryError!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  DropdownButton<String>(
+                    value: selectedCity,
+                    hint: const Text('Select City'),
+                    isExpanded: true,
+                    items: selectedCountry == null
+                        ? []
+                        : cities[selectedCountry!]!.map((String city) {
+                            return DropdownMenuItem<String>(
+                              value: city,
+                              child: Text(city),
+                            );
+                          }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedCity = newValue;
+                        cityError = null;
+                      });
+                    },
+                  ),
+                  if (cityError != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5.0),
+                      child: Text(
+                        cityError!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 10),
+                  if (showLocalGuideCheckbox)
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isLocalGuide,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              isLocalGuide = value ?? false;
+                            });
+                          },
+                        ),
+                        const Text('I agree to be a local guide'),
+                      ],
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: isLoading ? null : handleRegister,
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Register'),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

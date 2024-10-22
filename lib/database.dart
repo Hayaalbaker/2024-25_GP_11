@@ -7,7 +7,7 @@ class FirestoreService {
 
   // Add user details to Firestore (including local guide status)
   Future<void> addUserDetails(String userName, String country, String city,
-      List<String> interests, bool isLocalGuide) async {
+      List<String> interests, bool isLocalGuide, {String? profileImageUrl}) async {
     try {
       User? user = _auth.currentUser;
       if (user != null) {
@@ -19,8 +19,12 @@ class FirestoreService {
           'interests': interests,
           'local_guide': isLocalGuide ? 'yes' : 'no', // Save local guide status
           'created_at': FieldValue.serverTimestamp(),
+          'Name': user.displayName,
+          'profileImageUrl': profileImageUrl ?? '', // إضافة حقل رابط الصورة
         });
         print('User details added successfully');
+      } else {
+        print('No user is currently signed in.');
       }
     } catch (e) {
       print('Error adding user details: $e');

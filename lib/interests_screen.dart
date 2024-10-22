@@ -72,7 +72,22 @@ class _InterestsScreenState extends State<InterestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Select Your Interests'),
+        title: Row(
+          children: [
+            Text('Select Your Interests'),
+            SizedBox(width: 8),
+            Tooltip(
+              message:
+                  'Your interests will help us offer personalized recommendations for the best Riyadh destinations that match your preferences. Please choose your interests to uncover new hidden gems!',
+              preferBelow: false,
+              child: Icon(
+                Icons.info_outline,
+                size: 24,
+                color: const Color.fromARGB(255, 213, 9, 9),
+              ),
+            ),
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -103,8 +118,16 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   }
                 });
 
-                print(finalInterests);
+                // Ensure that there are interests selected
+                if (finalInterests.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Please select at least one interest!')),
+                  );
+                  return;
+                }
 
+                // Save user details including interests
                 await saveUserDetails(finalInterests);
 
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -126,8 +149,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
     );
   }
 
-  Future<void> saveUserDetails(List<String> finalInterests) {
-    return firestoreService.addUserDetails(
+  Future<void> saveUserDetails(List<String> finalInterests) async {
+    // Call the Firestore service to save user details
+    await firestoreService.addUserDetails(
       widget.userName,
       widget.country,
       widget.city,
@@ -141,16 +165,16 @@ class _InterestsScreenState extends State<InterestsScreen> {
     switch (interest) {
       case 'Restaurants':
         types = restaurantTypes;
-// Add break statement
+        break;
       case 'Parks':
         types = parkTypes;
-// Add break statement
+        break;
       case 'Shopping':
         types = shoppingTypes;
-// Add break statement
+        break;
       case 'Children':
         types = childrenTypes;
-// Add break statement
+        break;
       default:
         types = [];
     }
