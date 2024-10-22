@@ -20,7 +20,7 @@ class FirestoreService {
           'local_guide': isLocalGuide ? 'yes' : 'no', // Save local guide status
           'created_at': FieldValue.serverTimestamp(),
           'Name': user.displayName,
-          'profileImageUrl': profileImageUrl ?? '', // إضافة حقل رابط الصورة
+          'profileImageUrl': profileImageUrl ?? '', 
         });
         print('User details added successfully');
       } else {
