@@ -148,21 +148,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       try {
         User? user = _auth.currentUser;
 
+        // Convert input to lowercase for case-insensitive checking
+        String lowerCaseEmail = _emailController.text.trim().toLowerCase();
+        String lowerCaseUsername = _usernameController.text.trim().toLowerCase();
+
         // Check if email or username already exists
         QuerySnapshot emailCheck = await _firestore
             .collection('users')
-            .where('email', isEqualTo: _emailController.text)
+            .where('email', isEqualTo: lowerCaseEmail)
             .get();
         QuerySnapshot usernameCheck = await _firestore
             .collection('users')
-            .where('user_name', isEqualTo: _usernameController.text)
+            .where('user_name', isEqualTo: lowerCaseUsername)
             .get();
 
         // Check if the email already exists and does not belong to the current user
         if (emailCheck.docs.isNotEmpty &&
             emailCheck.docs.first.id != user?.uid) {
           ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('ُEmail already exists.')));
+              .showSnackBar(SnackBar(content: Text('Email already exists.')));
           return;
         }
 
@@ -175,15 +179,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
 
         // Update user email if necessary
-        if (user != null && user.email != _emailController.text) {
-          await user.updateEmail(_emailController.text);
+        if (user != null && user.email != lowerCaseEmail) {
+          await user.updateEmail(lowerCaseEmail);
         }
 
         // Upload new profile picture if selected
         String? profileImageUrl;
         if (_pickedImage != null) {
           final storageRef =
-              _storage.ref().child('profileImages/${user!.uid}.jpg');
+          _storage.ref().child('profileImages/${user!.uid}.jpg');
           await storageRef.putFile(_pickedImage!);
           profileImageUrl = await storageRef.getDownloadURL();
         } else {
@@ -198,9 +202,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Load the current interests from Firestore to check if there is a change
         DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(user!.uid).get();
+        await _firestore.collection('users').doc(user!.uid).get();
         List<String> currentInterests =
-            List<String>.from(userDoc['interests'] ?? []);
+        List<String>.from(userDoc['interests'] ?? []);
 
         // Update Firestore only if interests have changed
         if (newInterests
@@ -214,11 +218,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Update other fields without affecting interests unnecessarily
         await _firestore.collection('users').doc(user.uid).update({
-          'user_name': _usernameController.text,
-          'Name': _nameController.text,
+          'user_name': lowerCaseUsername, // Store in lowercase
+          'Name': _nameController.text.trim(), // Trimmed Name
           'city': _selectedCity,
           'country': _selectedCountry,
-          'email': _emailController.text,
+          'email': lowerCaseEmail, // Store in lowercase
           'profileImageUrl': profileImageUrl,
         });
 
@@ -231,6 +235,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }
   }
+
 
   // Subinterest selection widget
   Widget _buildSubInterestSelection(String category, List<String> options) {

@@ -165,16 +165,12 @@ class _InterestsScreenState extends State<InterestsScreen> {
     switch (interest) {
       case 'Restaurants':
         types = restaurantTypes;
-        break;
       case 'Parks':
         types = parkTypes;
-        break;
       case 'Shopping':
         types = shoppingTypes;
-        break;
       case 'Children':
         types = childrenTypes;
-        break;
       default:
         types = [];
     }

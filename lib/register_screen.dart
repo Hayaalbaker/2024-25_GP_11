@@ -150,9 +150,9 @@ class RegisterScreenState extends State<RegisterScreen> {
       }
 
       User? user = await _authService.registerWithEmailAndPassword(
-        email: emailController.text.trim(),
+        email: emailController.text.trim().toLowerCase(),
         password: passwordController.text.trim(),
-        userName: userNameController.text.trim(),
+        userName: userNameController.text.trim().toLowerCase(),
         displayName: displayNameController.text.trim(),
         isLocalGuide: isLocalGuide,
         city: selectedCity!,
@@ -168,8 +168,8 @@ class RegisterScreenState extends State<RegisterScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => InterestsScreen(
-              email: emailController.text.trim(),
-              userName: userNameController.text.trim(),
+              email: emailController.text.trim().toLowerCase(),
+              userName: userNameController.text.trim().toLowerCase(),
               country: selectedCountry!,
               city: selectedCity!,
               isLocalGuide: isLocalGuide,

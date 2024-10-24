@@ -5,14 +5,9 @@ import 'activity_page.dart'; // Import the activity page
 import 'add_place.dart'; // Import your Add Place page here
 import 'welcome_screen.dart'; // Import your welcome screen here
 import 'package:firebase_auth/firebase_auth.dart';
+import 'places_widget.dart'; 
 import 'profile_screen.dart';
-
 class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class homepage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -21,13 +16,11 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   static List<Widget> _pages = <Widget>[
-    Center(
-        child: Text(
-            'Welcome to the Home Page!')), // Replace with actual home content
+    Center(child: Places_widget()), // Replace with actual home content ???
     SearchPage(), // Search Page
     CreatePostPage(), // Create Post Page
     ActivityPage(), // Activity Page
-    ProfileScreen(), 
+    ProfileScreen(), // Profile Page
   ];
 
   // Titles for each page
@@ -44,22 +37,20 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = index;
     });
   }
-
-  // Method to handle sign out
-  void _signOut() async {
-    try {
-      await FirebaseAuth.instance.signOut(); // Sign out from Firebase
-      print("User signed out");
-
-      // Navigate to the welcome screen
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-            builder: (context) => WelcomeScreen()), // Navigate to WelcomeScreen
-      );
-    } catch (e) {
-      print("Error signing out: $e"); // Print any errors to the console
-    }
+// Method to handle sign out
+void _signOut() async {
+  try {
+    await FirebaseAuth.instance.signOut(); // Sign out from Firebase
+    print("User signed out");
+    
+    // Navigate to the welcome screen
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => WelcomeScreen()), // Navigate to WelcomeScreen
+    );
+  } catch (e) {
+    print("Error signing out: $e"); // Print any errors to the console
   }
+}
 
   // Inside your _onCreatePost function:
   void _onCreatePost() {
@@ -72,7 +63,7 @@ class _HomePageState extends State<HomePage> {
       builder: (BuildContext context) {
         return Container(
           padding: EdgeInsets.all(16),
-          height: 100, // Set height for modal
+          height: 220, // Set height for modal
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -101,9 +92,7 @@ class _HomePageState extends State<HomePage> {
                   // Navigate to Add Place Page
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            AddPlacePage()), // Ensure this points to your AddPlacePage
+                    MaterialPageRoute(builder: (context) => AddPlacePage()), // Ensure this points to your AddPlacePage
                   );
                 },
               ),
@@ -118,13 +107,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(_titles[_selectedIndex]), // Set title based on selected index
+        title: Text(_titles[_selectedIndex]), // Set title based on selected index
         actions: [
           if (_selectedIndex == 0) // Show direct message icon only on Home page
             IconButton(
-              icon: Icon(Icons
-                  .chat_bubble_outline), // Chat bubble icon for direct messages
+              icon: Icon(Icons.chat_bubble_outline), // Chat bubble icon for direct messages
               onPressed: () {
                 // Add action for direct messages
               },
@@ -133,16 +120,13 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
-          Expanded(
-              child: _pages[
-                  _selectedIndex]), // Use Expanded to take full height for the pages
+          Expanded(child: _pages[_selectedIndex]), // Use Expanded to take full height for the pages
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: ElevatedButton(
               onPressed: _signOut, // Text for the button
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    Colors.red, // Use backgroundColor instead of primary
+                backgroundColor: Colors.red, // Use backgroundColor instead of primary
                 padding: EdgeInsets.symmetric(vertical: 16.0), // Padding
                 textStyle: TextStyle(fontSize: 18), // Text style
               ), // Call sign-out method
@@ -152,8 +136,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       bottomNavigationBar: Container(
-        margin: EdgeInsets.only(
-            left: 10, right: 10, bottom: 10), // Margin for the floating effect
+        margin: EdgeInsets.only(left: 10, right: 10, bottom: 10), // Margin for the floating effect
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(30), // Rounded corners
@@ -166,21 +149,19 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         child: BottomNavigationBar(
-          backgroundColor:
-              Colors.transparent, // Make the background transparent
+          backgroundColor: Colors.transparent, // Make the background transparent
           elevation: 0, // Remove default shadow
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.search), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
             BottomNavigationBarItem(
               icon: Icon(Icons.add_box), // Post icon
               label: 'Post',
             ),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.notifications), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Activity'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
           ],
           selectedItemColor: Colors.black, // Color of selected icon
           unselectedItemColor: Colors.grey, // Color of unselected icons
@@ -195,8 +176,7 @@ class _HomePageState extends State<HomePage> {
           child: Icon(Icons.add), // Floating plus icon
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation
-          .centerDocked, // Centers the button above the nav bar
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked, // Centers the button above the nav bar
     );
   }
 }

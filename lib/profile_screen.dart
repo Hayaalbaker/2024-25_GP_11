@@ -33,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (userDoc.exists) {
           setState(() {
             var data = userDoc.data() as Map<String, dynamic>;
+            _profileImageUrl = data['profileImageUrl'] ?? null;
 
             _displayName = data['Name'] ?? 'Display Name';
             _username = data['user_name'] ?? 'Username';
@@ -69,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         : null,
                     image: DecorationImage(
                       image: _profileImageUrl.isNotEmpty
-                          ? NetworkImage(_profileImageUrl)
+                          ? NetworkImage(_profileImageUrl) as ImageProvider
                           : AssetImage('assets/default_profile.png')
                               as ImageProvider,
                       fit: BoxFit.cover,
@@ -115,7 +116,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: const Color.fromARGB(255, 222, 139, 139), // لون نص الزر
+                backgroundColor:
+                    const Color.fromARGB(255, 222, 139, 139), // لون نص الزر
               ),
               child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
             ),
