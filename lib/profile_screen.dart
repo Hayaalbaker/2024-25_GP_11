@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (userDoc.exists) {
           setState(() {
             var data = userDoc.data() as Map<String, dynamic>;
-            _profileImageUrl = data['profileImageUrl'] ?? null;
+            _profileImageUrl = data['profileImageUrl'];
 
             _displayName = data['Name'] ?? 'Display Name';
             _username = data['user_name'] ?? 'Username';
@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Profile')),
+      //appBar: AppBar(title: Text('Profile')),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
@@ -71,7 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     image: DecorationImage(
                       image: _profileImageUrl.isNotEmpty
                           ? NetworkImage(_profileImageUrl) as ImageProvider
-                          : AssetImage('assets/default_profile.png')
+                          : AssetImage('images/default_profile.png')
                               as ImageProvider,
                       fit: BoxFit.cover,
                     ),

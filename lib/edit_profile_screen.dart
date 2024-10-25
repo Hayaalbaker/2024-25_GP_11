@@ -107,9 +107,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
           _usernameController.text = data['user_name'] ?? '';
           _nameController.text = data['Name'] ?? '';
-          _selectedCity = data['city'] ?? null;
-          _selectedCountry = data['country'] ?? null;
-          _imageUrl = data['profileImageUrl'] ?? null;
+          _selectedCity = data['city'];
+          _selectedCountry = data['country'];
+          _imageUrl = data['profileImageUrl'];
 
           // Load existing interests
           selectedInterests = List<String>.from(data['interests'] ?? []);

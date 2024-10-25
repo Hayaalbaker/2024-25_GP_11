@@ -229,17 +229,24 @@ class RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: displayNameController,
                     decoration: InputDecoration(
-                      labelText: 'Name',
-                      errorText: displayNameError,
-                    ),
+                        labelText: 'Name',
+                        errorText: displayNameError,
+                        suffixIcon: Tooltip(
+                          message:
+                              'This will be your display name, visible to others on the platform. You can use a nickname or any name you’d like',
+                          child: Icon(Icons.info_outline),
+                        )),
                   ),
                   const SizedBox(height: 10),
                   TextField(
                     controller: userNameController,
                     decoration: InputDecoration(
-                      labelText: 'Username',
-                      errorText: userNameError,
-                    ),
+                        labelText: 'Username',
+                        errorText: userNameError,
+                        suffixIcon: Tooltip(
+                          message: 'Choose a unique username.',
+                          child: Icon(Icons.info_outline),
+                        )),
                   ),
                   if (userNameError != null)
                     Padding(
@@ -253,9 +260,12 @@ class RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                      labelText: 'Email',
-                      errorText: emailError,
-                    ),
+                        labelText: 'Email',
+                        errorText: emailError,
+                        suffixIcon: Tooltip(
+                          message: 'Enter a valid email address.',
+                          child: Icon(Icons.info_outline),
+                        )),
                     keyboardType: TextInputType.emailAddress,
                   ),
                   if (emailError != null)
@@ -354,6 +364,11 @@ class RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
                         const Text('I agree to be a local guide'),
+                        Tooltip(
+                          message:
+                              'By agreeing to be a local guide, you’ll be recommended to other users for messaging and assistance. You may be contacted to provide guidance or help within your selected city ',
+                          child: Icon(Icons.info_outline),
+                        )
                       ],
                     ),
                   const SizedBox(height: 20),

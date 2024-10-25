@@ -108,6 +108,7 @@ void _signOut() async {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]), // Set title based on selected index
+        automaticallyImplyLeading: false,
         actions: [
           if (_selectedIndex == 0) // Show direct message icon only on Home page
             IconButton(

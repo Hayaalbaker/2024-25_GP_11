@@ -125,24 +125,26 @@ class _PlaceFormState extends State<PlaceForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add a Place'),
+            appBar: AppBar(
+        title: Text("Add a Place"),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => HomePage()),
+              );
+            },
+            child: Text(
+              "Cancel",
+              style: TextStyle(color: const Color.fromARGB(255, 16, 0, 0)),
+            ),
+          ),
+        ],
       ),
 
-/*appBar: AppBar(
-  leading: IconButton(
-    icon: Icon(Icons.arrow_back, color: Colors.black),
-    onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => HomePage()),
-  );
-}
-  ), 
-  title: Text("Add a Place"),
-  centerTitle: true,
-),
-*/
+
 
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -292,13 +294,13 @@ class _PlaceFormState extends State<PlaceForm> {
                 onPressed: () {
                   //check_values= await checkAndDisplayResult( placeName,  category);
 
-                  checkAndDisplayResult(placeName, category);
+               /*   checkAndDisplayResult(placeName, category);
                   if (check_values) {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text(
                           'cant add the place becouse the Place name: $placeName, and the category: $category is already added'),
                     ));
-                  } else {
+                  } else {*/
                     if (_formKey.currentState!.validate()) {
                       _formKey.currentState!.save();
 
@@ -321,7 +323,7 @@ class _PlaceFormState extends State<PlaceForm> {
 
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content:
-                            Text('Place Added: $placeName, user id: $userID'),
+                            Text('Place Added: $placeName Successfully!'),
                       ));
                       Navigator.push(
                         context,
@@ -330,7 +332,7 @@ class _PlaceFormState extends State<PlaceForm> {
                                 HomePage()), // Ensure this points to your AddPlacePage
                       );
                     }
-                  }
+                 // }
                 },
                 child: Text('Add Place'),
               ),
