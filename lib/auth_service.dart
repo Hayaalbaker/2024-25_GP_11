@@ -96,21 +96,21 @@ class AuthService {
     return result.docs.isNotEmpty;
   }
 
-  Future<bool> checkEmailExists(String email) async {
-    final QuerySnapshot result = await _firestore
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .get();
-    return result.docs.isNotEmpty;
-  }
+  // Future<bool> checkEmailExists(String email) async {
+  //   final QuerySnapshot result = await _firestore
+  //       .collection('users')
+  //       .where('email', isEqualTo: email)
+  //       .get();
+  //   return result.docs.isNotEmpty;
+  // }
 
-  Future<bool> checkUsernameExists(String username) async {
-    final QuerySnapshot result = await _firestore
-        .collection('users')
-        .where('userName', isEqualTo: username) // Ensure this matches your Firestore field
-        .get();
-    return result.docs.isNotEmpty;
-  }
+  // Future<bool> checkUsernameExists(String username) async {
+  //   final QuerySnapshot result = await _firestore
+  //       .collection('users')
+  //       .where('userName', isEqualTo: username) // Ensure this matches your Firestore field
+  //       .get();
+  //   return result.docs.isNotEmpty;
+  // }
 
   /// Signs in an existing user with the given email and password.
   ///
