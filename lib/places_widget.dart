@@ -11,11 +11,11 @@ class Places_widget extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: const Color.fromARGB(255, 228, 189, 215),
-                   bottom: new PreferredSize(
-            preferredSize: new Size(200.0, 25.0),
-            child: new Container(
+                   bottom: PreferredSize(
+            preferredSize: Size(200.0, 25.0),
+            child: SizedBox(
               width: 200.0,
-              child: new TabBar(
+              child: TabBar(
             tabs: [
               Tab(
                 icon: Icon(Icons.add_location_alt),
@@ -51,7 +51,7 @@ class PlacesWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // <1> Use StreamBuilder
-    int item_Count = 6;
+    int itemCount = 6;
     return StreamBuilder<QuerySnapshot>(
         // <2> Pass `Stream<QuerySnapshot>` to stream
         stream: FirebaseFirestore.instance.collection('places').snapshots(),

@@ -10,8 +10,8 @@ plugins {
 
 android {
     namespace = "com.example.localize" // Adjust if needed
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk = 34 // Use a specific compile SDK version (replace with your desired version)
+    ndkVersion = "23.1.7779620" // You can define the NDK version explicitly if needed
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -25,9 +25,9 @@ android {
     defaultConfig {
         applicationId = "com.example.localize"
         minSdk = 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        targetSdk = 33 // Use a specific target SDK version
+        versionCode = 1 // Set your app version code explicitly
+        versionName = "1.0" // Set your app version name explicitly
     }
 
     buildTypes {
@@ -46,5 +46,5 @@ dependencies {
     // Firebase BOM
     implementation platform('com.google.firebase:firebase-bom:32.2.0') // Use Firebase BOM for versioning
     implementation 'com.google.firebase:firebase-firestore' // Firestore dependency
-    // Add other dependencies as needed
+   
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'edit_profile_screen.dart';
 import 'search_page.dart'; // Import the search page
 import 'create_post_page.dart'; // Import the create post page
 import 'activity_page.dart'; // Import the activity page
 import 'add_place.dart'; // Import your Add Place page here
 import 'welcome_screen.dart'; // Import your welcome screen here
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'places_widget.dart'; 
+import 'profile_screen.dart';
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -16,11 +16,11 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
   static List<Widget> _pages = <Widget>[
-    Center(child: Text('Welcome to the Home Page!')), // Replace with actual home content
+    Center(child: Places_widget()), // Replace with actual home content ???
     SearchPage(), // Search Page
     CreatePostPage(), // Create Post Page
     ActivityPage(), // Activity Page
-    EditProfileScreen(), // Profile Page
+    ProfileScreen(), // Profile Page
   ];
 
   // Titles for each page
@@ -63,7 +63,7 @@ void _signOut() async {
       builder: (BuildContext context) {
         return Container(
           padding: EdgeInsets.all(16),
-          height: 180, // Set height for modal
+          height: 220, // Set height for modal
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -108,6 +108,7 @@ void _signOut() async {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]), // Set title based on selected index
+        automaticallyImplyLeading: false,
         actions: [
           if (_selectedIndex == 0) // Show direct message icon only on Home page
             IconButton(

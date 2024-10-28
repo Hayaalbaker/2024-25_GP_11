@@ -28,52 +28,72 @@ class AuthService {
   ///
   /// Returns the [User] if registration is successful, or throws an exception on error.
   Future<User?> registerWithEmailAndPassword({
-    required String email,
-    required String password,
-    required String userName,
-    required String displayName,
-    required bool isLocalGuide,
-    required String city,
-  }) async {
-    try {
-      // Check if email or username already exists
-      await checkEmailAndUsernameExists(email, userName);
+  required String email,
+  required String password,
+  required String userName,
+  required String displayName,
+  required bool isLocalGuide,
+  required String city,
+  required String country, // Add the country parameter here
+}) async {
+  try {
+    // Check if email or username already exists
+    await checkEmailAndUsernameExists(email, userName);
 
-      // Create user with email and password
-      UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      User? user = result.user;
+    // Create user with email and password
+    UserCredential result = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+    User? user = result.user;
 
+    if (user != null) {
+      // Update the user's display name in Firebase Auth
+      await user.updateDisplayName(displayName);
+      await user.reload();
+      user = _auth.currentUser;
+
+      // Additional null check after reassigning
       if (user != null) {
-        // Update the user's display name in Firebase Auth
-        await user.updateDisplayName(displayName);
-        await user.reload();
-        user = _auth.currentUser;
-
-        // Additional null check after reassigning
-        if (user != null) {
-          // Store additional user information in Firestore
-          await _firestore.collection('users').doc(user.uid).set({
-            'email': email,
-            'userName': userName,
-            'displayName': displayName,
-            'isLocalGuide': isLocalGuide,
-            'city': city,
-            'created_at': FieldValue.serverTimestamp(),
-          });
-        }
+        // Store additional user information in Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'email': email,
+          'userName': userName,
+          'displayName': displayName,
+          'isLocalGuide': isLocalGuide,
+          'city': city,
+          'country': country, // Include country here
+          'created_at': FieldValue.serverTimestamp(),
+        });
       }
-
-      return user;
-    } on FirebaseAuthException catch (e) {
-      // Handle Firebase-specific authentication errors
-      throw Exception('Registration failed: ${e.message}');
-    } catch (e) {
-      // Handle any other errors
-      throw Exception('Registration failed: $e');
     }
+
+    return user;
+  } on FirebaseAuthException catch (e) {
+    // Handle Firebase-specific authentication errors
+    throw Exception('Registration failed: ${e.message}');
+  } catch (e) {
+    // Handle any other errors
+    throw Exception('Registration failed: $e');
+  }
+}
+
+  /// Checks if an email already exists in Firestore.
+  Future<bool> checkEmailExists(String email) async {
+    final QuerySnapshot result = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
+    return result.docs.isNotEmpty;
+  }
+
+  /// Checks if a username already exists in Firestore.
+  Future<bool> checkUsernameExists(String username) async {
+    final QuerySnapshot result = await _firestore
+        .collection('users')
+        .where('userName', isEqualTo: username) // Ensure this matches your Firestore field
+        .get();
+    return result.docs.isNotEmpty;
   }
 
   Future<bool> checkEmailExists(String email) async {

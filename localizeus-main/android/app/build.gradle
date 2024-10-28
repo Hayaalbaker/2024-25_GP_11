@@ -1,0 +1,50 @@
+plugins {
+    id "com.android.application"
+    // START: FlutterFire Configuration
+    id 'com.google.gms.google-services' // Ensure this is included
+    // END: FlutterFire Configuration
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+android {
+    namespace = "com.example.localize" // Adjust if needed
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        applicationId = "com.example.localize"
+        minSdk = 23
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug // Update for release builds as needed
+        }
+    }
+}
+
+flutter {
+    source = "../.." // Ensure this path points to your Flutter source
+}
+
+// Add your dependencies in a separate dependencies block
+dependencies {
+    // Firebase BOM
+    implementation platform('com.google.firebase:firebase-bom:32.2.0') // Use Firebase BOM for versioning
+    implementation 'com.google.firebase:firebase-firestore' // Firestore dependency
+    // Add other dependencies as needed
+}

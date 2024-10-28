@@ -11,18 +11,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
+  firebase_storage: ^12.3.3
+  image_picker: ^1.1.2
+
   cloud_firestore: ^5.4.3
   provider: ^6.0.0
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
   firebase_in_app_messaging: ^0.8.0+8
+  info_popup: ^4.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^2.0.0
+  flutter_lints: ^5.0.0
 
 flutter:
   uses-material-design: true
@@ -30,3 +33,5 @@ flutter:
   assets:
     - images/Logo.png
     - images/image1.jpg
+    - images/Riyadh.webp
+    - images/default_profile.png
