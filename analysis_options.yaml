@@ -1,6 +1,8 @@
 analyzer:
   errors:
     file_names: ignore
+    non_constant_identifier_names: ignore
+    unused_import: ignore ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:

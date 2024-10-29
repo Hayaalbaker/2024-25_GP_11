@@ -52,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(title: Text('Profile')),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
@@ -91,19 +90,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             SizedBox(height: 8),
-            Text(
-              _displayName,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+            // Inside the Column that contains user information
+            Column(
+              children: [
+                Text(
+                  _displayName,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                if (_isLocalGuide)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Local Guide',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      SizedBox(
+                          width:
+                              4), // Small space between the text and the icon
+                      Icon(
+                        Icons.check_circle, // Using a checkmark icon
+                        color: Colors.green, // Green color for the icon
+                        size: 16, // Icon size
+                      ),
+                    ],
+                  ),
+                Text(
+                  '@$_username',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
             ),
-            if (_isLocalGuide)
-              Text(
-                'Local Guide',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-            Text(
-              '@$_username',
-              style: TextStyle(color: Colors.grey, fontSize: 14),
-            ),
+
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
@@ -116,17 +135,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor:
-                    const Color.fromARGB(255, 222, 139, 139), // لون نص الزر
+                backgroundColor: const Color.fromARGB(255, 218, 0, 0),
               ),
               child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
             ),
             SizedBox(height: 10),
-            Text(
-              'Reviews',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            TextButton(
+              onPressed: () {
+                //next sprint
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Color.fromARGB(255, 184, 57, 57),
+                backgroundColor: Color.fromARGB(255, 230, 230, 230),
+                padding: EdgeInsets.symmetric(horizontal: 66, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Reviews',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-            SizedBox(height: 5),
+            SizedBox(height: 1),
             Expanded(
               child: _reviews.isEmpty
                   ? Center(child: Text('No reviews yet'))

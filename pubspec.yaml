@@ -20,6 +20,8 @@ dependencies:
   firebase_auth: ^5.3.1
   firebase_in_app_messaging: ^0.8.0+8
   info_popup: ^4.3.1
+  url_launcher: ^6.3.1
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
