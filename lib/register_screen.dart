@@ -15,9 +15,15 @@ class RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController displayNameController = TextEditingController();
 
-  bool isLoading = false; // Tracks if registration is in progress
-  bool obscureText = true; // Controls password visibility
-  bool isLocalGuide = false; // Tracks if the user is a local guide
+  bool isLoading = false; 
+  bool obscureText = true; 
+  bool isLocalGuide = false; 
+
+bool hasUppercase = false;
+bool hasLowercase = false;
+bool hasDigit = false;
+bool hasSpecialChar = false;
+bool hasMinLength = false;
 
   String? userNameError;
   String? emailError;
@@ -28,7 +34,6 @@ class RegisterScreenState extends State<RegisterScreen> {
   String? selectedCountry;
   String? selectedCity;
 
-  // List of available countries
   List<String> countries = [
     'Saudi Arabia',
     'Egypt',
@@ -36,7 +41,6 @@ class RegisterScreenState extends State<RegisterScreen> {
     'Kuwait',
   ];
 
-  // Map of cities by country
   Map<String, List<String>> cities = {
     'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam'],
     'Egypt': ['Cairo', 'Alexandria', 'Giza'],
@@ -53,6 +57,38 @@ class RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  @override
+void initState() {
+  super.initState();
+
+  passwordController.addListener(() {
+    final password = passwordController.text;
+
+    setState(() {
+      hasUppercase = RegExp(r'(?=.*[A-Z])').hasMatch(password);
+      hasLowercase = RegExp(r'(?=.*[a-z])').hasMatch(password);
+      hasDigit = RegExp(r'(?=.*\d)').hasMatch(password);
+      hasSpecialChar = RegExp(r'(?=.*[@$!%*?&])').hasMatch(password);
+      hasMinLength = password.length >= 8;
+    });
+  });
+}
+Widget passwordRequirement(String text, bool isMet) {
+  return Row(
+    children: [
+      Icon(
+        isMet ? Icons.check : Icons.close,
+        color: isMet ? Colors.green : Colors.red,
+      ),
+      const SizedBox(width: 5),
+      Text(
+        text,
+        style: TextStyle(color: isMet ? Colors.green : Colors.red),
+      ),
+    ],
+  );
+}
+
   void resetErrors() {
     setState(() {
       userNameError = null;
@@ -64,55 +100,61 @@ class RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
-  bool validateInputs() {
-    bool hasError = false;
-    resetErrors();
+bool validateInputs() {
+  bool hasError = false;
+  resetErrors();
 
-    if (userNameController.text.trim().isEmpty) {
-      setState(() {
-        userNameError = 'Please enter a username.';
-      });
-      hasError = true;
-    }
-
-    if (displayNameController.text.trim().isEmpty) {
-      setState(() {
-        displayNameError = 'Please enter a display name.';
-      });
-      hasError = true;
-    }
-
-    if (emailController.text.trim().isEmpty ||
-        !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text.trim())) {
-      setState(() {
-        emailError = 'Please enter a valid email.';
-      });
-      hasError = true;
-    }
-
-    if (passwordController.text.trim().length < 6) {
-      setState(() {
-        passwordError = 'Password must be at least 6 characters long.';
-      });
-      hasError = true;
-    }
-
-    if (selectedCountry == null) {
-      setState(() {
-        countryError = 'Please select a country.';
-      });
-      hasError = true;
-    }
-
-    if (selectedCity == null) {
-      setState(() {
-        cityError = 'Please select a city.';
-      });
-      hasError = true;
-    }
-
-    return hasError;
+  if (userNameController.text.trim().isEmpty) {
+    setState(() {
+      userNameError = 'Please enter a username.';
+    });
+    hasError = true;
   }
+
+  if (displayNameController.text.trim().isEmpty) {
+    setState(() {
+      displayNameError = 'Please enter a display name.';
+    });
+    hasError = true;
+  }
+
+  if (emailController.text.trim().isEmpty ||
+      !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text.trim())) {
+    setState(() {
+      emailError = 'Please enter a valid email.';
+    });
+    hasError = true;
+  }
+
+  String password = passwordController.text.trim();
+  if (password.length < 8 ||
+      !RegExp(r'(?=.*[A-Z])').hasMatch(password) ||  // At least one uppercase
+      !RegExp(r'(?=.*[a-z])').hasMatch(password) ||  // At least one lowercase
+      !RegExp(r'(?=.*\d)').hasMatch(password) ||      // At least one digit
+      !RegExp(r'(?=.*[@$!%*?&])').hasMatch(password) // At least one special char
+  ) {
+    setState(() {
+      passwordError = 'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.';
+    });
+    hasError = true;
+  }
+
+  if (selectedCountry == null) {
+    setState(() {
+      countryError = 'Please select a country.';
+    });
+    hasError = true;
+  }
+
+  if (selectedCity == null) {
+    setState(() {
+      cityError = 'Please select a city.';
+    });
+    hasError = true;
+  }
+
+  return hasError;
+}
 
   Future<void> handleRegister() async {
     if (validateInputs()) {
@@ -208,13 +250,12 @@ class RegisterScreenState extends State<RegisterScreen> {
       appBar: AppBar(title: const Text('Register')),
       body: Stack(
         children: [
-          // Background image with transparency
           Opacity(
             opacity: 0.2,
             child: Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('images/Riyadh.webp'), // Background image
+                  image: AssetImage('images/Riyadh.webp'), 
                   fit: BoxFit.cover,
                 ),
               ),
@@ -229,7 +270,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: displayNameController,
                     decoration: InputDecoration(
-                        labelText: 'Name',
+                        labelText: 'Name*',
                         errorText: displayNameError,
                         suffixIcon: Tooltip(
                           message:
@@ -241,7 +282,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: userNameController,
                     decoration: InputDecoration(
-                        labelText: 'Username',
+                        labelText: 'Username*',
                         errorText: userNameError,
                         suffixIcon: Tooltip(
                           message: 'Choose a unique username.',
@@ -260,7 +301,7 @@ class RegisterScreenState extends State<RegisterScreen> {
                   TextField(
                     controller: emailController,
                     decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: 'Email*',
                         errorText: emailError,
                         suffixIcon: Tooltip(
                           message: 'Enter a valid email address.',
@@ -281,20 +322,31 @@ class RegisterScreenState extends State<RegisterScreen> {
                     controller: passwordController,
                     obscureText: obscureText,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                     labelText: 'Password*',
                       errorText: passwordError,
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscureText ? Icons.visibility : Icons.visibility_off,
                         ),
                         onPressed: () {
-                          setState(() {
-                            obscureText = !obscureText;
-                          });
-                        },
-                      ),
+                        setState(() {
+                          obscureText = !obscureText;
+                        });
+                      },
                     ),
+                   ),
                   ),
+const SizedBox(height: 10),
+Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: [
+    passwordRequirement('At least 8 characters', hasMinLength),
+    passwordRequirement('One uppercase letter', hasUppercase),
+    passwordRequirement('One lowercase letter', hasLowercase),
+    passwordRequirement('One digit', hasDigit),
+    passwordRequirement('One special character', hasSpecialChar),
+  ],
+),
                   const SizedBox(height: 10),
                   DropdownButton<String>(
                     value: selectedCountry,
