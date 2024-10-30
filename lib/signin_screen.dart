@@ -76,9 +76,9 @@ class _SignInScreenState extends State<SignInScreen> {
     }
 
     // Validate password
-    if (passwordController.text.length < 6) {
+    if (passwordController.text.isEmpty) {
       setState(() {
-        passwordError = 'Password must be at least 6 characters long.';
+        passwordError = 'Please enter your password.';
       });
     }
 
@@ -106,7 +106,7 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       } else {
         setState(() {
-          emailError = 'Log in failed. Please check your credentials.';
+          emailError = 'Sign in failed. Please check your email, or password.';
         });
       }
     } catch (e) {

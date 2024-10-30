@@ -78,12 +78,12 @@ Widget passwordRequirement(String text, bool isMet) {
     children: [
       Icon(
         isMet ? Icons.check : Icons.close,
-        color: isMet ? Colors.green : Colors.red,
+        color: isMet ? Colors.green : Colors.black,
       ),
       const SizedBox(width: 5),
       Text(
         text,
-        style: TextStyle(color: isMet ? Colors.green : Colors.red),
+        style: TextStyle(color: isMet ? Colors.green : Colors.black),
       ),
     ],
   );
