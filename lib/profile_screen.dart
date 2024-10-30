@@ -51,8 +51,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Profile'),
+    ),
+          body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
@@ -135,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
-                backgroundColor: const Color.fromARGB(255, 218, 0, 0),
+                backgroundColor: const Color(0xFF800020),
               ),
               child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
             ),
@@ -145,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 //next sprint
               },
               style: TextButton.styleFrom(
-                foregroundColor: Color.fromARGB(255, 184, 57, 57),
+                foregroundColor: Color(0xFF800020),
                 backgroundColor: Color.fromARGB(255, 230, 230, 230),
                 padding: EdgeInsets.symmetric(horizontal: 66, vertical: 8),
                 shape: RoundedRectangleBorder(
