@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'profile_settings.dart'; 
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -20,7 +21,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _usernameController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
-  TextEditingController _newPasswordController = TextEditingController();
 
   String? _imageUrl;
   File? _pickedImage;
@@ -143,7 +143,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // Update user profile in Firestore, including password if provided
+// Update user profile in Firestore
   Future<void> _updateProfile() async {
     if (_formKey.currentState!.validate()) {
       try {
@@ -151,8 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Convert input to lowercase for case-insensitive checking
         String lowerCaseEmail = _emailController.text.trim().toLowerCase();
-        String lowerCaseUsername =
-            _usernameController.text.trim().toLowerCase();
+        String lowerCaseUsername = _usernameController.text.trim().toLowerCase();
 
         // Check if email or username already exists
         QuerySnapshot emailCheck = await _firestore
@@ -185,16 +184,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           await user.updateEmail(lowerCaseEmail);
         }
 
-        // Update password if provided
-        if (_newPasswordController.text.isNotEmpty) {
-          await user!.updatePassword(_newPasswordController.text);
-        }
-
         // Upload new profile picture if selected
         String? profileImageUrl;
         if (_pickedImage != null) {
           final storageRef =
-              _storage.ref().child('profileImages/${user!.uid}.jpg');
+          _storage.ref().child('profileImages/${user!.uid}.jpg');
           await storageRef.putFile(_pickedImage!);
           profileImageUrl = await storageRef.getDownloadURL();
         } else {
@@ -209,9 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Load the current interests from Firestore to check if there is a change
         DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(user!.uid).get();
+        await _firestore.collection('users').doc(user!.uid).get();
         List<String> currentInterests =
-            List<String>.from(userDoc['interests'] ?? []);
+        List<String>.from(userDoc['interests'] ?? []);
 
         // Update Firestore only if interests have changed
         if (newInterests
@@ -242,6 +236,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     }
   }
+
 
   // Subinterest selection widget
   Widget _buildSubInterestSelection(String category, List<String> options) {
@@ -280,6 +275,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Profile'),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.settings), 
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+            );
+          },
+        ),
+      ]
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
@@ -328,17 +334,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a valid username.';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _newPasswordController,
-                decoration: InputDecoration(labelText: 'New Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value != null && value.isNotEmpty && value.length < 6) {
-                    return 'Password must be at least 6 characters.';
                   }
                   return null;
                 },

@@ -114,44 +114,52 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Page options based on _selectedIndex
-    List<Widget> _pages = [
-      NestedScrollView(
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return <Widget>[
-            SliverAppBar(
-              expandedHeight: 300.0,
-              floating: false,
-              pinned: true,
-              stretch: true,
-              flexibleSpace: FlexibleSpaceBar(
-                centerTitle: true,
-                collapseMode: CollapseMode.parallax,
-                background: Image.network(
-                  "https://images.pexels.com/photos/417173/pexels-photo-417173.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-                  fit: BoxFit.cover,
-                ),
+@override
+Widget build(BuildContext context) {
+  List<Widget> _pages = [
+    NestedScrollView(
+      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+        return <Widget>[
+          SliverAppBar(
+            expandedHeight: 300.0,
+            floating: false,
+            pinned: true,
+            stretch: true,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () {
+                  // Handle message icon tap
+                  print("Message icon tapped!");
+                },
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              collapseMode: CollapseMode.parallax,
+              background: Image.network(
+                "https://images.pexels.com/photos/417173/pexels-photo-417173.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+                fit: BoxFit.cover,
               ),
             ),
-            SliverPersistentHeader(
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  labelColor: Color(0xFF800020),
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.rate_review), text: "Reviews"),
-                    Tab(icon: Icon(Icons.place), text: "Places"),
-                  ],
-                ),
+          ),
+          SliverPersistentHeader(
+            delegate: _SliverAppBarDelegate(
+              TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.label,
+                labelColor: Color(0xFF800020),
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(icon: Icon(Icons.rate_review), text: "Reviews"),
+                  Tab(icon: Icon(Icons.place), text: "Places"),
+                ],
               ),
-              pinned: true,
             ),
-          ];
-        },
+            pinned: true,
+          ),
+        ];
+      },
         body: TabBarView(
           controller: _tabController,
           children: [
