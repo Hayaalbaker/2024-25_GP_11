@@ -3,8 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
-import 'home_page.dart'; // Ensure the correct filename is used
-import 'register_screen.dart'; // Import RegisterScreen
+import 'home_page.dart';
+import 'register_screen.dart';
+import 'reset_password.dart'; // Import the new ResetPasswordScreen
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -25,39 +26,6 @@ class _SignInScreenState extends State<SignInScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _resetPassword() async {
-    if (emailController.text.isEmpty ||
-        !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a valid email.')),
-      );
-      return;
-    }
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      await _authService.sendPasswordResetEmail(email: emailController.text.trim());
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password reset email sent.')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
   }
 
   Future<void> _handleLogin() async {
@@ -143,44 +111,54 @@ class _SignInScreenState extends State<SignInScreen> {
                     passwordError: passwordError,
                     isLoading: isLoading,
                     onLogin: _handleLogin,
-                    onResetPassword: _resetPassword,
-                    obscureText: obscureText,
-                    onTogglePasswordVisibility: () {
-                      setState(() {
-                        obscureText = !obscureText;
-                      });
-                    },
-                  ),
-                ],
-              )
-            : Container(
-                padding: const EdgeInsets.all(32.0),
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: Row(
-                  children: [
-                    const Expanded(child: _Logo()),
-                    Expanded(
-                      child: Center(
-                        child: _FormContent(
-                          emailController: emailController,
-                          passwordController: passwordController,
-                          emailError: emailError,
-                          passwordError: passwordError,
-                          isLoading: isLoading,
-                          onLogin: _handleLogin,
-                          onResetPassword: _resetPassword,
-                          obscureText: obscureText,
-                          onTogglePasswordVisibility: () {
-                            setState(() {
-                              obscureText = !obscureText;
-                            });
-                          },
-                        ),
-                      ),
+                      onResetPassword: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ResetPasswordScreen()), // Navigate to ResetPasswordScreen
+                        );
+                      },
+                      obscureText: obscureText,
+                      onTogglePasswordVisibility: () {
+                        setState(() {
+                          obscureText = !obscureText;
+                        });
+                      },
                     ),
                   ],
+                )
+              : Container(
+                  padding: const EdgeInsets.all(32.0),
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Row(
+                    children: [
+                      const Expanded(child: _Logo()),
+                      Expanded(
+                        child: Center(
+                          child: _FormContent(
+                            emailController: emailController,
+                            passwordController: passwordController,
+                            emailError: emailError,
+                            passwordError: passwordError,
+                            isLoading: isLoading,
+                            onLogin: _handleLogin,
+                            onResetPassword: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ResetPasswordScreen()), // Navigate to ResetPasswordScreen
+                              );
+                            },
+                            obscureText: obscureText,
+                            onTogglePasswordVisibility: () {
+                              setState(() {
+                                obscureText = !obscureText;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
         ),
       ),
     );
