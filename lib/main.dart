@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'welcome_screen.dart'; 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_service.dart'; // Import AuthService
+import 'auth_service.dart'; 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,30 +28,29 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
       ),
-      home: AuthenticationWrapper(), // Use AuthenticationWrapper for navigation
-      debugShowCheckedModeBanner: false, // Remove debug banner
+      home: AuthenticationWrapper(), 
+      debugShowCheckedModeBanner: false, 
     );
   }
 }
 
 class AuthenticationWrapper extends StatelessWidget {
-  final AuthService _authService = AuthService(); // Instantiate AuthService
+  final AuthService _authService = AuthService(); 
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
-      stream: _authService.authStateChanges, // Use AuthService's authStateChanges
+      stream: _authService.authStateChanges, 
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           User? user = snapshot.data;
           if (user == null) {
-            return WelcomeScreen(); // Navigate to WelcomeScreen if not logged in
+            return WelcomeScreen(); 
           } else {
-            return HomePage(); // Navigate to HomePage if logged in
+            return HomePage(); 
           }
         }
 
-        // While checking the auth state, show a loading indicator
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );

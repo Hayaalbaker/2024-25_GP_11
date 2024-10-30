@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
-import 'home_page.dart';
-import 'register_screen.dart';
-import 'reset_password.dart'; // Import the new ResetPasswordScreen
+import 'home_page.dart'; 
+import 'register_screen.dart'; 
+import 'reset_password.dart'; 
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -80,7 +80,7 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        emailError = e.toString(); // Update error message
+        emailError = e.toString(); 
       });
     } finally {
       if (mounted) {
@@ -98,25 +98,25 @@ class _SignInScreenState extends State<SignInScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('')),
       body: Center(
-        child: SingleChildScrollView( // Add this line
-        child: isSmallScreen
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _Logo(),
-                  _FormContent(
-                    emailController: emailController,
-                    passwordController: passwordController,
-                    emailError: emailError,
-                    passwordError: passwordError,
-                    isLoading: isLoading,
-                    onLogin: _handleLogin,
+        child: SingleChildScrollView(
+          child: isSmallScreen
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _Logo(),
+                    _FormContent(
+                      emailController: emailController,
+                      passwordController: passwordController,
+                      emailError: emailError,
+                      passwordError: passwordError,
+                      isLoading: isLoading,
+                      onLogin: _handleLogin,
                       onResetPassword: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ResetPasswordScreen()), // Navigate to ResetPasswordScreen
-                        );
-                      },
+                      Navigator.push(
+                       context,
+                        MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+                       );
+                      },         
                       obscureText: obscureText,
                       onTogglePasswordVisibility: () {
                         setState(() {
@@ -142,10 +142,10 @@ class _SignInScreenState extends State<SignInScreen> {
                             isLoading: isLoading,
                             onLogin: _handleLogin,
                             onResetPassword: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => ResetPasswordScreen()), // Navigate to ResetPasswordScreen
-                              );
+                               Navigator.push(
+                                 context,
+                                 MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+                               );
                             },
                             obscureText: obscureText,
                             onTogglePasswordVisibility: () {
@@ -165,7 +165,6 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 }
 
-
 class _Logo extends StatelessWidget {
   const _Logo();
 
@@ -175,9 +174,9 @@ class _Logo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset(
-          'images/Logo.png', // Change this to your logo's path
-          width: 200, // You can adjust the size as needed
-          height: 200, // Adjust the height if necessary
+          'images/Logo.png', 
+          width: 200, 
+          height: 200, 
         ),
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -258,9 +257,12 @@ class _FormContent extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                // Navigate to register screen
-              },
-              child: const Text('Don\'t have an account? Register'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  );
+                },
+                child: const Text('Don\'t have an account? Register'),
             ),
           ],
         ),
