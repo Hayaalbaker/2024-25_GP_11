@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
 import 'interests_screen.dart';
+import 'signin_screen.dart'; 
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -73,7 +74,7 @@ void initState() {
     });
   });
 }
-Widget passwordRequirement(String text, bool isMet) {
+Widget passwordRequirement(String text, bool isMet, {double fontSize = 14}) {
   return Row(
     children: [
       Icon(
@@ -128,10 +129,10 @@ bool validateInputs() {
 
   String password = passwordController.text.trim();
   if (password.length < 8 ||
-      !RegExp(r'(?=.*[A-Z])').hasMatch(password) ||  // At least one uppercase
-      !RegExp(r'(?=.*[a-z])').hasMatch(password) ||  // At least one lowercase
-      !RegExp(r'(?=.*\d)').hasMatch(password) ||      // At least one digit
-      !RegExp(r'(?=.*[@$!%*?&])').hasMatch(password) // At least one special char
+      !RegExp(r'(?=.*[A-Z])').hasMatch(password) ||  
+      !RegExp(r'(?=.*[a-z])').hasMatch(password) || 
+      !RegExp(r'(?=.*\d)').hasMatch(password) ||     
+      !RegExp(r'(?=.*[@$!%*?&])').hasMatch(password) 
   ) {
     setState(() {
       passwordError = 'Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.';
@@ -242,199 +243,222 @@ bool validateInputs() {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    bool showLocalGuideCheckbox = selectedCity == 'Riyadh';
+@override
+Widget build(BuildContext context) {
+  bool showLocalGuideCheckbox = selectedCity == 'Riyadh';
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: Stack(
-        children: [
-          Opacity(
-            opacity: 0.2,
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('images/Riyadh.webp'), 
-                  fit: BoxFit.cover,
-                ),
+  return Scaffold(
+    appBar: null, 
+    body: Stack(
+      children: [
+        Opacity(
+          opacity: 0.2,
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('images/Riyadh.webp'),
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  TextField(
-                    controller: displayNameController,
-                    decoration: InputDecoration(
-                        labelText: 'Name*',
-                        errorText: displayNameError,
-                        suffixIcon: Tooltip(
-                          message:
-                              'This will be your display name, visible to others on the platform. You can use a nickname or any name you’d like',
-                          child: Icon(Icons.info_outline),
-                        )),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: userNameController,
-                    decoration: InputDecoration(
-                        labelText: 'Username*',
-                        errorText: userNameError,
-                        suffixIcon: Tooltip(
-                          message: 'Choose a unique username.',
-                          child: Icon(Icons.info_outline),
-                        )),
-                  ),
-                  if (userNameError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5.0),
-                      child: Text(
-                        userNameError!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 90), 
+                const Text(
+                  "Let's get started",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Please register to sign in",
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                const SizedBox(height: 20), 
+                TextField(
+                  controller: displayNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name*',
+                    errorText: displayNameError,
+                    suffixIcon: Tooltip(
+                      message: 'This will be your display name, visible to others on the platform. You can use a nickname or any name you’d like',
+                      child: Icon(Icons.info_outline),
                     ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                        labelText: 'Email*',
-                        errorText: emailError,
-                        suffixIcon: Tooltip(
-                          message: 'Enter a valid email address.',
-                          child: Icon(Icons.info_outline),
-                        )),
-                    keyboardType: TextInputType.emailAddress,
                   ),
-                  if (emailError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5.0),
-                      child: Text(
-                        emailError!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: userNameController,
+                  decoration: InputDecoration(
+                    labelText: 'Username*',
+                    errorText: userNameError,
+                    suffixIcon: Tooltip(
+                      message: 'Choose a unique username.',
+                      child: Icon(Icons.info_outline),
+                    )),
+                ),
+                if (userNameError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: Text(
+                      userNameError!,
+                      style: const TextStyle(color: Colors.red),
                     ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: obscureText,
-                    decoration: InputDecoration(
-                     labelText: 'Password*',
-                      errorText: passwordError,
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscureText ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () {
+                  ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email*',
+                    errorText: emailError,
+                    suffixIcon: Tooltip(
+                      message: 'Enter a valid email address.',
+                      child: Icon(Icons.info_outline),
+                    )),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                if (emailError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: Text(
+                      emailError!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscureText,
+                  decoration: InputDecoration(
+                    labelText: 'Password*',
+                    errorText: passwordError,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscureText ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
                         setState(() {
                           obscureText = !obscureText;
                         });
                       },
                     ),
-                   ),
                   ),
-const SizedBox(height: 10),
-Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    passwordRequirement('At least 8 characters', hasMinLength),
-    passwordRequirement('One uppercase letter', hasUppercase),
-    passwordRequirement('One lowercase letter', hasLowercase),
-    passwordRequirement('One digit', hasDigit),
-    passwordRequirement('One special character', hasSpecialChar),
-  ],
-),
-                  const SizedBox(height: 10),
-                  DropdownButton<String>(
-                    value: selectedCountry,
-                    hint: const Text('Select Country'),
-                    isExpanded: true,
-                    items: countries.map((String country) {
-                      return DropdownMenuItem<String>(
-                        value: country,
-                        child: Text(country),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedCountry = newValue;
-                        selectedCity = null;
-                        countryError = null;
-                        isLocalGuide = false;
-                      });
-                    },
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    passwordRequirement('At least 8 characters', hasMinLength, fontSize: 12),
+                    passwordRequirement('One uppercase letter', hasUppercase, fontSize: 12),
+                    passwordRequirement('One lowercase letter', hasLowercase, fontSize: 12),
+                    passwordRequirement('One digit', hasDigit, fontSize: 12),
+                    passwordRequirement('One special character', hasSpecialChar, fontSize: 12),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                DropdownButton<String>(
+                  value: selectedCountry,
+                  hint: const Text('Select Country'),
+                  isExpanded: true,
+                  items: countries.map((String country) {
+                    return DropdownMenuItem<String>(
+                      value: country,
+                      child: Text(country),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCountry = newValue;
+                      selectedCity = null;
+                      countryError = null;
+                      isLocalGuide = false;
+                    });
+                  },
+                ),
+                if (countryError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: Text(
+                      countryError!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   ),
-                  if (countryError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5.0),
-                      child: Text(
-                        countryError!,
-                        style: const TextStyle(color: Colors.red),
+                const SizedBox(height: 10),
+                DropdownButton<String>(
+                  value: selectedCity,
+                  hint: const Text('Select City'),
+                  isExpanded: true,
+                  items: selectedCountry == null
+                      ? []
+                      : cities[selectedCountry!]!.map((String city) {
+                          return DropdownMenuItem<String>(
+                            value: city,
+                            child: Text(city),
+                          );
+                        }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedCity = newValue;
+                      cityError = null;
+                    });
+                  },
+                ),
+                if (cityError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: Text(
+                      cityError!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                if (showLocalGuideCheckbox)
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: isLocalGuide,
+                        onChanged: (bool? value) {
+                          setState(() {
+                            isLocalGuide = value ?? false;
+                          });
+                        },
                       ),
-                    ),
-                  const SizedBox(height: 10),
-                  DropdownButton<String>(
-                    value: selectedCity,
-                    hint: const Text('Select City'),
-                    isExpanded: true,
-                    items: selectedCountry == null
-                        ? []
-                        : cities[selectedCountry!]!.map((String city) {
-                            return DropdownMenuItem<String>(
-                              value: city,
-                              child: Text(city),
-                            );
-                          }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedCity = newValue;
-                        cityError = null;
-                      });
-                    },
+                      const Text('I agree to be a local guide'),
+                      Tooltip(
+                        message:
+                            'By agreeing to be a local guide, you’ll be recommended to other users for messaging and assistance. You may be contacted to provide guidance or help within your selected city ',
+                        child: Icon(Icons.info_outline),
+                      )
+                    ],
                   ),
-                  if (cityError != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 5.0),
-                      child: Text(
-                        cityError!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  const SizedBox(height: 10),
-                  if (showLocalGuideCheckbox)
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: isLocalGuide,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              isLocalGuide = value ?? false;
-                            });
-                          },
-                        ),
-                        const Text('I agree to be a local guide'),
-                        Tooltip(
-                          message:
-                              'By agreeing to be a local guide, you’ll be recommended to other users for messaging and assistance. You may be contacted to provide guidance or help within your selected city ',
-                          child: Icon(Icons.info_outline),
-                        )
-                      ],
-                    ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: isLoading ? null : handleRegister,
-                    child: isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Register'),
-                  ),
-                ],
-              ),
+                  SizedBox(
+                    width: 250, 
+                    height: 50, 
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : handleRegister,
+                      child: isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Register', style: TextStyle(fontSize: 18)), 
+                      ),
+                    ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignInScreen()),
+                    );
+                  },
+                  child: const Text('Already have an account? Sign In'),
+                ),
+              ],
             ),
           ),
-        ],
+     ) ],
       ),
     );
   }

@@ -249,7 +249,7 @@ class _FormContent extends StatelessWidget {
                 ? CircularProgressIndicator()
                 : ElevatedButton(
                     onPressed: onLogin,
-                    child: const Text('Login'),
+                    child: const Text('Sign In'),
                   ),
             TextButton(
               onPressed: onResetPassword,
