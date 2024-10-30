@@ -125,68 +125,166 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSmallScreen = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign In')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView( // Prevent overflow on smaller screens
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Email Field
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  errorText: emailError, // Show error message here
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 10),
-              // Password Field
-              TextField(
-                controller: passwordController,
-                obscureText: obscureText,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  errorText: passwordError, // Show error message here
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscureText ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
+      appBar: AppBar(title: const Text('')),
+      body: Center(
+        child: SingleChildScrollView( // Add this line
+        child: isSmallScreen
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _Logo(),
+                  _FormContent(
+                    emailController: emailController,
+                    passwordController: passwordController,
+                    emailError: emailError,
+                    passwordError: passwordError,
+                    isLoading: isLoading,
+                    onLogin: _handleLogin,
+                    onResetPassword: _resetPassword,
+                    obscureText: obscureText,
+                    onTogglePasswordVisibility: () {
                       setState(() {
                         obscureText = !obscureText;
                       });
                     },
                   ),
+                ],
+              )
+            : Container(
+                padding: const EdgeInsets.all(32.0),
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: Row(
+                  children: [
+                    const Expanded(child: _Logo()),
+                    Expanded(
+                      child: Center(
+                        child: _FormContent(
+                          emailController: emailController,
+                          passwordController: passwordController,
+                          emailError: emailError,
+                          passwordError: passwordError,
+                          isLoading: isLoading,
+                          onLogin: _handleLogin,
+                          onResetPassword: _resetPassword,
+                          obscureText: obscureText,
+                          onTogglePasswordVisibility: () {
+                            setState(() {
+                              obscureText = !obscureText;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 20),
-              // Login Button
-              isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _handleLogin,
-                      child: const Text('Login'),
-                    ),
-              // Forgot Password Button
-              TextButton(
-                onPressed: _resetPassword,
-                child: const Text('Forgot Password?'),
-              ),
-              // Register Button
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => RegisterScreen()),
-                  );
-                },
-                child: const Text('Don\'t have an account? Register'),
-              ),
-            ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _Logo extends StatelessWidget {
+  const _Logo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Image.asset(
+          'images/Logo.png', // Change this to your logo's path
+          width: 200, // You can adjust the size as needed
+          height: 200, // Adjust the height if necessary
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Welcome to Localize!",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FormContent extends StatelessWidget {
+  const _FormContent({
+    required this.emailController,
+    required this.passwordController,
+    this.emailError,
+    this.passwordError,
+    required this.isLoading,
+    required this.onLogin,
+    required this.onResetPassword,
+    required this.obscureText,
+    required this.onTogglePasswordVisibility,
+  });
+
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final String? emailError;
+  final String? passwordError;
+  final bool isLoading;
+  final VoidCallback onLogin;
+  final VoidCallback onResetPassword;
+  final bool obscureText;
+  final VoidCallback onTogglePasswordVisibility;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: Form(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                errorText: emailError,
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: passwordController,
+              obscureText: obscureText,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                errorText: passwordError,
+                suffixIcon: IconButton(
+                  icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
+                  onPressed: onTogglePasswordVisibility,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: onLogin,
+                    child: const Text('Login'),
+                  ),
+            TextButton(
+              onPressed: onResetPassword,
+              child: const Text('Forgot Password?'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigate to register screen
+              },
+              child: const Text('Don\'t have an account? Register'),
+            ),
+          ],
         ),
       ),
     );
