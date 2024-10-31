@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'reset_password.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'signin_screen.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
+  // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
+    // ignore: unused_field
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -60,21 +63,40 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
   String? _selectedCountry;
   String? _selectedCity;
 
+  bool _hasUnsavedChanges = false;
+
+  final Map<String, List<String>> cities = {
+    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Mecca', 'Medina'],
+    'Egypt': ['Cairo', 'Alexandria', 'Giza'],
+    'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah'],
+    'Kuwait': ['Kuwait City', 'Salmiya', 'Hawalli'],
+  };
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _usernameController.addListener(_onFieldChanged);
+    _emailController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    setState(() {
+      _hasUnsavedChanges = true;
+    });
   }
 
   void _loadUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
       setState(() {
         _usernameController.text = userDoc['user_name'] ?? '';
         _emailController.text = user.email ?? '';
         _selectedCountry = userDoc['country'];
         _selectedCity = userDoc['city'];
+        _hasUnsavedChanges = false; // Reset when data is loaded
       });
     }
   }
@@ -88,68 +110,136 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         'country': _selectedCountry,
         'city': _selectedCity,
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Information updated!')));
+      setState(() {
+        _hasUnsavedChanges = false;
+      });
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Information updated!')));
     }
+  }
+
+  Future<bool> _onWillPop() async {
+    if (_hasUnsavedChanges) {
+      final shouldDiscard = await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Unsaved Changes'),
+            content: Text('You have unsaved changes. Do you want to discard them?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false), // Stay
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true), // Discard
+                child: Text('Discard'),
+              ),
+            ],
+          );
+        },
+      );
+      return shouldDiscard ?? false;
+    }
+    return true;
+  }
+
+  void _signOut() async {
+    await _auth.signOut();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => SignInScreen()),
+      (route) => false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Account Information"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
-            ),
-            // Add Country and City Selection
-            DropdownButton<String>(
-              value: _selectedCountry,
-              hint: Text('Select Country'),
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedCountry = newValue;
-                });
-              },
-              items: ['Saudi Arabia', 'Egypt', 'United Arab Emirates', 'Kuwait']
-                  .map((country) => DropdownMenuItem(
-                        value: country,
-                        child: Text(country),
-                      ))
-                  .toList(),
-            ),
-            DropdownButton<String>(
-              value: _selectedCity,
-              hint: Text('Select City'),
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedCity = newValue;
-                });
-              },
-              items: _selectedCountry != null
-                  ? ['City1', 'City2'] // Populate based on selected country
-                      .map((city) => DropdownMenuItem(
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Account Information"),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(labelText: 'Username'),
+              ),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(labelText: 'Email'),
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedCountry,
+                  hint: Text('Select Country'),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCountry = newValue;
+                      _selectedCity = null;
+                      _hasUnsavedChanges = true;
+                    });
+                  },
+                  items: ['Saudi Arabia', 'Egypt', 'United Arab Emirates', 'Kuwait']
+                      .map((country) => DropdownMenuItem(
+                            value: country,
+                            child: Text(country),
+                          ))
+                      .toList(),
+                ),
+              ),
+              SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: DropdownButton<String>(
+                  isExpanded: true,
+                  value: _selectedCity,
+                  hint: Text('Select City'),
+                  onChanged: (newValue) {
+                    setState(() {
+                      _selectedCity = newValue;
+                      _hasUnsavedChanges = true;
+                    });
+                  },
+                  items: _selectedCountry != null
+                      ? cities[_selectedCountry]!.map((city) => DropdownMenuItem(
                             value: city,
                             child: Text(city),
-                          ))
-                      .toList()
-                  : [],
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _updateUserInfo,
-              child: Text('Update Information'),
-            ),
-          ],
+                          )).toList()
+                      : [],
+                ),
+              ),
+              SizedBox(height: 20),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _updateUserInfo,
+                  child: Text('Update Information'),
+                ),
+              ),
+              SizedBox(height: 20),
+              Center(
+                child: GestureDetector(
+                  onTap: _signOut,
+                  child: Text(
+                    'Sign Out',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
