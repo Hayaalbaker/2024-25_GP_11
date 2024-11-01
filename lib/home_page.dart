@@ -7,7 +7,7 @@ import 'welcome_screen.dart'; // Import the welcome screen
 import 'package:firebase_auth/firebase_auth.dart';
 import 'places_widget.dart'; // Import the Places widget
 import 'profile_screen.dart'; // Import the profile screen
-
+import 'review_widget.dart';
 void main() {
   runApp(MyApp());
 }
@@ -125,6 +125,7 @@ Widget build(BuildContext context) {
             floating: false,
             pinned: true,
             stretch: true,
+            automaticallyImplyLeading: false,
             actions: [
               IconButton(
                 icon: Icon(Icons.send),
@@ -163,7 +164,7 @@ Widget build(BuildContext context) {
         body: TabBarView(
           controller: _tabController,
           children: [
-            Center(child: Text("Reviews Content", textAlign: TextAlign.center)), // Replace with actual reviews content
+            Review_widget(), // Replace with actual reviews content
             Places_widget(), // Display the Places widget here
           ],
         ),

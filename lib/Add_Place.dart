@@ -38,6 +38,9 @@ class _PlaceFormState extends State<PlaceForm> {
   String? subcategory;
   bool isLoading = false;
   String userID = '';
+
+  TextEditingController _placeNameController = TextEditingController();
+  TextEditingController _categoryController = TextEditingController();
 // Main categories for the first dropdown
   final List<String> mainCategories = [
     'Restaurants',
@@ -122,10 +125,78 @@ class _PlaceFormState extends State<PlaceForm> {
     });
   }
 
+
+
+
+// Update user profile in Firestore
+  Future<void> checkPlace() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      try {
+      //  User? user = _auth.currentUser;
+          DocumentReference newPlaceRef = FirebaseFirestore.instance.collection('places').doc();
+        // Convert input to lowercase for case-insensitive checking
+        String lowerCasePlaceName = placeName.trim().toLowerCase();
+        String lowerCaseCategory = category.trim().toLowerCase();
+
+        // Check if email or username already exists
+        QuerySnapshot placeNameCheck = await FirebaseFirestore.instance
+            .collection('places')
+            .where('place_name', isEqualTo: lowerCasePlaceName)
+            .get();
+        QuerySnapshot categoryCheck = await FirebaseFirestore.instance
+            .collection('places')
+            .where('category', isEqualTo: lowerCaseCategory)
+            .get();
+
+        // Check if the email already exists and does not belong to the current user
+        if (placeNameCheck.docs.isNotEmpty &&
+            categoryCheck.docs.isNotEmpty) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('cant add the place becouse it is already exists. please add other one ')));
+          return;
+        }else{
+
+                    newPlaceRef.set({
+                      'placeId': newPlaceRef.id, // Save the generated place ID
+                      'place_name': placeName,
+                      'description': description,
+                      'location': location,
+                      'category': category,
+                      'subcategory': subcategory, // Save selected subcategory
+                      'created_at': FieldValue.serverTimestamp(),
+                      'Neighborhood': Neighborhood,
+                      'Street': Street,
+                      'user_uid': userID,
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Place Added: $placeName Successfully!'),
+                    )
+                    
+                    );
+                                        Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              HomePage()), // Ensure this points to your AddPlacePage
+                    );
+
+        }
+
+
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update profile: $e')));
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-            appBar: AppBar(
+      appBar: AppBar(
         title: Text("Add a Place"),
         centerTitle: true,
         actions: [
@@ -143,9 +214,6 @@ class _PlaceFormState extends State<PlaceForm> {
           ),
         ],
       ),
-
-
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -290,87 +358,18 @@ class _PlaceFormState extends State<PlaceForm> {
 
               SizedBox(height: 20),
 
+
+
               ElevatedButton(
-                onPressed: () {
-                  //check_values= await checkAndDisplayResult( placeName,  category);
-
-               /*   checkAndDisplayResult(placeName, category);
-                  if (check_values) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                          'cant add the place becouse the Place name: $placeName, and the category: $category is already added'),
-                    ));
-                  } else {*/
-                    if (_formKey.currentState!.validate()) {
-                      _formKey.currentState!.save();
-
-                      DocumentReference newPlaceRef =
-                          FirebaseFirestore.instance.collection('places').doc();
-
-                      newPlaceRef.set({
-                        'placeId':
-                            newPlaceRef.id, // Save the generated place ID
-                        'place_name': placeName,
-                        'description': description,
-                        'location': location,
-                        'category': category,
-                        'subcategory': subcategory, // Save selected subcategory
-                        'created_at': FieldValue.serverTimestamp(),
-                        'Neighborhood': Neighborhood,
-                        'Street': Street,
-                        'user_uid': userID,
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content:
-                            Text('Place Added: $placeName Successfully!'),
-                      ));
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                HomePage()), // Ensure this points to your AddPlacePage
-                      );
-                    }
-                 // }
-                },
+                onPressed: checkPlace,
                 child: Text('Add Place'),
+                
               ),
+
             ],
           ),
         ),
       ),
     );
-  }
-
-  Future<bool> isNameExists(String name) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('places') // replace with your collection name
-        .where('Place_Name', isEqualTo: name)
-        .get();
-
-    // Check if any documents exist with the matching name
-    return querySnapshot.docs.isNotEmpty;
-  }
-
-  Future<bool> isCategoryExists(String category) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('places') // replace with your collection name
-        .where('Category', isEqualTo: category)
-        .get();
-
-    // Check if any documents exist with the matching name
-    return querySnapshot.docs.isNotEmpty;
-  }
-
-  void checkAndDisplayResult(String name, String category) async {
-    bool nameExists = await isNameExists(name);
-    bool nameExists2 = await isCategoryExists(category);
-
-    if (nameExists && nameExists2) {
-      check_values = true;
-    } else {
-      check_values = false;
-    }
   }
 }
