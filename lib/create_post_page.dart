@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'database.dart';
 import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:info_popup/info_popup.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 /*class CreatePostPage extends StatelessWidget {
