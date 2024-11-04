@@ -14,13 +14,15 @@ A mobile Android app designed to redefine Saudi tourism by incorporating artific
 
 ## 🔧 Technologies Used
 
-- **Programming Language**: Python
-- **Frontend**: Flutter (Dart)
-- **Backend**: Python
-- **Database:** Firebase (NoSQL database)
-- **AI Integration:** 
-- **Development Environment:** VS Code
-- **Version Control:** Git and GitHub
+| Technology           | Description                          |
+|----------------------|--------------------------------------|
+| ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) | Backend logic and AI integration |
+| ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=flat&logo=flutter&logoColor=white) | Frontend development |
+| ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=white) | NoSQL database and user authentication |
+| ![Dart](https://img.shields.io/badge/Dart-0175C2?style=flat&logo=dart&logoColor=white) | Core programming language for Flutter |
+| ![VS Code](https://img.shields.io/badge/VS%20Code-007ACC?style=flat&logo=visual-studio-code&logoColor=white) | Development environment |
+| ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=git&logoColor=white) & ![GitHub](https://img.shields.io/badge/GitHub-181717?style=flat&logo=github&logoColor=white) | Version control |
+
 
 
 > **In tech, localization is crucial:** It involves adapting software, apps, and services to the language, culture, and needs of a specific region, something *Localize* excels at by personalizing trips for different places.
