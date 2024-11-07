@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 class ViewPlace extends StatefulWidget {
   @override
   final String place_Id; // Declare the final property
@@ -14,21 +15,17 @@ class ViewPlace extends StatefulWidget {
 }
 
 class _PlaceScreenState extends State<ViewPlace> {
-  // String placeId='0';
-    //_PlaceScreenState() : super(placeId: "12345");
-
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String _placeName = '';
-  String _description = 'description'; // Default values to avoid null issues
+  String _description = 'description';
   String _location = 'location';
   String _category = 'category';
   String _subcategory = 'subcategory';
-  //Timestamp _created_at ; // Default values to avoid null issues
   String _neighborhood = 'Neighborhood';
   String _street = 'Street';
-
+  String _imageUrl = ''; // To store the image URL
 
   @override
   void initState() {
@@ -37,35 +34,28 @@ class _PlaceScreenState extends State<ViewPlace> {
   }
 
   void _loadPlaceProfile() async {
-   // place? place = _auth.currentUser;
-    //if (place != null) {
-      try {
-          String placeId = widget.place_Id;
-        DocumentSnapshot placeDoc =
-            await _firestore.collection('places').doc(placeId).get();
-        if (placeDoc.exists) {
-          setState(() {
-            var data = placeDoc.data() as Map<String, dynamic>;
-            _placeName =   data['place_name'];
-            _description = data['description'] ?? ' description';
-            _location = data['location'] ?? 'location';
-            _category =   data['category'] ?? 'category';
-            _subcategory =   data['subcategory'];
-          //  _created_at =   data['created_at'];
-            _neighborhood =   data['Neighborhood'];
-            _street =   data['Street'];
-          });
-        }
-      } catch (e) {
-        // Handle errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load profile: $e')),
-        );
+    try {
+      String placeId = widget.place_Id;
+      DocumentSnapshot placeDoc = await _firestore.collection('places').doc(placeId).get();
+      if (placeDoc.exists) {
+        setState(() {
+          var data = placeDoc.data() as Map<String, dynamic>;
+          _placeName = data['place_name'];
+          _description = data['description'] ?? 'description';
+          _location = data['location'] ?? 'location';
+          _category = data['category'] ?? 'category';
+          _subcategory = data['subcategory'] ?? 'subcategory';
+          _neighborhood = data['Neighborhood'] ?? 'Neighborhood';
+          _street = data['Street'] ?? 'Street';
+          _imageUrl = data['imageUrl'] ?? ''; // Get the image URL
+        });
       }
-   // }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load profile: $e')));
+    }
   }
 
-   void _launchLocation(String url) async {
+  void _launchLocation(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -76,9 +66,6 @@ class _PlaceScreenState extends State<ViewPlace> {
 
   @override
   Widget build(BuildContext context) {
- // Format the date
-    //final String formattedDate = _created_at;
-
     return Scaffold(
       appBar: AppBar(
         title: Text("Place Details"),
@@ -89,13 +76,16 @@ class _PlaceScreenState extends State<ViewPlace> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _imageUrl.isNotEmpty
+                ? Image.network(_imageUrl) // Display the image if available
+                : Icon(Icons.image, size: 150), // Placeholder if no image
+            SizedBox(height: 16),
             _buildDetailItem("Place Name:", _placeName),
             _buildDetailItem("Description:", _description),
             _buildDetailItem("Category:", _category),
             _buildDetailItem("Subcategory:", _subcategory),
             _buildDetailItem("Neighborhood:", _neighborhood),
             _buildDetailItem("Street:", _street),
-         //   _buildDetailItem("Created At:", formattedDate),
             _buildLocationLink("Location:", _location),
           ],
         ),
@@ -103,7 +93,7 @@ class _PlaceScreenState extends State<ViewPlace> {
     );
   }
 
- Widget _buildDetailItem(String label, String value) {
+  Widget _buildDetailItem(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -113,13 +103,12 @@ class _PlaceScreenState extends State<ViewPlace> {
             "$label ",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
-          Expanded(child: Text(value,  style: TextStyle(fontSize: 18),) ),
+          Expanded(child: Text(value, style: TextStyle(fontSize: 18))),
         ],
       ),
     );
   }
 
-  // Widget for the location link
   Widget _buildLocationLink(String label, String url) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -130,7 +119,7 @@ class _PlaceScreenState extends State<ViewPlace> {
             "$label ",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
           ),
-   Flexible( // Use Flexible to allow wrapping
+          Flexible(
             child: GestureDetector(
               onTap: () => _launchLocation(url),
               child: Text(
@@ -139,8 +128,8 @@ class _PlaceScreenState extends State<ViewPlace> {
                   color: Colors.blue,
                   decoration: TextDecoration.underline,
                 ),
-                softWrap: true, // Ensure text wraps
-                overflow: TextOverflow.visible, // Handle overflow
+                softWrap: true,
+                overflow: TextOverflow.visible,
               ),
             ),
           ),
@@ -148,7 +137,4 @@ class _PlaceScreenState extends State<ViewPlace> {
       ),
     );
   }
-
-
-
 }
