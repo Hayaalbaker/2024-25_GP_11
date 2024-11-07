@@ -3,6 +3,7 @@ import 'reset_password.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signin_screen.dart';
+import 'delete_user.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
   // ignore: unused_field
@@ -39,8 +40,10 @@ class ProfileSettingsPage extends StatelessWidget {
           ListTile(
             title: Text("Delete your account"),
             onTap: () {
-              // Handle delete account logic here
-              print("Delete account tapped");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DeleteAccountConfirmationPage()),
+              );
             },
           ),
         ],
