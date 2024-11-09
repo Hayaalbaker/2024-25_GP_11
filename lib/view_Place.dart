@@ -1,20 +1,19 @@
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'review_widget.dart';
 
 class ViewPlace extends StatefulWidget {
-  @override
-  final String place_Id; // Declare the final property
+  final String place_Id;
 
-  // Constructor with required parameter
   const ViewPlace({super.key, required this.place_Id});
- // placeId = ModalRoute.of(context)!.settings.arguments as String;
+
   @override
   _PlaceScreenState createState() => _PlaceScreenState();
 }
 
-class _PlaceScreenState extends State<ViewPlace> {
+class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -25,12 +24,21 @@ class _PlaceScreenState extends State<ViewPlace> {
   String _subcategory = 'subcategory';
   String _neighborhood = 'Neighborhood';
   String _street = 'Street';
-  String _imageUrl = ''; // To store the image URL
+  String _imageUrl = '';
+
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadPlaceProfile();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   void _loadPlaceProfile() async {
@@ -47,7 +55,7 @@ class _PlaceScreenState extends State<ViewPlace> {
           _subcategory = data['subcategory'] ?? 'subcategory';
           _neighborhood = data['Neighborhood'] ?? 'Neighborhood';
           _street = data['Street'] ?? 'Street';
-          _imageUrl = data['imageUrl'] ?? ''; // Get the image URL
+          _imageUrl = data['imageUrl'] ?? '';
         });
       }
     } catch (e) {
@@ -68,27 +76,63 @@ class _PlaceScreenState extends State<ViewPlace> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Place Details"),
+        title: Text(_placeName),
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF800020),
       ),
-      backgroundColor: const Color.fromARGB(255, 239, 215, 215),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _imageUrl.isNotEmpty
-                ? Image.network(_imageUrl) // Display the image if available
-                : Icon(Icons.image, size: 150), // Placeholder if no image
-            SizedBox(height: 16),
-            _buildDetailItem("Place Name:", _placeName),
-            _buildDetailItem("Description:", _description),
-            _buildDetailItem("Category:", _category),
-            _buildDetailItem("Subcategory:", _subcategory),
-            _buildDetailItem("Neighborhood:", _neighborhood),
-            _buildDetailItem("Street:", _street),
-            _buildLocationLink("Location:", _location),
-          ],
-        ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          _imageUrl.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    _imageUrl,
+                    height: 250,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Icon(Icons.image, size: 150, color: Colors.grey),
+
+          SizedBox(height: 16),
+
+          // Tab bar below the image
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(text: "Overview"),
+              Tab(text: "Reviews"),
+            ],
+          ),
+
+          // Expanded TabBarView
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Overview Tab
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailItem("", _description),
+                      _buildDetailItem("Category:", _category),
+                      _buildDetailItem("Subcategory:", _subcategory),
+                      _buildDetailItem("Neighborhood:", _neighborhood),
+                      _buildDetailItem("Street:", _street),
+                      _buildLocationLink("Location:", _location),
+                    ],
+                  ),
+                ),
+                // Reviews Tab with the reusable Review_widget
+                // Should be changed later to filer only the place reviews
+                Review_widget(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -101,9 +145,15 @@ class _PlaceScreenState extends State<ViewPlace> {
         children: [
           Text(
             "$label ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
           ),
-          Expanded(child: Text(value, style: TextStyle(fontSize: 18))),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 16, color: Colors.black.withOpacity(0.7)),
+              softWrap: true,
+            ),
+          ),
         ],
       ),
     );
@@ -117,7 +167,7 @@ class _PlaceScreenState extends State<ViewPlace> {
         children: [
           Text(
             "$label ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
           ),
           Flexible(
             child: GestureDetector(
@@ -125,7 +175,8 @@ class _PlaceScreenState extends State<ViewPlace> {
               child: Text(
                 url,
                 style: TextStyle(
-                  color: Colors.blue,
+                  color: Colors.blueAccent,
+                  fontSize: 16,
                   decoration: TextDecoration.underline,
                 ),
                 softWrap: true,
