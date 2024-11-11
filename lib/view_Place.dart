@@ -16,7 +16,7 @@ class ViewPlace extends StatefulWidget {
 class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+  String? placeId ;
   String _placeName = '';
   String _description = 'description';
   String _location = 'location';
@@ -43,7 +43,9 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
 
   void _loadPlaceProfile() async {
     try {
-      String placeId = widget.place_Id;
+       placeId = widget.place_Id;
+                                     debugPrint('here  ViewPlace');
+              debugPrint('here  placeId: '+placeId!);
       DocumentSnapshot placeDoc = await _firestore.collection('places').doc(placeId).get();
       if (placeDoc.exists) {
         setState(() {
@@ -128,7 +130,8 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
                 ),
                 // Reviews Tab with the reusable Review_widget
                 // Should be changed later to filer only the place reviews
-                Review_widget(),
+
+                Review_widget(place_Id:placeId),
               ],
             ),
           ),

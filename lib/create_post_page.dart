@@ -5,13 +5,13 @@ import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
+
 /*class CreatePostPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(child: Text('Create Post Page'));
   }
 }*/
-
 
 void main() {
   runApp(CreatePostPage());
@@ -37,23 +37,19 @@ class ReviewForm extends StatefulWidget {
 
 class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
-  String ReviewText ='';
-  String PostDate ='';
-  int LikeCount =0;
-   int Rating = 1; 
-  String placeId ='';
-  String user_uid='';
-final TextEditingController _reviewController = TextEditingController();
-
-
+  String ReviewText = '';
+  String PostDate = '';
+  List<String>? LikeCount;
+  int Rating = 1;
+  String placeId = '';
+  String user_uid = '';
+  final TextEditingController _reviewController = TextEditingController();
 
   bool isLoading = false;
- 
 
   List<Map<String, String>> places = [];
   String? selectedPlaceName;
   String? selectedPlaceId;
-
 
   final FirestoreService _firestoreService =
       FirestoreService(); // Create an instance of FirestoreService
@@ -94,7 +90,8 @@ final TextEditingController _reviewController = TextEditingController();
 
   Future<void> fetchPlaces() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection('places').get();
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('places').get();
       setState(() {
         places = querySnapshot.docs.map((doc) {
           return {
@@ -102,7 +99,7 @@ final TextEditingController _reviewController = TextEditingController();
             'name': doc['place_name'] as String,
           };
         }).toList();
-         selectedPlaceName = places.isNotEmpty ? null : selectedPlaceName;
+        selectedPlaceName = places.isNotEmpty ? null : selectedPlaceName;
       });
     } catch (e) {
       print('Error fetching places: $e');
@@ -110,40 +107,40 @@ final TextEditingController _reviewController = TextEditingController();
   }
 
   Future<void> saveReview() async {
-  if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-    _formKey.currentState!.save();
-    try {
-      // Reference to the 'reviews' collection in Firestore
-      DocumentReference newReviewRef = FirebaseFirestore.instance.collection('Review').doc();
-      
-      // Save the review details to Firestore
-      await newReviewRef.set({
-        'Review_Text': ReviewText,
-        'user_uid': user_uid,
-        'placeId': selectedPlaceId, // ID of the selected place from dropdown
-        'Rating': Rating,
-        'Post_Date': FieldValue.serverTimestamp(),
-        'Like_count':LikeCount,
-      });
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      try {
+        // Reference to the 'reviews' collection in Firestore
+        DocumentReference newReviewRef =
+            FirebaseFirestore.instance.collection('Review').doc();
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Review posted successfully!'),
-      ));
+        // Save the review details to Firestore
+        await newReviewRef.set({
+          'Review_Text': ReviewText,
+          'user_uid': user_uid,
+          'placeId': selectedPlaceId, // ID of the selected place from dropdown
+          'Rating': Rating,
+          'Post_Date': FieldValue.serverTimestamp(),
+          'Like_count': LikeCount,
+        });
 
-      // Navigate to HomePage or another relevant page after saving the review
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomePage(),
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Review posted successfully!'),
+        ));
 
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post review: $e')));
+        // Navigate to HomePage or another relevant page after saving the review
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
+      }
     }
   }
-}
 
 /*
     Future<void> storeSelectedPlace(String placeId) async {
@@ -224,7 +221,6 @@ final TextEditingController _reviewController = TextEditingController();
     }
   }*/
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -246,39 +242,35 @@ final TextEditingController _reviewController = TextEditingController();
           ),
         ],
       ),
-      body: 
-
-Padding(
-       padding: const EdgeInsets.all(16.0),
-     child:  Form(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
           key: _formKey,
-        child: Column(
-          children: [
-            TextField(
-              controller: _reviewController,
-              decoration: InputDecoration(
-                labelText: 'Write your review',
-                border: OutlineInputBorder(),
+          child: Column(
+            children: [
+              TextField(
+                controller: _reviewController,
+                decoration: InputDecoration(
+                  labelText: 'Write your review',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 5,
               ),
-              maxLines: 5,
-            ),
-            
-            
-            SizedBox(height: 20),
-        
-           RatingBar.builder(
+              SizedBox(height: 20),
+              RatingBar.builder(
                 initialRating: Rating.toDouble(),
                 minRating: 1,
                 direction: Axis.horizontal,
                 itemCount: 5,
-                itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                itemBuilder: (context, _) =>
+                    Icon(Icons.star, color: Colors.amber),
                 onRatingUpdate: (rating) {
                   setState(() {
                     Rating = rating.toInt(); // Store the rating as an int
                   });
                 },
               ),
-DropdownButton<String>(
+              DropdownButton<String>(
             hint: Text("Select a place"),
             value: selectedPlaceName,
             onChanged: (value) {
@@ -291,25 +283,23 @@ DropdownButton<String>(
             items: places.map((place) {
               return DropdownMenuItem<String>(
                 value: place['name'],
-                child: Text(place['name']!), // Correct placement of `child`
+                child: Text(place['name']!), // Correct placement of child
               );
             }).toList(),
+          ), 
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  ReviewText = _reviewController
+                      .text; // Set ReviewText from the TextField
+                  saveReview(); // Call the saveReview method
+                },
+                child: Text('Post Review'),
+              ),
+            ],
           ),
-          SizedBox(height: 20),
-          ElevatedButton(
-  onPressed: () {
-    ReviewText = _reviewController.text; // Set ReviewText from the TextField
-    saveReview(); // Call the saveReview method
-  },
-            child: Text('Post Review'),
-          ),
-        ],
+        ),
       ),
-     ),
-    ),
-  );
-
-    
+    );
   }
 }
-
