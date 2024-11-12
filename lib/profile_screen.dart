@@ -2,26 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
+import 'bookmarks.dart';  // Import your bookmarks.dart file
 
 class ProfileScreen extends StatefulWidget {
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String _profileImageUrl = '';
-  String _displayName = 'displayName'; // Default values to avoid null issues
+  String _displayName = 'displayName';
   String _username = 'Username';
   bool _isLocalGuide = false;
   List<String> _reviews = [];
+  List<String> _bookmarkedReviews = [];
+  List<String> _bookmarkedPlaces = [];
+
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _loadUserProfile();
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   void _loadUserProfile() async {
@@ -34,14 +40,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           setState(() {
             var data = userDoc.data() as Map<String, dynamic>;
             _profileImageUrl = data['profileImageUrl'];
-
             _displayName = data['Name'] ?? 'Display Name';
             _username = data['user_name'] ?? 'Username';
             _isLocalGuide = data['local_guide'] == 'yes';
           });
         }
       } catch (e) {
-        // Handle errors
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load profile: $e')),
         );
@@ -51,14 +55,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Profile'),
-    ),
-          body: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Profile'),
+      ),
+      body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
+            // Profile Picture and User Info
             Stack(
               alignment: Alignment.bottomRight,
               children: [
@@ -93,8 +98,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             SizedBox(height: 8),
-
-            // Inside the Column that contains user information
             Column(
               children: [
                 Text(
@@ -109,13 +112,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         'Local Guide',
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
-                      SizedBox(
-                          width:
-                              4), // Small space between the text and the icon
+                      SizedBox(width: 4),
                       Icon(
-                        Icons.check_circle, // Using a checkmark icon
-                        color: Colors.green, // Green color for the icon
-                        size: 16, // Icon size
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 16,
                       ),
                     ],
                   ),
@@ -125,7 +126,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ],
             ),
-
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
@@ -143,43 +143,95 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
             ),
             SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                //next sprint
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF800020),
-                backgroundColor: Color.fromARGB(255, 230, 230, 230),
-                padding: EdgeInsets.symmetric(horizontal: 66, vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(
-                'Reviews',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            // TabBar for Reviews and Bookmarks
+            TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.black,
+              indicatorColor: const Color(0xFF800020),
+              indicatorWeight: 3,
+              tabs: [
+                Tab(text: 'Reviews'),
+                Tab(text: 'Bookmarks'),
+              ],
             ),
-            SizedBox(height: 1),
             Expanded(
-              child: _reviews.isEmpty
-                  ? Center(child: Text('No reviews yet'))
-                  : ListView.builder(
-                      itemCount: _reviews.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(_reviews[index],
-                              style: TextStyle(fontSize: 14)),
-                        );
-                      },
-                    ),
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildReviewsList(),
+                  _buildBookmarksSection(),
+                ],
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Widget to display the user's reviews
+  Widget _buildReviewsList() {
+    return _reviews.isEmpty
+        ? Center(child: Text('No reviews yet'))
+        : ListView.builder(
+            itemCount: _reviews.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(_reviews[index], style: TextStyle(fontSize: 14)),
+              );
+            },
+          );
+  }
+
+  // Widget to display the bookmarks section
+  Widget _buildBookmarksSection() {
+    return Column(
+      children: [
+        SizedBox(height: 10),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BookmarkedReviewsScreen()),
+            );
+          },
+          child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Color(0xFF800020),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'Bookmarked Reviews',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BookmarkedPlacesScreen()),
+            );
+          },
+          child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            color: Color(0xFF800020),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Text(
+                  'Bookmarked Places',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

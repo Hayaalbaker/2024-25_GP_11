@@ -64,7 +64,7 @@ class _Review_widgetState extends State<Review_widget> {
         }).toList();
 
         return ListView.separated(
-          padding: EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          padding: EdgeInsets.symmetric(horizontal: 8),
           itemCount: filteredDocs.length,
           separatorBuilder: (context, index) => Divider(
             color: Colors.grey[300], // Light grey color for separation line
@@ -111,7 +111,7 @@ class _Review_widgetState extends State<Review_widget> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    margin: EdgeInsets.symmetric(vertical: 8),
+                    margin: EdgeInsets.symmetric(vertical: 4),
                     elevation: 0,
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
