@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'create_post_page.dart';
 import 'post_like.dart';
 import 'database.dart';
+import 'profile_screen.dart';  // Import ProfileScreen
+import 'view_Place.dart';     // Import PlaceScreen
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
@@ -17,7 +19,7 @@ class Review_widget extends StatefulWidget {
 class _Review_widgetState extends State<Review_widget> {
   String? active_userid;
 
-  final FirestoreService _firestoreService = FirestoreService(); // Create an instance of FirestoreService
+  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   void initState() {
@@ -58,7 +60,6 @@ class _Review_widgetState extends State<Review_widget> {
           return Center(child: Text('No reviews available.'));
         }
 
-        // Filter documents based on placeId if it's not null
         final filteredDocs = snapshot.data!.docs.where((doc) {
           return widget.place_Id == null || doc['placeId'] == widget.place_Id;
         }).toList();
@@ -67,7 +68,7 @@ class _Review_widgetState extends State<Review_widget> {
           padding: EdgeInsets.symmetric(horizontal: 8),
           itemCount: filteredDocs.length,
           separatorBuilder: (context, index) => Divider(
-            color: Colors.grey[300], // Light grey color for separation line
+            color: Colors.grey[300],
             thickness: 1,
             indent: 16,
             endIndent: 16,
@@ -83,14 +84,8 @@ class _Review_widgetState extends State<Review_widget> {
 
             return FutureBuilder(
               future: Future.wait([
-                FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(userUid)
-                    .get(),
-                FirebaseFirestore.instance
-                    .collection('places')
-                    .doc(placeId)
-                    .get(),
+                FirebaseFirestore.instance.collection('users').doc(userUid).get(),
+                FirebaseFirestore.instance.collection('places').doc(placeId).get(),
               ]),
               builder: (context, AsyncSnapshot<List<DocumentSnapshot>> asyncSnapshot) {
                 if (asyncSnapshot.connectionState == ConnectionState.waiting) {
@@ -103,8 +98,8 @@ class _Review_widgetState extends State<Review_widget> {
                   final Name = (userDoc.data() as Map<String, dynamic>?)?['Name'] ?? 'Unknown User';
                   final profileImageUrl = (userDoc.data() as Map<String, dynamic>?)?['profileImageUrl'] ?? 'images/default_profile.png';
                   final placeName = placeDoc['place_name'];
-                  final userData = userDoc.data() as Map<String, dynamic>?; // Cast to Map if data() isn't null
-                  final _isLocalGuide = userData != null && userData.containsKey('local_guide') ? userData['local_guide'] == 'yes' : false;
+                  final userData = userDoc.data() as Map<String, dynamic>?;
+                  final _isLocalGuide = userData != null && userData.containsKey('local_guide') && userData['local_guide'] == 'yes';
 
                   return Card(
                     color: Colors.transparent,
@@ -121,22 +116,42 @@ class _Review_widgetState extends State<Review_widget> {
                           // User and Place Information
                           Row(
                             children: [
-                              CircleAvatar(
-                                backgroundImage: profileImageUrl.isNotEmpty
-                                    ? NetworkImage(profileImageUrl)
-                                    : AssetImage('images/default_profile.png') as ImageProvider,
-                                radius: 24,
+                              GestureDetector(
+                                onTap: () {
+                                  // Navigate to the user's profile
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProfileScreen(),
+                                      ),
+                                    );
+                                },
+                                child: CircleAvatar(
+                                  backgroundImage: NetworkImage(profileImageUrl),
+                                  radius: 24,
+                                ),
                               ),
                               SizedBox(width: 12),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    Name,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black,
+                                  GestureDetector(
+                                    onTap: () {
+                                      // Navigate to the user's profile
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ProfileScreen(),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      Name,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Colors.black,
+                                      ),
                                     ),
                                   ),
                                   SizedBox(height: 4),
@@ -170,9 +185,20 @@ class _Review_widgetState extends State<Review_widget> {
                                           ],
                                         ),
                                   SizedBox(height: 4),
-                                  Text(
-                                    placeName,
-                                    style: TextStyle(color: Colors.grey[600]),
+                                  GestureDetector(
+                                    onTap: () {
+                                      // Navigate to the place details
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ViewPlace(place_Id: placeId,),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      placeName,
+                                      style: TextStyle(color: Colors.grey[600]),
+                                    ),
                                   ),
                                 ],
                               ),
