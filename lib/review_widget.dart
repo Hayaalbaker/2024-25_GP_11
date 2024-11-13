@@ -5,8 +5,8 @@ import 'create_post_page.dart';
 import 'otherUser_profile.dart';
 import 'post_like.dart';
 import 'database.dart';
-import 'profile_screen.dart';  // Import ProfileScreen
-import 'view_Place.dart';     // Import PlaceScreen
+import 'profile_screen.dart';  
+import 'view_Place.dart';  
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
@@ -21,6 +21,8 @@ class _Review_widgetState extends State<Review_widget> {
   String? active_userid;
 
   final FirestoreService _firestoreService = FirestoreService();
+
+  Map<String, bool> bookmarkedReviews = {};
 
   @override
   void initState() {
@@ -39,6 +41,26 @@ class _Review_widgetState extends State<Review_widget> {
     } catch (e) {
       print('Failed to load user data: $e');
     }
+  }
+
+  Future<void> toggleBookmark(String reviewId) async {
+    if (active_userid == null) return;
+
+    final userRef = FirebaseFirestore.instance.collection('users').doc(active_userid);
+    final userDoc = await userRef.get();
+    final bookmarks = List<String>.from(userDoc.data()?['bookmarks'] ?? []);
+
+    setState(() {
+      if (bookmarks.contains(reviewId)) {
+        bookmarks.remove(reviewId); 
+        bookmarkedReviews[reviewId] = false; 
+      } else {
+        bookmarks.add(reviewId); 
+        bookmarkedReviews[reviewId] = true; 
+      }
+    });
+
+    await userRef.update({'bookmarks': bookmarks});
   }
 
   @override
@@ -102,6 +124,8 @@ class _Review_widgetState extends State<Review_widget> {
                   final userData = userDoc.data() as Map<String, dynamic>?;
                   final _isLocalGuide = userData != null && userData.containsKey('local_guide') && userData['local_guide'] == 'yes';
 
+                  bool isBookmarked = bookmarkedReviews[review_id] ?? false;
+
                   return Card(
                     color: Colors.transparent,
                     shape: RoundedRectangleBorder(
@@ -124,8 +148,8 @@ class _Review_widgetState extends State<Review_widget> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => OtherUserProfileScreen(userId: 'other-user-uid'),
-                                      ),
-                                    );
+                                    ),
+                                  );
                                 },
                                 child: CircleAvatar(
                                   backgroundImage: NetworkImage(profileImageUrl),
@@ -136,67 +160,67 @@ class _Review_widgetState extends State<Review_widget> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-Row(
-  children: [
-GestureDetector(
-  onTap: () {
-    // Navigate to the profile of the user
-    if (userUid == active_userid) {
-      // If it's the logged-in user, go to ProfileScreen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProfileScreen(), // Your own profile
-        ),
-      );
-    } else {
-      // If it's another user, go to OtherUserProfileScreen
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OtherUserProfileScreen(userId: userUid), // Pass the other user's UID
-        ),
-      );
-    }
-  },
-  child: Text(
-    '$Name ', // User's name
-    style: TextStyle(
-      fontWeight: FontWeight.bold, // Bold for name only
-      fontSize: 16,
-      color: Colors.black,
-    ),
-  ),
-),
-    Text(
-      'reviewed', // The "reviewed" text, not bold
-      style: TextStyle(
-        fontWeight: FontWeight.normal, // Normal weight for "reviewed"
-        fontSize: 16,
-        color: Colors.black,
-      ),
-    ),
-    GestureDetector(
-      onTap: () {
-        // Navigate to the place details
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ViewPlace(place_Id: placeId),
-          ),
-        );
-      },
-      child: Text(
-        ' $placeName', // The place name
-        style: TextStyle(
-          fontWeight: FontWeight.bold, // You can keep this bold or adjust to your preference
-          fontSize: 16,
-          color: const Color(0xFF800020), // Color to distinguish the place name
-        ),
-      ),
-    ),
-  ],
-),
+                                  Row(
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          // Navigate to the profile of the user
+                                          if (userUid == active_userid) {
+                                            // If it's the logged-in user, go to ProfileScreen
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => ProfileScreen(), // Your own profile
+                                              ),
+                                            );
+                                          } else {
+                                            // If it's another user, go to OtherUserProfileScreen
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => OtherUserProfileScreen(userId: userUid), // Pass the other user's UID
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        child: Text(
+                                          '$Name ', // User's name
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold, // Bold for name only
+                                            fontSize: 16,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        'reviewed', // The "reviewed" text, not bold
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal, // Normal weight for "reviewed"
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          // Navigate to the place details
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => ViewPlace(place_Id: placeId),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          ' $placeName', // The place name
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold, // You can keep this bold or adjust to your preference
+                                            fontSize: 16,
+                                            color: const Color(0xFF800020), // Color to distinguish the place name
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                   SizedBox(height: 4),
                                   _isLocalGuide
                                       ? Row(
@@ -253,9 +277,24 @@ GestureDetector(
                           ),
                           SizedBox(height: 5),
 
-                          // Like and Bookmark Icons
-                          PostLike(passed_user_uid: active_userid, passed_review_id: review_id, passed_likeCount: likeCount),
-                          SizedBox(height: 5),
+                          // Like and Bookmark Icons (Ensure only one bookmark icon)
+                          Row(
+                            children: [
+                              PostLike(passed_user_uid: active_userid, passed_review_id: review_id, passed_likeCount: likeCount),
+                              Spacer(),
+                              SizedBox(width: 8),
+                              IconButton(
+                                icon: Icon(
+                                  isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                  color: isBookmarked ? Colors.grey : Colors.grey, 
+                                  ),
+                                  onPressed: () {
+                                    toggleBookmark(review_id);
+                                    setState(() {}); 
+                                    },
+                                )
+                            ],
+                          ),
                         ],
                       ),
                     ),

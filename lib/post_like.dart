@@ -113,7 +113,7 @@ class _PostLikeState extends State<PostLike> {
 )
                                   ],
                                 ),
-                                Icon(Icons.bookmark, color: Colors.grey),
+                               // Icon(Icons.bookmark, color: Colors.grey),
                               ],
                             );
   }
