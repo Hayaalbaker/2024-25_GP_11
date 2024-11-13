@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'bookmarks.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
   final String userId;
@@ -22,8 +21,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
   bool _isLocalGuide = false;
   
   List<DocumentSnapshot> _reviews = [];
-  List<DocumentSnapshot> _bookmarkedReviews = [];
-  List<DocumentSnapshot> _bookmarkedPlaces = [];
 
   late TabController _tabController;
 
@@ -31,7 +28,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
   void initState() {
     super.initState();
     _loadUserProfile(widget.userId); // Load profile data for the passed userId
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 1, vsync: this); // Only one tab for reviews now
   }
 
   void _loadUserProfile(String userId) async {
@@ -48,12 +45,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
 
         // Load the user's reviews (these are public)
         _loadUserReviews(userId);
-
-        // Load bookmarks only if this is the logged-in user
-        User? currentUser = _auth.currentUser;
-        if (currentUser != null && currentUser.uid == userId) {
-          _loadUserBookmarks(userId);
-        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,29 +65,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
       });
     } catch (e) {
       print("Error loading reviews: $e");
-    }
-  }
-
-  // Load bookmarks for the logged-in user only
-  void _loadUserBookmarks(String userId) async {
-    try {
-      var bookmarkReviewsSnapshot = await _firestore
-          .collection('bookmarks')
-          .where('user_uid', isEqualTo: userId)
-          .where('type', isEqualTo: 'review')
-          .get();
-      var bookmarkPlacesSnapshot = await _firestore
-          .collection('bookmarks')
-          .where('user_uid', isEqualTo: userId)
-          .where('type', isEqualTo: 'place')
-          .get();
-
-      setState(() {
-        _bookmarkedReviews = bookmarkReviewsSnapshot.docs;
-        _bookmarkedPlaces = bookmarkPlacesSnapshot.docs;
-      });
-    } catch (e) {
-      print("Error loading bookmarks: $e");
     }
   }
 
@@ -131,7 +99,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
                     ),
                   ),
                 ),
-                // Hide edit button for other users' profile
               ],
             ),
             SizedBox(height: 8),
@@ -164,16 +131,14 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
               ],
             ),
             SizedBox(height: 10),
-            // TabBar for Reviews and Bookmarks
             TabBar(
               controller: _tabController,
-              labelColor: Colors.white,
+              labelColor: const Color(0xFF800020),
               unselectedLabelColor: Colors.black,
               indicatorColor: const Color(0xFF800020),
               indicatorWeight: 3,
               tabs: [
                 Tab(text: 'Reviews'),
-                Tab(text: 'Bookmarks'),
               ],
             ),
             Expanded(
@@ -181,7 +146,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
                 controller: _tabController,
                 children: [
                   _buildReviewsList(),
-                  _buildBookmarksSection(),
                 ],
               ),
             ),
@@ -204,60 +168,5 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
               );
             },
           );
-  }
-
-  // Widget to display the bookmarks section
-  Widget _buildBookmarksSection() {
-    // Hide bookmarks section for other users
-    if (_bookmarkedReviews.isEmpty && _bookmarkedPlaces.isEmpty) {
-      return Center(child: Text('No bookmarks yet'));
-    }
-    return Column(
-      children: [
-        SizedBox(height: 10),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BookmarkedReviewsScreen()),
-            );
-          },
-          child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Color(0xFF800020),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text(
-                  'Bookmarked Reviews',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => BookmarkedPlacesScreen()),
-            );
-          },
-          child: Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Color(0xFF800020),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Text(
-                  'Bookmarked Places',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
