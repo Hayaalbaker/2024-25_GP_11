@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'create_post_page.dart';
+import 'otherUser_profile.dart';
 import 'post_like.dart';
 import 'database.dart';
 import 'profile_screen.dart';  // Import ProfileScreen
@@ -122,7 +123,7 @@ class _Review_widgetState extends State<Review_widget> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => ProfileScreen(),
+                                      builder: (context) => OtherUserProfileScreen(userId: 'other-user-uid'),
                                       ),
                                     );
                                 },
@@ -135,25 +136,67 @@ class _Review_widgetState extends State<Review_widget> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      // Navigate to the user's profile
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProfileScreen(),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      Name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
+Row(
+  children: [
+GestureDetector(
+  onTap: () {
+    // Navigate to the profile of the user
+    if (userUid == active_userid) {
+      // If it's the logged-in user, go to ProfileScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileScreen(), // Your own profile
+        ),
+      );
+    } else {
+      // If it's another user, go to OtherUserProfileScreen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OtherUserProfileScreen(userId: userUid), // Pass the other user's UID
+        ),
+      );
+    }
+  },
+  child: Text(
+    '$Name ', // User's name
+    style: TextStyle(
+      fontWeight: FontWeight.bold, // Bold for name only
+      fontSize: 16,
+      color: Colors.black,
+    ),
+  ),
+),
+    Text(
+      'reviewed', // The "reviewed" text, not bold
+      style: TextStyle(
+        fontWeight: FontWeight.normal, // Normal weight for "reviewed"
+        fontSize: 16,
+        color: Colors.black,
+      ),
+    ),
+    GestureDetector(
+      onTap: () {
+        // Navigate to the place details
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewPlace(place_Id: placeId),
+          ),
+        );
+      },
+      child: Text(
+        ' $placeName', // The place name
+        style: TextStyle(
+          fontWeight: FontWeight.bold, // You can keep this bold or adjust to your preference
+          fontSize: 16,
+          color: const Color(0xFF800020), // Color to distinguish the place name
+        ),
+      ),
+    ),
+  ],
+),
                                   SizedBox(height: 4),
                                   _isLocalGuide
                                       ? Row(
@@ -185,21 +228,6 @@ class _Review_widgetState extends State<Review_widget> {
                                           ],
                                         ),
                                   SizedBox(height: 4),
-                                  GestureDetector(
-                                    onTap: () {
-                                      // Navigate to the place details
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ViewPlace(place_Id: placeId,),
-                                        ),
-                                      );
-                                    },
-                                    child: Text(
-                                      placeName,
-                                      style: TextStyle(color: Colors.grey[600]),
-                                    ),
-                                  ),
                                 ],
                               ),
                             ],

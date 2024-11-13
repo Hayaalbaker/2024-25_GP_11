@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
-import 'bookmarks.dart';  // Import your bookmarks.dart file
+import 'bookmarks.dart';  
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -17,9 +17,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   String _displayName = 'displayName';
   String _username = 'Username';
   bool _isLocalGuide = false;
-  List<String> _reviews = [];
-  List<String> _bookmarkedReviews = [];
-  List<String> _bookmarkedPlaces = [];
+  
+  // These will hold the data fetched from Firestore
+  List<DocumentSnapshot> _reviews = [];
+  List<DocumentSnapshot> _bookmarkedReviews = [];
+  List<DocumentSnapshot> _bookmarkedPlaces = [];
 
   late TabController _tabController;
 
@@ -34,22 +36,63 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(user.uid).get();
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
         if (userDoc.exists) {
           setState(() {
             var data = userDoc.data() as Map<String, dynamic>;
-            _profileImageUrl = data['profileImageUrl'];
+            _profileImageUrl = data['profileImageUrl'] ?? '';
             _displayName = data['Name'] ?? 'Display Name';
             _username = data['user_name'] ?? 'Username';
             _isLocalGuide = data['local_guide'] == 'yes';
           });
+
+          // Load the user's reviews and bookmarks
+          _loadUserReviews(user.uid);
+          _loadUserBookmarks(user.uid);
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to load profile: $e')),
         );
       }
+    }
+  }
+
+  // Function to load reviews from Firestore
+  void _loadUserReviews(String userId) async {
+    try {
+      var reviewSnapshot = await _firestore
+          .collection('Review')
+          .where('user_uid', isEqualTo: userId)
+          .get();
+      setState(() {
+        _reviews = reviewSnapshot.docs;
+      });
+    } catch (e) {
+      print("Error loading reviews: $e");
+    }
+  }
+
+  // Function to load bookmarked reviews and places
+  void _loadUserBookmarks(String userId) async {
+    try {
+      var bookmarkReviewsSnapshot = await _firestore
+          .collection('bookmarks')
+          .where('user_uid', isEqualTo: userId)
+          .where('type', isEqualTo: 'review')
+          .get();
+      var bookmarkPlacesSnapshot = await _firestore
+          .collection('bookmarks')
+          .where('user_uid', isEqualTo: userId)
+          .where('type', isEqualTo: 'place')
+          .get();
+
+      setState(() {
+        _bookmarkedReviews = bookmarkReviewsSnapshot.docs;
+        _bookmarkedPlaces = bookmarkPlacesSnapshot.docs;
+      });
+    } catch (e) {
+      print("Error loading bookmarks: $e");
     }
   }
 
@@ -177,8 +220,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         : ListView.builder(
             itemCount: _reviews.length,
             itemBuilder: (context, index) {
+              var review = _reviews[index].data() as Map<String, dynamic>;
               return ListTile(
-                title: Text(_reviews[index], style: TextStyle(fontSize: 14)),
+                title: Text(review['Review_Text'], style: TextStyle(fontSize: 14)),
               );
             },
           );
