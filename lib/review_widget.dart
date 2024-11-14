@@ -10,9 +10,9 @@ import 'view_Place.dart';
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
-  final String? userId;  // Added userId parameter
+  final String? userId;  
 
-  Review_widget({this.place_Id, this.userId}); // Modify constructor
+  Review_widget({this.place_Id, this.userId}); 
 
   @override
   _Review_widgetState createState() => _Review_widgetState();
@@ -64,6 +64,14 @@ class _Review_widgetState extends State<Review_widget> {
     await userRef.update({'bookmarks': bookmarks});
   }
 
+  Future<void> deleteReview(String reviewId) async {
+    try {
+      await FirebaseFirestore.instance.collection('Review').doc(reviewId).delete();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Review deleted")));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete review")));
+    }
+  }
 @override
 Widget build(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
@@ -147,11 +155,10 @@ Widget build(BuildContext context) {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                // Navigate to the user's profile
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => OtherUserProfileScreen(userId: userUid), // Use actual userUid
+                                    builder: (context) => OtherUserProfileScreen(userId: userUid), 
                                   ),
                                 );
                               },
@@ -168,45 +175,41 @@ Widget build(BuildContext context) {
                                   children: [
                                     GestureDetector(
                                       onTap: () {
-                                        // Navigate to the profile of the user
                                         if (userUid == active_userid) {
-                                          // If it's the logged-in user, go to ProfileScreen
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ProfileScreen(), // Your own profile
+                                              builder: (context) => ProfileScreen(),
                                             ),
                                           );
                                         } else {
-                                          // If it's another user, go to OtherUserProfileScreen
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => OtherUserProfileScreen(userId: userUid), // Pass the other user's UID
+                                              builder: (context) => OtherUserProfileScreen(userId: userUid), 
                                             ),
                                           );
                                         }
                                       },
                                       child: Text(
-                                        '$Name ', // User's name
+                                        '$Name ', 
                                         style: TextStyle(
-                                          fontWeight: FontWeight.bold, // Bold for name only
+                                          fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                           color: Colors.black,
                                         ),
                                       ),
                                     ),
                                     Text(
-                                      'reviewed', // The "reviewed" text, not bold
+                                      'reviewed', 
                                       style: TextStyle(
-                                        fontWeight: FontWeight.normal, // Normal weight for "reviewed"
+                                        fontWeight: FontWeight.normal, 
                                         fontSize: 16,
                                         color: Colors.black,
                                       ),
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        // Navigate to the place details
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
@@ -215,11 +218,11 @@ Widget build(BuildContext context) {
                                         );
                                       },
                                       child: Text(
-                                        ' $placeName', // The place name
+                                        ' $placeName', 
                                         style: TextStyle(
-                                          fontWeight: FontWeight.bold, // You can keep this bold or adjust to your preference
+                                          fontWeight: FontWeight.bold, 
                                           fontSize: 16,
-                                          color: const Color(0xFF800020), // Color to distinguish the place name
+                                          color: const Color(0xFF800020), 
                                         ),
                                       ),
                                     ),
@@ -258,6 +261,32 @@ Widget build(BuildContext context) {
                                 SizedBox(height: 4),
                               ],
                             ),
+                                                          Spacer(),
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, color: Colors.black),
+                                onSelected: (value) {
+                                  if (value == 'delete') {
+                                    if (userUid == active_userid) {
+                                      deleteReview(review_id);
+                                    }
+                                  } else if (value == 'share') {
+                                   // Share.share('Check out this review: $reviewText');
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    if (userUid == active_userid)
+                                      PopupMenuItem<String>(
+                                        value: 'delete',
+                                        child: Text('Delete Review'),
+                                      ),
+                                    PopupMenuItem<String>(
+                                      value: 'share',
+                                      child: Text('Share'),
+                                    ),
+                                  ];
+                                },
+                              ),
                           ],
                         ),
                         SizedBox(height: 16),
@@ -281,7 +310,7 @@ Widget build(BuildContext context) {
                         ),
                         SizedBox(height: 5),
 
-                        // Like and Bookmark Icons (Ensure only one bookmark icon)
+                        // Like and Bookmark Icons 
                         Row(
                           children: [
                             PostLike(passed_user_uid: active_userid, passed_review_id: review_id, passed_likeCount: likeCount),
@@ -290,11 +319,11 @@ Widget build(BuildContext context) {
                             IconButton(
                               icon: Icon(
                                 isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                                color: isBookmarked ? Colors.blue : Colors.grey, // Adjust color
+                                color: isBookmarked ? Colors.blue : Colors.grey, 
                               ),
                               onPressed: () {
                                 toggleBookmark(review_id);
-                                setState(() {}); // Refresh the widget to show bookmark change
+                                setState(() {}); 
                               },
                             )
                           ],

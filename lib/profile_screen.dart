@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             // TabBar for Reviews and Bookmarks
             TabBar(
               controller: _tabController,
-              labelColor: Colors.white,
+              labelColor: const Color(0xFF800020),
               unselectedLabelColor: Colors.black,
               indicatorColor: const Color(0xFF800020),
               indicatorWeight: 3,
