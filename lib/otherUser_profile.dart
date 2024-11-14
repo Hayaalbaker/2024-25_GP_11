@@ -28,8 +28,8 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
   @override
   void initState() {
     super.initState();
-    _loadUserProfile(widget.userId); // Load profile data for the passed userId
-    _tabController = TabController(length: 1, vsync: this); // Only one tab for reviews now
+    _loadUserProfile(widget.userId); 
+    _tabController = TabController(length: 1, vsync: this); 
   }
 
   void _loadUserProfile(String userId) async {
@@ -44,7 +44,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
           _isLocalGuide = data['local_guide'] == 'yes';
         });
 
-        // Load the user's reviews (these are public)
         _loadUserReviews(userId);
       }
     } catch (e) {
@@ -54,7 +53,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
     }
   }
 
-  // Load reviews for the other user
   void _loadUserReviews(String userId) async {
     try {
       var reviewSnapshot = await _firestore
@@ -172,8 +170,7 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
     );
   }
 
-  // Pass the userId of the other user to the ReviewWidget
   Widget _buildReviewsList() {
-    return Review_widget(userId: widget.userId); // Pass the other user's ID here
+    return Review_widget(userId: widget.userId);
   }
 }
