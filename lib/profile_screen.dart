@@ -2,7 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
-import 'bookmarks.dart';  
+import 'bookmarks.dart';
+import 'review_widget.dart';  
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -214,19 +215,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   // Widget to display the user's reviews
-  Widget _buildReviewsList() {
-    return _reviews.isEmpty
-        ? Center(child: Text('No reviews yet'))
-        : ListView.builder(
-            itemCount: _reviews.length,
-            itemBuilder: (context, index) {
-              var review = _reviews[index].data() as Map<String, dynamic>;
-              return ListTile(
-                title: Text(review['Review_Text'], style: TextStyle(fontSize: 14)),
-              );
-            },
-          );
-  }
+Widget _buildReviewsList() {
+  return Review_widget(userId: _auth.currentUser?.uid); // Pass the current user's ID
+}
 
   // Widget to display the bookmarks section
   Widget _buildBookmarksSection() {

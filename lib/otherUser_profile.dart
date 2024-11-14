@@ -131,6 +131,22 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
               ],
             ),
             SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: () {
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => Message page(),
+                //   ),
+                // );
+              },
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF800020),
+              ),
+              child: Text('Message', style: TextStyle(fontSize: 14)),
+            ),
+            SizedBox(height: 10),
             TabBar(
               controller: _tabController,
               labelColor: const Color(0xFF800020),
