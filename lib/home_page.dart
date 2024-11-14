@@ -178,29 +178,49 @@ Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex], // Display the selected page based on the index
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Highlight the selected icon
-        onTap: _onItemTapped, // Change selected page on tap
-        items: [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home, color: const Color(0xFF800020)),
-              label: ''), // Home
-          BottomNavigationBarItem(
-              icon: Icon(Icons.search, color: const Color(0xFF800020)),
-              label: ''), // Search
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add_box, color: const Color(0xFF800020)), // Create post icon
-              label: ''), // Create Post
-          BottomNavigationBarItem(
-              icon: Icon(Icons.notifications, color: const Color(0xFF800020)),
-              label: ''), // Activity
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person, color: const Color(0xFF800020)),
-              label: ''), // Profile
-        ],
-        selectedItemColor: const Color.fromARGB(255, 184, 57, 57),
-        unselectedItemColor: const Color.fromARGB(255, 184, 57, 57),
-        type: BottomNavigationBarType.fixed,
+  currentIndex: _selectedIndex, // Highlight the selected icon
+  onTap: _onItemTapped, // Change selected page on tap
+  items: [
+    BottomNavigationBarItem(
+      icon: Icon(
+        Icons.home,
+        color: _selectedIndex == 0 ? const Color(0xFF800020) : Colors.grey,
       ),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(
+        Icons.search,
+        color: _selectedIndex == 1 ? const Color(0xFF800020) : Colors.grey,
+      ),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(
+        Icons.add_box,
+        color: _selectedIndex == 2 ? const Color(0xFF800020) : Colors.grey,
+      ),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(
+        Icons.notifications,
+        color: _selectedIndex == 3 ? const Color(0xFF800020) : Colors.grey,
+      ),
+      label: '',
+    ),
+    BottomNavigationBarItem(
+      icon: Icon(
+        Icons.person,
+        color: _selectedIndex == 4 ? const Color(0xFF800020) : Colors.grey,
+      ),
+      label: '',
+    ),
+  ],
+  selectedItemColor: const Color.fromARGB(255, 184, 57, 57),
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+),
       floatingActionButton: GestureDetector(
         onTap: _onCreatePost, // Show modal on tapping the floating button
         child: FloatingActionButton(

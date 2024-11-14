@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'review_widget.dart';
 
 class OtherUserProfileScreen extends StatefulWidget {
   final String userId;
@@ -171,18 +172,8 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
     );
   }
 
-  // Widget to display the user's reviews
+  // Pass the userId of the other user to the ReviewWidget
   Widget _buildReviewsList() {
-    return _reviews.isEmpty
-        ? Center(child: Text('No reviews yet'))
-        : ListView.builder(
-            itemCount: _reviews.length,
-            itemBuilder: (context, index) {
-              var review = _reviews[index].data() as Map<String, dynamic>;
-              return ListTile(
-                title: Text(review['Review_Text'], style: TextStyle(fontSize: 14)),
-              );
-            },
-          );
+    return Review_widget(userId: widget.userId); // Pass the other user's ID here
   }
 }
