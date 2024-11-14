@@ -72,6 +72,7 @@ class PlacesList extends StatelessWidget {
                           ],
                         ),
                       ),
+                      
                     ],
                   ),
                 ),

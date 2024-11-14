@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'create_post_page.dart';
 import 'review_widget.dart';
 
 class ViewPlace extends StatefulWidget {
@@ -25,32 +26,20 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
   String _neighborhood = 'Neighborhood';
   String _street = 'Street';
   String _imageUrl = '';
+  bool isBookmarked = false;
 
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    placeId = widget.place_Id; // Assign the passed placeId to the local placeId variable.
+    placeId = widget.place_Id;
     _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _loadPlaceProfile();
+    _checkIfBookmarked();
   }
 
-void _launchLocation(String url) async {
-  final uri = Uri.parse(url);
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
-  }
-}
-
-void _loadPlaceProfile() async {
+Future<void> _loadPlaceProfile() async {
   if (placeId == null || placeId!.isEmpty) {
     // If placeId is null or empty, show an error message and return early.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -62,8 +51,6 @@ void _loadPlaceProfile() async {
   }
 
   try {
-    debugPrint('here  ViewPlace');
-    debugPrint('here  placeId: $placeId');
     DocumentSnapshot placeDoc = await _firestore.collection('places').doc(placeId).get();
     if (placeDoc.exists) {
       setState(() {
@@ -78,7 +65,6 @@ void _loadPlaceProfile() async {
         _imageUrl = data['imageUrl'] ?? '';
       });
     } else {
-      // Handle case where the document doesn't exist.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Place not found.')),
@@ -86,7 +72,6 @@ void _loadPlaceProfile() async {
       });
     }
   } catch (e) {
-    // Handle any errors that occur during Firestore query.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load profile: $e')),
@@ -95,69 +80,145 @@ void _loadPlaceProfile() async {
   }
 }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+Future<void> _launchLocation(String url) async {
+  final uri = Uri.parse(url);
+  if (await canLaunch(url)) {
+    await launch(url);
+  } else {
+    throw 'Could not launch $url';
+  }
+}
+
+  Future<void> _checkIfBookmarked() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId != null && placeId != null) {
+      final docSnapshot = await _firestore
+          .collection('bookmarks')
+          .doc(userId)
+          .collection('places')
+          .doc(placeId)
+          .get();
+
+      setState(() {
+        isBookmarked = docSnapshot.exists;
+      });
+    }
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(_placeName),
-      foregroundColor: Colors.white,
-      backgroundColor: const Color(0xFF800020),
-    ),
-    backgroundColor: Colors.white,
-    body: Column(
-      children: [
-        _imageUrl.isNotEmpty
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  _imageUrl,
-                  height: 250,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : Icon(Icons.image, size: 150, color: Colors.grey),
-        SizedBox(height: 16),
-        TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(text: "Overview"),
-            Tab(text: "Reviews"),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
+  Future<void> toggleBookmarkForPlace() async {
+    final userId = _auth.currentUser?.uid;
+    if (userId == null || placeId == null) return;
+
+    final placeRef = _firestore.collection('bookmarks').doc(userId).collection('places').doc(placeId);
+
+    if (isBookmarked) {
+      await placeRef.delete();
+      setState(() {
+        isBookmarked = false;
+      });
+    } else {
+      await placeRef.set({'timestamp': FieldValue.serverTimestamp()});
+      setState(() {
+        isBookmarked = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_placeName),
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF800020),
+      ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          _imageUrl.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    _imageUrl,
+                    height: 250,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Icon(Icons.image, size: 150, color: Colors.grey),
+          SizedBox(height: 16),
+          TabBar(
             controller: _tabController,
+            tabs: [
+              Tab(text: "Overview"),
+              Tab(text: "Reviews"),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailItem("", _description),
+                      _buildDetailItem("Category:", _category),
+                      _buildDetailItem("Subcategory:", _subcategory),
+                      _buildDetailItem("Neighborhood:", _neighborhood),
+                      _buildDetailItem("Street:", _street),
+                      _buildLocationLink("Location:", _location),
+                    ],
+                  ),
+                                  ),
+                // Pass placeId to the Review_widget here
+                Review_widget(place_Id: placeId),  // Ensure the correct placeId is passed
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailItem("", _description),
-                    _buildDetailItem("Category:", _category),
-                    _buildDetailItem("Subcategory:", _subcategory),
-                    _buildDetailItem("Neighborhood:", _neighborhood),
-                    _buildDetailItem("Street:", _street),
-                    _buildLocationLink("Location:", _location),
-                  ],
+              // Review button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreatePostPage(placeId: placeId!), 
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF800020),
+                  minimumSize: Size(250, 60),
+                  padding: EdgeInsets.symmetric(horizontal: 40),  
                 ),
+                child: Text("Review $_placeName",
+                style: TextStyle(color: Colors.white),),
               ),
-              // Pass placeId to the Review_widget here
-              Review_widget(place_Id: placeId),  // Ensure the correct placeId is passed
+              
+              // Bookmark icon
+              IconButton(
+                icon: Icon(
+                  isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
+                  color: isBookmarked ? Color(0xFF800020) : Colors.grey,
+                ),
+                onPressed: toggleBookmarkForPlace,
+              ),
             ],
           ),
         ),
-      ],
-    ),
-  );
-}
+      ),
+    );
+  }
 
   Widget _buildDetailItem(String label, String value) {
     return Padding(

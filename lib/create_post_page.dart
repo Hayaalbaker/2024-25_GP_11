@@ -5,19 +5,15 @@ import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-
-/*class CreatePostPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text('Create Post Page'));
-  }
-}*/
-
 void main() {
   runApp(CreatePostPage());
 }
 
 class CreatePostPage extends StatelessWidget {
+  final String? placeId;
+
+  CreatePostPage({super.key, this.placeId}); 
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,12 +21,16 @@ class CreatePostPage extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ReviewForm(),
+      home: ReviewForm(placeId: placeId), 
     );
   }
 }
 
 class ReviewForm extends StatefulWidget {
+  final String? placeId;
+
+  ReviewForm({super.key, required this.placeId}); // Constructor now accepts a nullable String
+
   @override
   _ReviewFormState createState() => _ReviewFormState();
 }
@@ -38,60 +38,48 @@ class ReviewForm extends StatefulWidget {
 class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   String ReviewText = '';
-  String PostDate = '';
-  List<String>? LikeCount;
+  List<String> LikeCount = [];
   int Rating = 1;
-  String placeId = '';
   String user_uid = '';
   final TextEditingController _reviewController = TextEditingController();
 
   bool isLoading = false;
-
   List<Map<String, String>> places = [];
   String? selectedPlaceName;
   String? selectedPlaceId;
-
-  final FirestoreService _firestoreService =
-      FirestoreService(); // Create an instance of FirestoreService
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     fetchPlaces();
+
+    // If placeId is passed, pre-fill the dropdown
+    if (widget.placeId != null) {
+      selectedPlaceId = widget.placeId;
+      final place = places.firstWhere((place) => place['id'] == selectedPlaceId, orElse: () => {});
+      if (place.isNotEmpty) {
+        selectedPlaceName = place['name'];
+      }
+    }
   }
 
   Future<void> _loadUserData() async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
         user_uid = user.uid;
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to load user data: $e'),
       ));
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
     }
-  }
-
-  Future<void> _saveProfile() async {
-    setState(() {
-      isLoading = true;
-    });
   }
 
   Future<void> fetchPlaces() async {
     try {
-      final querySnapshot =
-          await FirebaseFirestore.instance.collection('places').get();
+      final querySnapshot = await FirebaseFirestore.instance.collection('places').get();
       setState(() {
         places = querySnapshot.docs.map((doc) {
           return {
@@ -99,7 +87,18 @@ class _ReviewFormState extends State<ReviewForm> {
             'name': doc['place_name'] as String,
           };
         }).toList();
-        selectedPlaceName = places.isNotEmpty ? null : selectedPlaceName;
+        
+        // After places are fetched, pre-fill the selected place if a placeId is provided
+        if (widget.placeId != null && places.isNotEmpty) {
+          final place = places.firstWhere(
+            (place) => place['id'] == widget.placeId, 
+            orElse: () => {}
+          );
+          if (place.isNotEmpty) {
+            selectedPlaceId = widget.placeId;
+            selectedPlaceName = place['name'];
+          }
+        }
       });
     } catch (e) {
       print('Error fetching places: $e');
@@ -110,15 +109,12 @@ class _ReviewFormState extends State<ReviewForm> {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        // Reference to the 'reviews' collection in Firestore
-        DocumentReference newReviewRef =
-            FirebaseFirestore.instance.collection('Review').doc();
+        DocumentReference newReviewRef = FirebaseFirestore.instance.collection('Review').doc();
 
-        // Save the review details to Firestore
         await newReviewRef.set({
           'Review_Text': ReviewText,
           'user_uid': user_uid,
-          'placeId': selectedPlaceId, // ID of the selected place from dropdown
+          'placeId': selectedPlaceId, // Use the selectedPlaceId
           'Rating': Rating,
           'Post_Date': FieldValue.serverTimestamp(),
           'Like_count': LikeCount,
@@ -128,7 +124,6 @@ class _ReviewFormState extends State<ReviewForm> {
           content: Text('Review posted successfully!'),
         ));
 
-        // Navigate to HomePage or another relevant page after saving the review
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -136,90 +131,11 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
         );
       } catch (e) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
-      }
-    }
-  }
-
-/*
-    Future<void> storeSelectedPlace(String placeId) async {
-    try {
-      await FirebaseFirestore.instance.collection('userSelections').add({
-        'selectedPlaceId': placeId,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      print('Selected place ID stored successfully!');
-    } catch (e) {
-      print('Error storing selected place ID: $e');
-    }
-  }
-*/
-/*
-
-// Update user profile in Firestore
-  Future<void> checkPlace() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      try {
-      //  User? user = _auth.currentUser;
-          DocumentReference newPlaceRef = FirebaseFirestore.instance.collection('places').doc();
-        // Convert input to lowercase for case-insensitive checking
-        String lowerCasePlaceName = placeName.trim().toLowerCase();
-        String lowerCaseCategory = category.trim().toLowerCase();
-
-        // Check if email or username already exists
-        QuerySnapshot placeNameCheck = await FirebaseFirestore.instance
-            .collection('places')
-            .where('place_name', isEqualTo: lowerCasePlaceName)
-            .get();
-        QuerySnapshot categoryCheck = await FirebaseFirestore.instance
-            .collection('places')
-            .where('category', isEqualTo: lowerCaseCategory)
-            .get();
-
-        // Check if the email already exists and does not belong to the current user
-        if (placeNameCheck.docs.isNotEmpty &&
-            categoryCheck.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('cant add the place becouse it is already exists. please add other one ')));
-          return;
-        }else{
-
-                    newPlaceRef.set({
-                      'placeId': newPlaceRef.id, // Save the generated place ID
-                      'place_name': placeName,
-                      'description': description,
-                      'location': location,
-                      'category': category,
-                      'subcategory': subcategory, // Save selected subcategory
-                      'created_at': FieldValue.serverTimestamp(),
-                      'Neighborhood': Neighborhood,
-                      'Street': Street,
-                      'user_uid': userID,
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Place Added: $placeName Successfully!'),
-                    )
-                    
-                    );
-                                        Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              HomePage()), // Ensure this points to your AddPlacePage
-                    );
-
-        }
-
-
-      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e')));
+            SnackBar(content: Text('Failed to post review: $e')));
       }
     }
-  }*/
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +153,7 @@ class _ReviewFormState extends State<ReviewForm> {
             },
             child: Text(
               "Cancel",
-              style: TextStyle(color: const Color.fromARGB(255, 16, 0, 0)),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ],
@@ -262,37 +178,35 @@ class _ReviewFormState extends State<ReviewForm> {
                 minRating: 1,
                 direction: Axis.horizontal,
                 itemCount: 5,
-                itemBuilder: (context, _) =>
-                    Icon(Icons.star, color: Colors.amber),
+                itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
                 onRatingUpdate: (rating) {
                   setState(() {
-                    Rating = rating.toInt(); // Store the rating as an int
+                    Rating = rating.toInt();
                   });
                 },
               ),
               DropdownButton<String>(
-            hint: Text("Select a place"),
-            value: selectedPlaceName,
-            onChanged: (value) {
-              setState(() {
-                selectedPlaceName = value;
-                selectedPlaceId = places
-                    .firstWhere((place) => place['name'] == value)['id'];
-              });
-            },
-            items: places.map((place) {
-              return DropdownMenuItem<String>(
-                value: place['name'],
-                child: Text(place['name']!), // Correct placement of child
-              );
-            }).toList(),
-          ), 
+                hint: Text("Select a place"),
+                value: selectedPlaceName,
+                onChanged: (value) {
+                  setState(() {
+                    selectedPlaceName = value;
+                    selectedPlaceId = places
+                        .firstWhere((place) => place['name'] == value)['id'];
+                  });
+                },
+                items: places.map((place) {
+                  return DropdownMenuItem<String>(
+                    value: place['name'],
+                    child: Text(place['name']!),
+                  );
+                }).toList(),
+              ),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  ReviewText = _reviewController
-                      .text; // Set ReviewText from the TextField
-                  saveReview(); // Call the saveReview method
+                  ReviewText = _reviewController.text;
+                  saveReview();
                 },
                 child: Text('Post Review'),
               ),
