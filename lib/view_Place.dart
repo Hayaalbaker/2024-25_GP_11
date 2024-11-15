@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'create_post_page.dart';
 import 'review_widget.dart';
-
+import 'package:rating_summary/rating_summary.dart';
 class ViewPlace extends StatefulWidget {
   final String place_Id;
 
@@ -27,6 +27,13 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
   String _street = 'Street';
   String _imageUrl = '';
   bool isBookmarked = false;
+  int _totalReviews = 0;
+  double _averageRating = 0.0;
+  int _countFiveStars = 0;
+  int _countFourStars = 0;
+  int _countThreeStars = 0;
+  int _countTwoStars = 0;
+  int _countOneStars = 0;
 
   late TabController _tabController;
 
@@ -37,6 +44,7 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
     _tabController = TabController(length: 2, vsync: this);
     _loadPlaceProfile();
     _checkIfBookmarked();
+    _fetchRatingSummary();
   }
 
 Future<void> _loadPlaceProfile() async {
@@ -123,6 +131,61 @@ Future<void> _launchLocation(String url) async {
       });
     }
   }
+  void _fetchRatingSummary() async {
+  try {
+    QuerySnapshot reviewsSnapshot = await _firestore
+        .collection('Review')
+        .where('placeId', isEqualTo: widget.place_Id)
+        .get();
+
+    int totalReviews = reviewsSnapshot.docs.length;
+    int totalRatingSum = 0;
+    int countFiveStars = 0;
+    int countFourStars = 0;
+    int countThreeStars = 0;
+    int countTwoStars = 0;
+    int countOneStars = 0;
+
+    for (var doc in reviewsSnapshot.docs) {
+      int rating = doc['Rating'];
+      totalRatingSum += rating;
+      switch (rating) {
+        case 5:
+          countFiveStars++;
+          break;
+        case 4:
+          countFourStars++;
+          break;
+        case 3:
+          countThreeStars++;
+          break;
+        case 2:
+          countTwoStars++;
+          break;
+        case 1:
+          countOneStars++;
+          break;
+        default:
+          break;
+      }
+    }
+
+    double averageRating = totalReviews > 0 ? totalRatingSum / totalReviews : 0.0;
+
+    setState(() {
+      _totalReviews = totalReviews;
+      _averageRating = averageRating;
+      _countFiveStars = countFiveStars;
+      _countFourStars = countFourStars;
+      _countThreeStars = countThreeStars;
+      _countTwoStars = countTwoStars;
+      _countOneStars = countOneStars;
+    });
+  } catch (e) {
+    print("Failed to fetch rating summary: $e");
+    //show a SnackBar or other UI ???
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -154,27 +217,36 @@ Future<void> _launchLocation(String url) async {
               Tab(text: "Reviews"),
             ],
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildDetailItem("", _description),
-                      _buildDetailItem("Category:", _category),
-                      _buildDetailItem("Subcategory:", _subcategory),
-                      _buildDetailItem("Neighborhood:", _neighborhood),
-                      _buildDetailItem("Street:", _street),
-                      _buildLocationLink("Location:", _location),
-                    ],
-                  ),
-                                  ),
-                // Pass placeId to the Review_widget here
-                Review_widget(place_Id: placeId),  // Ensure the correct placeId is passed
-              ],
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RatingSummary(
+                      counter: _totalReviews,
+                      average: double.parse(_averageRating.toStringAsFixed(1)),
+                      counterFiveStars: _countFiveStars,
+                      counterFourStars: _countFourStars,
+                      counterThreeStars: _countThreeStars,
+                      counterTwoStars: _countTwoStars,
+                      counterOneStars: _countOneStars,
+                    ),
+                    SizedBox(height: 20), 
+                    _buildDetailItem("", _description),
+                    _buildDetailItem("Category:", _category),
+                    _buildDetailItem("Subcategory:", _subcategory),
+                    _buildDetailItem("Neighborhood:", _neighborhood),
+                    _buildDetailItem("Street:", _street),
+                    _buildLocationLink("Location:", _location),
+                  ],
+                ),
+              ),
+              Review_widget(place_Id: placeId),
+            ],
             ),
           ),
         ],
