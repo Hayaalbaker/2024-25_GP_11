@@ -315,6 +315,7 @@ Future<void> _launchLocation(String url) async {
   }
 
   Widget _buildLocationLink(String label, String url) {
+    String shortenedUrl = url.length > 30 ? '${url.substring(0, 30)}...' : url;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -328,7 +329,7 @@ Future<void> _launchLocation(String url) async {
             child: GestureDetector(
               onTap: () => _launchLocation(url),
               child: Text(
-                url,
+                shortenedUrl,
                 style: TextStyle(
                   color: Colors.blueAccent,
                   fontSize: 16,
