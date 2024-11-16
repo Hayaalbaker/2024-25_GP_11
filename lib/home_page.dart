@@ -257,24 +257,48 @@ class _HomePageState extends State<HomePage>
         onTap: _onItemTapped, // Change selected page on tap
         items: [
           BottomNavigationBarItem(
-              icon: Icon(Icons.home, color: const Color(0xFF800020)),
-              label: ''), // Home
+            icon: Icon(
+              Icons.home,
+              color:
+                  _selectedIndex == 0 ? const Color(0xFF800020) : Colors.grey,
+            ),
+            label: '',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.search, color: const Color(0xFF800020)),
-              label: ''), // Search
+            icon: Icon(
+              Icons.search,
+              color:
+                  _selectedIndex == 1 ? const Color(0xFF800020) : Colors.grey,
+            ),
+            label: '',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.add_box,
-                  color: const Color(0xFF800020)), // Create post icon
-              label: ''), // Create Post
+            icon: Icon(
+              Icons.add_box,
+              color:
+                  _selectedIndex == 2 ? const Color(0xFF800020) : Colors.grey,
+            ),
+            label: '',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.notifications, color: const Color(0xFF800020)),
-              label: ''), // Activity
+            icon: Icon(
+              Icons.notifications,
+              color:
+                  _selectedIndex == 3 ? const Color(0xFF800020) : Colors.grey,
+            ),
+            label: '',
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.person, color: const Color(0xFF800020)),
-              label: ''), // Profile
+            icon: Icon(
+              Icons.person,
+              color:
+                  _selectedIndex == 4 ? const Color(0xFF800020) : Colors.grey,
+            ),
+            label: '',
+          ),
         ],
         selectedItemColor: const Color.fromARGB(255, 184, 57, 57),
-        unselectedItemColor: const Color.fromARGB(255, 184, 57, 57),
+        unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ),
       floatingActionButton: GestureDetector(

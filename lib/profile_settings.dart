@@ -3,11 +3,12 @@ import 'reset_password.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signin_screen.dart';
+import 'delete_user.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
   // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  // ignore: unused_field
+    // ignore: unused_field
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -23,8 +24,7 @@ class ProfileSettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => AccountInformationPage()),
+                MaterialPageRoute(builder: (context) => AccountInformationPage()),
               );
             },
           ),
@@ -40,8 +40,10 @@ class ProfileSettingsPage extends StatelessWidget {
           ListTile(
             title: Text("Delete your account"),
             onTap: () {
-              // Handle delete account logic here
-              print("Delete account tapped");
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DeleteAccountConfirmationPage()),
+              );
             },
           ),
         ],
@@ -66,12 +68,13 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
 
   bool _hasUnsavedChanges = false;
 
-  Map<String, List<String>> cities = {
-    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam'],
+  final Map<String, List<String>> cities = {
+    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Mecca', 'Medina'],
     'Egypt': ['Cairo', 'Alexandria', 'Giza'],
     'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah'],
-    'Kuwait': ['Kuwait City', 'Hawalli', 'Salmiya'],
+    'Kuwait': ['Kuwait City', 'Salmiya', 'Hawalli'],
   };
+
   @override
   void initState() {
     super.initState();
@@ -125,8 +128,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         builder: (context) {
           return AlertDialog(
             title: Text('Unsaved Changes'),
-            content:
-                Text('You have unsaved changes. Do you want to discard them?'),
+            content: Text('You have unsaved changes. Do you want to discard them?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false), // Stay
@@ -189,12 +191,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                       _hasUnsavedChanges = true;
                     });
                   },
-                  items: [
-                    'Saudi Arabia',
-                    'Egypt',
-                    'United Arab Emirates',
-                    'Kuwait'
-                  ]
+                  items: ['Saudi Arabia', 'Egypt', 'United Arab Emirates', 'Kuwait']
                       .map((country) => DropdownMenuItem(
                             value: country,
                             child: Text(country),
@@ -216,12 +213,10 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     });
                   },
                   items: _selectedCountry != null
-                      ? cities[_selectedCountry]!
-                          .map((city) => DropdownMenuItem(
-                                value: city,
-                                child: Text(city),
-                              ))
-                          .toList()
+                      ? cities[_selectedCountry]!.map((city) => DropdownMenuItem(
+                            value: city,
+                            child: Text(city),
+                          )).toList()
                       : [],
                 ),
               ),
@@ -269,18 +264,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     try {
       // Re-authenticate the user
       String email = user!.email!;
-      AuthCredential credential = EmailAuthProvider.credential(
-          email: email, password: _currentPasswordController.text);
+      AuthCredential credential = EmailAuthProvider.credential(email: email, password: _currentPasswordController.text);
       await user.reauthenticateWithCredential(credential);
-
+      
       // Update password
       await user.updatePassword(_newPasswordController.text);
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password changed successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!')));
       Navigator.pop(context); // Return to Profile Settings
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error changing password: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error changing password: $e')));
     }
   }
 
@@ -304,8 +296,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => ResetPasswordScreen()),
+                  MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
                 );
               },
               child: const Text('Forgot Password?'),
@@ -324,18 +315,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             // Password requirements display
             Column(
               children: [
-                _passwordRequirement('At least 8 characters',
-                    _newPasswordController.text.length >= 8),
-                _passwordRequirement('One uppercase letter',
-                    _newPasswordController.text.contains(RegExp(r'[A-Z]'))),
-                _passwordRequirement('One lowercase letter',
-                    _newPasswordController.text.contains(RegExp(r'[a-z]'))),
-                _passwordRequirement('One digit',
-                    _newPasswordController.text.contains(RegExp(r'[0-9]'))),
-                _passwordRequirement(
-                    'One special character',
-                    _newPasswordController.text
-                        .contains(RegExp(r'[!@#\$&*~]'))),
+                _passwordRequirement('At least 8 characters', _newPasswordController.text.length >= 8),
+                _passwordRequirement('One uppercase letter', _newPasswordController.text.contains(RegExp(r'[A-Z]'))),
+                _passwordRequirement('One lowercase letter', _newPasswordController.text.contains(RegExp(r'[a-z]'))),
+                _passwordRequirement('One digit', _newPasswordController.text.contains(RegExp(r'[0-9]'))),
+                _passwordRequirement('One special character', _newPasswordController.text.contains(RegExp(r'[!@#\$&*~]'))),
               ],
             ),
           ],
@@ -347,8 +331,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget _passwordRequirement(String text, bool requirementMet) {
     return Row(
       children: [
-        Icon(requirementMet ? Icons.check : Icons.clear,
-            color: requirementMet ? Colors.green : Colors.red),
+        Icon(requirementMet ? Icons.check : Icons.clear, color: requirementMet ? Colors.green : Colors.red),
         SizedBox(width: 8),
         Text(text),
       ],

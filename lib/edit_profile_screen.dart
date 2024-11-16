@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'profile_settings.dart';
+import 'profile_settings.dart'; 
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -151,8 +151,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Convert input to lowercase for case-insensitive checking
         String lowerCaseEmail = _emailController.text.trim().toLowerCase();
-        String lowerCaseUsername =
-            _usernameController.text.trim().toLowerCase();
+        String lowerCaseUsername = _usernameController.text.trim().toLowerCase();
 
         // Check if email or username already exists
         QuerySnapshot emailCheck = await _firestore
@@ -189,7 +188,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         String? profileImageUrl;
         if (_pickedImage != null) {
           final storageRef =
-              _storage.ref().child('profileImages/${user!.uid}.jpg');
+          _storage.ref().child('profileImages/${user!.uid}.jpg');
           await storageRef.putFile(_pickedImage!);
           profileImageUrl = await storageRef.getDownloadURL();
         } else {
@@ -204,9 +203,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
         // Load the current interests from Firestore to check if there is a change
         DocumentSnapshot userDoc =
-            await _firestore.collection('users').doc(user!.uid).get();
+        await _firestore.collection('users').doc(user!.uid).get();
         List<String> currentInterests =
-            List<String>.from(userDoc['interests'] ?? []);
+        List<String>.from(userDoc['interests'] ?? []);
 
         // Update Firestore only if interests have changed
         if (newInterests
@@ -273,9 +272,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Edit Profile'), actions: [
+      appBar: AppBar(
+        title: Text('Edit Profile'),
+      actions: [
         IconButton(
-          icon: Icon(Icons.settings),
+          icon: Icon(Icons.settings), 
           onPressed: () {
             Navigator.push(
               context,
@@ -283,7 +284,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             );
           },
         ),
-      ]),
+      ]
+      ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Form(

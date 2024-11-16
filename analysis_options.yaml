@@ -12,6 +12,8 @@ analyzer:
     unused_local_variable: ignore
     override_on_non_overriding_member: ignore
     no_leading_underscores_for_local_identifiers: ignore
+    unnecessary_import: ignore
+    prefer_interpolation_to_compose_strings: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:

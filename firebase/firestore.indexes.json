@@ -1,4 +1,22 @@
 {
+<<<<<<< HEAD
   "indexes": [],
+=======
+  "indexes": [
+    {
+      "collectionId": "Review",
+      "fields": [
+        {
+          "fieldPath": "user_uid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "Post_Date",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+>>>>>>> cca2ea63bec0fcf68835291694fcfcb108268bfe
   "fieldOverrides": []
 }
