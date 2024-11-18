@@ -134,7 +134,7 @@ class _MessageScreenState extends State<MessageScreen> {
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(
+        return SizedBox(
           height: 150,
           child: ListView(
             children: reactions.map((reaction) {

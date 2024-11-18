@@ -152,19 +152,14 @@ Future<void> _launchLocation(String url) async {
       switch (rating) {
         case 5:
           countFiveStars++;
-          break;
         case 4:
           countFourStars++;
-          break;
         case 3:
           countThreeStars++;
-          break;
         case 2:
           countTwoStars++;
-          break;
         case 1:
           countOneStars++;
-          break;
         default:
           break;
       }
