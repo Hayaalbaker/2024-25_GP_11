@@ -204,8 +204,7 @@ class _Review_widgetState extends State<Review_widget> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) =>
-                                          OtherUserProfileScreen(
-                                              userId: userUid),
+                                          ProfileScreen(userId: userDoc.id)
                                     ),
                                   );
                                 },
@@ -240,8 +239,7 @@ class _Review_widgetState extends State<Review_widget> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    OtherUserProfileScreen(
-                                                        userId: userUid),
+                                                    ProfileScreen(userId: userDoc.id)
                                               ),
                                             );
                                           }
