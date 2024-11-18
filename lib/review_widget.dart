@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'bookmark_service.dart';
 import 'create_post_page.dart';
 import 'otherUser_profile.dart';
 import 'post_like.dart';
@@ -42,26 +43,41 @@ class _Review_widgetState extends State<Review_widget> {
     }
   }
 
-  Future<void> toggleBookmark(String reviewId) async {
-    if (active_userid == null) return;
+Future<void> toggleBookmark(String reviewId) async {
+  if (active_userid == null) return;
 
-    final userRef =
-        FirebaseFirestore.instance.collection('users').doc(active_userid);
-    final userDoc = await userRef.get();
-    final bookmarks = List<String>.from(userDoc.data()?['bookmarks'] ?? []);
+  final reviewRef = FirebaseFirestore.instance
+      .collection('bookmarks')
+      .doc(active_userid)
+      .collection('reviews')
+      .doc(reviewId);
 
+  final doc = await reviewRef.get();
+
+  if (doc.exists) {
+    await reviewRef.delete();
     setState(() {
-      if (bookmarks.contains(reviewId)) {
-        bookmarks.remove(reviewId);
-        bookmarkedReviews[reviewId] = false;
-      } else {
-        bookmarks.add(reviewId);
-        bookmarkedReviews[reviewId] = true;
-      }
+      bookmarkedReviews[reviewId] = false;
     });
-
-    await userRef.update({'bookmarks': bookmarks});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review unbookmarked and deleted')),
+    );
+  } else {
+    await reviewRef.set({
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+    setState(() {
+      bookmarkedReviews[reviewId] = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review bookmarked')),
+    );
   }
+
+  setState(() {
+    bookmarkedReviews[reviewId] = !bookmarkedReviews[reviewId]!;
+  });
+}
 
   Future<void> deleteReview(String reviewId) async {
     try {
@@ -382,12 +398,11 @@ class _Review_widgetState extends State<Review_widget> {
                                       ? Icons.bookmark
                                       : Icons.bookmark_border,
                                   color:
-                                      isBookmarked ? Colors.blue : Colors.grey,
+                                      isBookmarked ? Color(0xFF800020) : Colors.grey,
                                 ),
-                                onPressed: () {
-                                  toggleBookmark(review_id);
-                                  setState(() {});
-                                },
+                                onPressed: () async {
+                                  await toggleBookmark(review_id); 
+                                 },
                               )
                             ],
                           ),

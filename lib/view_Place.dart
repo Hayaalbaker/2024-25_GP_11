@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'bookmark_service.dart';
 import 'create_post_page.dart';
 import 'review_widget.dart';
 import 'package:rating_summary/rating_summary.dart';
@@ -113,12 +114,13 @@ Future<void> _launchLocation(String url) async {
     }
   }
 
-  Future<void> toggleBookmarkForPlace() async {
-    final userId = _auth.currentUser?.uid;
-    if (userId == null || placeId == null) return;
+Future<void> toggleBookmarkForPlace() async {
+  final userId = _auth.currentUser?.uid;
+  if (userId == null || placeId == null) return;
 
-    final placeRef = _firestore.collection('bookmarks').doc(userId).collection('places').doc(placeId);
+  final placeRef = _firestore.collection('bookmarks').doc(userId).collection('places').doc(placeId);
 
+  try {
     if (isBookmarked) {
       await placeRef.delete();
       setState(() {
@@ -130,7 +132,12 @@ Future<void> _launchLocation(String url) async {
         isBookmarked = true;
       });
     }
+  } catch (e) {
+    print("Error toggling bookmark: $e");
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to update bookmark")));
   }
+}
+
   void _fetchRatingSummary() async {
   try {
     QuerySnapshot reviewsSnapshot = await _firestore
@@ -259,7 +266,7 @@ Future<void> _launchLocation(String url) async {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreatePostPage(placeId: placeId!), 
+                      builder: (context) => CreatePostPage(placeId: placeId ?? ''),
                     ),
                   );
                 },
@@ -278,7 +285,12 @@ Future<void> _launchLocation(String url) async {
                   isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
                   color: isBookmarked ? Color(0xFF800020) : Colors.grey,
                 ),
-                onPressed: toggleBookmarkForPlace,
+                onPressed: () async {
+                  await toggleBookmarkForPlace();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Place bookmarked!')),
+                    );
+                  },
               ),
             ],
           ),
