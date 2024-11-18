@@ -7,6 +7,7 @@ import 'otherUser_profile.dart';
 import 'post_like.dart';
 import 'database.dart';
 import 'profile_screen.dart';
+import 'report_service.dart';
 import 'view_Place.dart';
 
 class Review_widget extends StatefulWidget {
@@ -21,6 +22,7 @@ class Review_widget extends StatefulWidget {
 
 class _Review_widgetState extends State<Review_widget> {
   String? active_userid;
+  final ReportService _reportService = ReportService();
   final FirestoreService _firestoreService = FirestoreService();
   Map<String, bool> bookmarkedReviews = {};
 
@@ -336,35 +338,41 @@ Future<void> toggleBookmark(String reviewId) async {
                                 ],
                               ),
                               Spacer(),
-                              PopupMenuButton<String>(
-                                icon:
-                                    Icon(Icons.more_vert, color: Colors.black),
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    if (userUid == active_userid) {
-                                      _showDeleteConfirmationDialog(review_id);
-                                    }
-                                  } else if (value == 'share') {
-                                    // Share.share('Check out this review: $reviewText');
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) {
-                                  return [
-                                    if (userUid == active_userid)
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text(
-                                          'Delete Review',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    PopupMenuItem<String>(
-                                      value: 'share',
-                                      child: Text('Share'),
+                          PopupMenuButton<String>(
+                            icon: Icon(Icons.more_vert, color: Colors.black),
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                if (userUid == active_userid) {
+                                  _showDeleteConfirmationDialog(review_id);
+                                }
+                              } else if (value == 'share') {
+                                // Share.share('Check out this review: $reviewText');
+                              } else if (value == 'report') {
+                                _reportService.navigateToReportScreen(context, review_id); 
+                              }
+                            },
+                            itemBuilder: (BuildContext context) {
+                              return [
+                                if (userUid == active_userid)
+                                  PopupMenuItem<String>(
+                                    value: 'delete',
+                                    child: Text(
+                                      'Delete Review',
+                                      style: TextStyle(color: Colors.red),
                                     ),
-                                  ];
-                                },
-                              ),
+                                  ),
+                                if (userUid != active_userid) 
+                                  PopupMenuItem<String>(
+                                    value: 'report',
+                                    child: Text('Report'),
+                                  ),
+                                PopupMenuItem<String>(
+                                  value: 'share',
+                                  child: Text('Share'),
+                                ),
+                              ];
+                            },
+                          ),
                             ],
                           ),
                           SizedBox(height: 16),
