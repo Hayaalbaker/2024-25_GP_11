@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage>
                   Navigator.pop(context); // Close the modal
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CreatePostPage()),
+                    MaterialPageRoute(builder: (context) => CreatePostPage(ISselectplace: false)),
                   ); // Navigate to Create Post Page
                 },
               ),
@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage>
         ),
       ),
       SearchPage(), // Navigate to Search Page
-      CreatePostPage(), // Navigate to Create Post Page
+      CreatePostPage(ISselectplace: false), // Navigate to Create Post Page
       ActivityPage(), // Navigate to Activity Page
       ProfileScreen(userId: FirebaseAuth.instance.currentUser!.uid),
       // Navigate to Profile Page

@@ -266,7 +266,7 @@ Future<void> toggleBookmarkForPlace() async {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreatePostPage(placeId: placeId ?? ''),
+                      builder: (context) => CreatePostPage(placeId: placeId ?? '', ISselectplace: true),
                     ),
                   );
                 },
