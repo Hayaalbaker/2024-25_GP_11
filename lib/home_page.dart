@@ -212,7 +212,7 @@ class _HomePageState extends State<HomePage>
                 centerTitle: true,
                 collapseMode: CollapseMode.parallax,
                 background: Image.network(
-                  "https://images.pexels.com/photos/417173/pexels-photo-417173.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+                  "https://images.pexels.com/photos/1885719/pexels-photo-1885719.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
                   fit: BoxFit.cover,
                 ),
               ),
