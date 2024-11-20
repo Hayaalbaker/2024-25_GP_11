@@ -1,39 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'signin_screen.dart';
-import 'profile_settings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DeleteAccountConfirmationPage extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Anonymize user data
-  Future<void> anonymizeUserData(String uid) async {
+  Future<void> deleteUserData(String uid) async {
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-    // user's reviews to anonymize
     QuerySnapshot reviewsSnapshot = await _firestore
         .collection('reviews')
         .where('userId', isEqualTo: uid)
         .get();
     for (QueryDocumentSnapshot doc in reviewsSnapshot.docs) {
-      await doc.reference.update({
-        'userName': 'Deleted User',
-        'deleted': true, 
-      });
+      await doc.reference.delete();
     }
 
-    // Update user's messages to anonymize
     QuerySnapshot messagesSnapshot = await _firestore
         .collection('messages')
         .where('userId', isEqualTo: uid)
         .get();
     for (QueryDocumentSnapshot doc in messagesSnapshot.docs) {
-      await doc.reference.update({
-        'senderName': 'Deleted User',
-        'deleted': true, 
-      });
+      await doc.reference.delete();
     }
+
+    await _firestore.collection('users').doc(uid).delete();
+  }
+
+  Future<void> _confirmAccountDeletion(BuildContext context) async {
+    User? user = _auth.currentUser;
+
+    if (user != null) {
+      String uid = user.uid;
+
+      try {
+        await deleteUserData(uid);
+
+        await user.delete();
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => SignInScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error deleting account: $e")),
+        );
+      }
+    }
+  }
+
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text("Delete Account"),
+          content: Text(
+            "Are you absolutely sure you want to delete your account? "
+            "This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); 
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              onPressed: () async {
+                Navigator.of(dialogContext).pop(); 
+                await _confirmAccountDeletion(context); 
+              },
+              child: Text("Yes, Delete"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -55,35 +104,20 @@ class DeleteAccountConfirmationPage extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Text(
-              "Deleting your account will anonymize your data, and this action cannot be undone.",
+              "Deleting your account will remove all your data, and this action cannot be undone.",
               style: TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 40),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, 
-                foregroundColor: Colors.black, 
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.black,
               ),
-              onPressed: () async {
-                User? user = _auth.currentUser;
-
-                if (user != null) {
-                  // Step 1: Anonymize user data
-                  await anonymizeUserData(user.uid);
-
-                  // Step 2: Delete the user's Firebase Authentication account
-                  await user.delete();
-
-                  // Step 3: Navigate to the sign-in screen after account deletion
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (context) => SignInScreen()),
-                    (Route<dynamic> route) => false,
-                  );
-                }
+              onPressed: () {
+                _showConfirmationDialog(context);
               },
-              child: Text("Yes, delete my account"),
+              child: Text("Delete My Account"),
             ),
             SizedBox(height: 20),
             TextButton(

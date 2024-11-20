@@ -83,7 +83,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
               child: Icon(
                 Icons.info_outline,
                 size: 24,
-                color: const Color.fromARGB(255, 213, 9, 9),
+                color: const Color(0xFF800020),
               ),
             ),
           ],
@@ -97,7 +97,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 return ExpansionTile(
                   title: Row(
                     children: [
-                      Icon(getInterestIcon(interest), color: Colors.red),
+                      Icon(getInterestIcon(interest), color: const Color(0xFF800020)),
                       SizedBox(width: 8),
                       Text(interest),
                     ],
@@ -118,7 +118,6 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   }
                 });
 
-                // Ensure that there are interests selected
                 if (finalInterests.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -127,7 +126,6 @@ class _InterestsScreenState extends State<InterestsScreen> {
                   return;
                 }
 
-                // Save user details including interests
                 await saveUserDetails(finalInterests);
 
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -150,7 +148,6 @@ class _InterestsScreenState extends State<InterestsScreen> {
   }
 
   Future<void> saveUserDetails(List<String> finalInterests) async {
-    // Call the Firestore service to save user details
     await firestoreService.addUserDetails(
       widget.userName,
       widget.country,
