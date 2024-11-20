@@ -1,0 +1,90 @@
+.
+├── android
+│   ├── app
+│   │   ├── build.gradle
+│   │   ├── google-services.json
+│   │   └── src
+│   │       ├── debug
+│   │       │   └── AndroidManifest.xml
+│   │       ├── main
+│   │       │   ├── AndroidManifest.xml
+│   │       │   ├── java
+│   │       │   │   └── io
+│   │       │   │       └── flutter
+│   │       │   │           └── plugins
+│   │       │   │               └── GeneratedPluginRegistrant.java
+│   │       │   ├── kotlin
+│   │       │   │   └── com
+│   │       │   │       └── example
+│   │       │   │           ├── localize
+│   │       │   │           │   └── MainActivity.kt
+│   │       │   │           └── localizeus
+│   │       │   │               └── MainActivity.kt
+│   │       │   └── res
+│   │       │       ├── drawable
+│   │       │       │   └── launch_background.xml
+│   │       │       ├── drawable-v21
+│   │       │       │   └── launch_background.xml
+│   │       │       ├── mipmap-hdpi
+│   │       │       │   └── ic_launcher.png
+│   │       │       ├── mipmap-mdpi
+│   │       │       │   └── ic_launcher.png
+│   │       │       ├── mipmap-xhdpi
+│   │       │       │   └── ic_launcher.png
+│   │       │       ├── mipmap-xxhdpi
+│   │       │       │   └── ic_launcher.png
+│   │       │       ├── mipmap-xxxhdpi
+│   │       │       │   └── ic_launcher.png
+│   │       │       ├── values
+│   │       │       │   └── styles.xml
+│   │       │       └── values-night
+│   │       │           └── styles.xml
+│   │       └── profile
+│   │           └── AndroidManifest.xml
+│   ├── build.gradle
+│   ├── gradle
+│   │   └── wrapper
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── gradle.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── local.properties
+│   └── settings.gradle
+├── file_tree.txt
+└── lib
+    ├── AESHelper.dart
+    ├── Add_Place.dart
+    ├── Message_List_Screen.dart
+    ├── PlaceSearchPage.dart
+    ├── UserSearchPage.dart
+    ├── activity_page.dart
+    ├── auth_service.dart
+    ├── authentication_wrapper.dart
+    ├── bookmark_service.dart
+    ├── bookmarks.dart
+    ├── create_post_page.dart
+    ├── database.dart
+    ├── delete_user.dart
+    ├── edit_profile_screen.dart
+    ├── firebase_options.dart
+    ├── home_page.dart
+    ├── interests_screen.dart
+    ├── login_screen.dart
+    ├── main.dart
+    ├── message_screen.dart
+    ├── otherUser_profile.dart
+    ├── places_widget.dart
+    ├── post_like.dart
+    ├── profile_screen.dart
+    ├── profile_settings.dart
+    ├── register_screen.dart
+    ├── report_service.dart
+    ├── reset_password.dart
+    ├── review_widget.dart
+    ├── search_page.dart
+    ├── signin_screen.dart
+    ├── view_Place.dart
+    └── welcome_screen.dart
+
+29 directories, 59 files
