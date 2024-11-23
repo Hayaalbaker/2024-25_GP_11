@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'places_widget.dart';
+import 'add_place.dart';
 
 class PlaceSearchPage extends StatefulWidget {
   @override
@@ -11,6 +12,7 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
   List<Map<String, String>> places = [];
   String? selectedPlaceName;
   String? selectedPlaceId;
+  String? _placeErrorText;
   @override
   void initState() {
     super.initState();
@@ -31,6 +33,19 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
       });
     } catch (e) {
       print('Error fetching places: $e');
+    }
+  }
+
+  void _validatePlaceSelection() {
+    if (selectedPlaceName == null ||
+        !places.any((place) => place['name'] == selectedPlaceName)) {
+      setState(() {
+        _placeErrorText = 'Please select a valid place from the list.';
+      });
+    } else {
+      setState(() {
+        _placeErrorText = null; // Clear error if valid
+      });
     }
   }
 
@@ -59,6 +74,7 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
                   selectedPlaceName = selectedPlace;
                   selectedPlaceId = places.firstWhere(
                       (place) => place['name'] == selectedPlace)['id'];
+                  _placeErrorText = null;
                 });
               },
               fieldViewBuilder: (BuildContext context,
@@ -71,17 +87,32 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
                   decoration: InputDecoration(
                     labelText: 'Search for a place',
                     border: OutlineInputBorder(),
+                    hintText: 'Enter a place name',
+                    errorText: _placeErrorText,
                   ),
                   onChanged: (value) {
                     setState(() {
-                      // Clear `selectedPlaceId` if user manually changes the text
-                      selectedPlaceName = value;
-                      selectedPlaceId = null;
+                      if (value.isEmpty) {
+                        _placeErrorText = 'Place name cannot be empty.';
+                        selectedPlaceName = null;
+                        selectedPlaceId = null;
+                      } else if (!places
+                          .any((place) => place['name'] == value)) {
+                        _placeErrorText = 'Place not found. ';
+                        selectedPlaceName = null;
+                        selectedPlaceId = null;
+                      } else {
+                        _placeErrorText = null; // Clear error
+                        selectedPlaceName = value;
+                        selectedPlaceId = places.firstWhere(
+                            (place) => place['name'] == value)['id'];
+                      }
                     });
                   },
                 );
               },
             ),
+            if (_placeErrorText != null) linktoaddpage(),
             const SizedBox(height: 20),
             Expanded(
               child: Places_widget(
@@ -91,6 +122,30 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget linktoaddpage() {
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddPlacePage(),
+              ),
+            );
+          },
+          child: Text(
+            'go to Add Place Page.',
+            style: TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

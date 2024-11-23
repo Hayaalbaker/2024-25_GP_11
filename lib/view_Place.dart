@@ -212,8 +212,8 @@ class _PlaceScreenState extends State<ViewPlace>
           _imageUrl.isNotEmpty
               ? Image.asset(
                   _imageUrl,
-                  height: 20,
-                  width: 20,
+                  height: 150,
+                  width: 150,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.broken_image,
@@ -282,8 +282,8 @@ class _PlaceScreenState extends State<ViewPlace>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CreatePostPage(placeId: placeId ?? ''),
+                      builder: (context) => CreatePostPage(
+                          placeId: placeId ?? '', ISselectplace: true),
                     ),
                   );
                 },

@@ -4,8 +4,8 @@ import 'view_Place.dart';
 
 class Places_widget extends StatelessWidget {
   final List<String>? placeIds;
-
-  Places_widget({this.placeIds}); // Updated constructor
+  final String? filterCategory; // Added category filter
+  Places_widget({this.placeIds, this.filterCategory}); // Updated constructor
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +13,9 @@ class Places_widget extends StatelessWidget {
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
-          child: PlacesList(placeIds: placeIds), // Pass placeIds to PlacesList
+          child: PlacesList(
+              placeIds: placeIds,
+              filterCategory: filterCategory), // Pass placeIds to PlacesList
         ),
       ),
     );
@@ -22,8 +24,9 @@ class Places_widget extends StatelessWidget {
 
 class PlacesList extends StatelessWidget {
   final List<String>? placeIds;
-
-  PlacesList({this.placeIds}); // Constructor to accept placeIds
+  final String? filterCategory; // Added category filter
+  PlacesList(
+      {this.placeIds, this.filterCategory}); // Constructor to accept placeIds
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +36,24 @@ class PlacesList extends StatelessWidget {
               .collection('places')
               .where(FieldPath.documentId,
                   whereIn: placeIds) // Filter by placeIds
+              .where(
+                'category',
+                isEqualTo:
+                    filterCategory != null && filterCategory != "All Categories"
+                        ? filterCategory
+                        : null,
+              ) // Add category filter dynamically
               .orderBy('created_at', descending: true)
               .snapshots()
           : FirebaseFirestore.instance
               .collection('places')
+              .where(
+                'category',
+                isEqualTo:
+                    filterCategory != null && filterCategory != "All Categories"
+                        ? filterCategory
+                        : null,
+              ) // Add category filter dynamically
               .orderBy('created_at', descending: true)
               .snapshots(),
       builder: (context, snapshot) {

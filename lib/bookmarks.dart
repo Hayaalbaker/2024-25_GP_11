@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'bookmark_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'review_widget.dart';
 
 class BookmarksScreen extends StatelessWidget {
   @override
@@ -25,7 +29,7 @@ class BookmarksScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Text(
-                      'Bookmarked Reviews',
+                      'Reviews',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -46,7 +50,7 @@ class BookmarksScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Text(
-                      'Bookmarked Places',
+                      'Places',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -63,14 +67,39 @@ class BookmarksScreen extends StatelessWidget {
 class BookmarkedReviewsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Display bookmarked reviews here
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return Center(child: Text('Please log in to view your bookmarked reviews.'));
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bookmarked Reviews'),
+        title: Text('Reviews'),
       ),
-      body: Center(
-        child: Text('Display bookmarked reviews here'),
-        
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('bookmarks')
+            .doc(userId)
+            .collection('reviews')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('No bookmarked reviews found.'));
+          }
+
+          // Extract review IDs from bookmarked documents
+          final bookmarkedReviewIds = snapshot.data!.docs
+              .map((doc) => doc['bookmark_id'] as String)
+              .toList();
+
+          return Review_widget(
+            reviewIds: bookmarkedReviewIds, // Pass IDs to Review_widget
+          );
+        },
       ),
     );
   }
@@ -79,13 +108,33 @@ class BookmarkedReviewsScreen extends StatelessWidget {
 class BookmarkedPlacesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // Display bookmarked places here
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bookmarked Places'),
+        title: Text('Places'),
       ),
-      body: Center(
-        child: Text('Display bookmarked places here'),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: BookmarkService.fetchBookmarks('place'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(child: Text('No bookmarked places found.'));
+          }
+
+          final bookmarks = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: bookmarks.length,
+            itemBuilder: (context, index) {
+              final bookmark = bookmarks[index].data() as Map<String, dynamic>;
+              return ListTile(
+                title: Text(bookmark['target_id']),
+                subtitle: Text(bookmark['bookmark_date']?.toDate().toString() ?? ''),
+              );
+            },
+          );
+        },
       ),
     );
   }

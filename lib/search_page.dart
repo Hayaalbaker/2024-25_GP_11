@@ -7,15 +7,13 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage>
-    with SingleTickerProviderStateMixin {
+class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateMixin {
   late TabController _tabController; // TabController for managing tabs
 
   @override
   void initState() {
     super.initState();
-    _tabController =
-        TabController(length: 2, vsync: this); // Initialize TabController
+    _tabController = TabController(length: 2, vsync: this); // Initialize TabController
   }
 
   @override

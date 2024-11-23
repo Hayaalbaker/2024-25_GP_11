@@ -9,13 +9,13 @@ import 'database.dart';
 import 'profile_screen.dart';
 import 'report_service.dart';
 import 'view_Place.dart';
-import 'Notifications_page.dart';
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
   final String? userId;
+  final List<String>? reviewIds;
 
-  Review_widget({this.place_Id, this.userId});
+  Review_widget({this.place_Id, this.userId, this.reviewIds});
 
   @override
   _Review_widgetState createState() => _Review_widgetState();
@@ -27,11 +27,31 @@ class _Review_widgetState extends State<Review_widget> {
   final FirestoreService _firestoreService = FirestoreService();
   Map<String, bool> bookmarkedReviews = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
+@override
+void initState() {
+  super.initState();
+  _loadUserData();
+  _loadBookmarks();
+}
+
+Future<void> _loadBookmarks() async {
+  if (active_userid == null) return;
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection('bookmarks')
+      .doc(active_userid)
+      .collection('reviews')
+      .get();
+
+  Map<String, bool> tempBookmarks = {};
+  for (var doc in snapshot.docs) {
+    tempBookmarks[doc.id] = true;
   }
+
+  setState(() {
+    bookmarkedReviews = tempBookmarks;
+  });
+}
 
   Future<void> _loadUserData() async {
     try {
@@ -46,41 +66,54 @@ class _Review_widgetState extends State<Review_widget> {
     }
   }
 
-  Future<void> toggleBookmark(String reviewId) async {
-    if (active_userid == null) return;
+Future<void> toggleBookmark(String reviewId) async {
+  if (active_userid == null) return;
 
-    final reviewRef = FirebaseFirestore.instance
-        .collection('bookmarks')
-        .doc(active_userid)
-        .collection('reviews')
-        .doc(reviewId);
+  final reviewRef = FirebaseFirestore.instance
+      .collection('bookmarks')
+      .doc(active_userid)
+      .collection('reviews')
+      .doc(reviewId);
 
-    final doc = await reviewRef.get();
+  final reviewDoc = await FirebaseFirestore.instance
+      .collection('Review')
+      .doc(reviewId)
+      .get();
 
-    if (doc.exists) {
-      await reviewRef.delete();
-      setState(() {
-        bookmarkedReviews[reviewId] = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review unbookmarked and deleted')),
-      );
-    } else {
-      await reviewRef.set({
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      setState(() {
-        bookmarkedReviews[reviewId] = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review bookmarked')),
-      );
-    }
-
-    setState(() {
-      bookmarkedReviews[reviewId] = !bookmarkedReviews[reviewId]!;
-    });
+  if (!reviewDoc.exists) {
+    print('Review does not exist');
+    return;
   }
+
+  final doc = await reviewRef.get();
+
+  if (!mounted) return;  
+
+  if (doc.exists) {
+    await reviewRef.delete();
+    setState(() {
+      bookmarkedReviews[reviewId] = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review unbookmarked')),
+    );
+  } else {
+    final bookmarkData = {
+      'bookmark_id': reviewId,
+      'user_uid': active_userid,
+      'bookmark_date': FieldValue.serverTimestamp(),
+      'bookmark_type': 'review',
+    };
+
+    await reviewRef.set(bookmarkData);
+    setState(() {
+      bookmarkedReviews[reviewId] = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review bookmarked')),
+    );
+  }
+}
 
   Future<void> deleteReview(String reviewId) async {
     try {
@@ -148,8 +181,11 @@ class _Review_widgetState extends State<Review_widget> {
         }
 
         final filteredDocs = snapshot.data!.docs.where((doc) {
-          return widget.place_Id == null || doc['placeId'] == widget.place_Id;
-        }).toList();
+          if (widget.reviewIds != null) {
+            return widget.reviewIds!.contains(doc.id);
+            }
+            return widget.place_Id == null || doc['placeId'] == widget.place_Id;
+          }).toList();
 
         return ListView.separated(
           padding: EdgeInsets.symmetric(horizontal: 8),
@@ -164,7 +200,7 @@ class _Review_widgetState extends State<Review_widget> {
             var doc = filteredDocs[index];
             String review_id = doc.id;
             String reviewText = doc['Review_Text'];
-            String placeId = doc['placeId'] ?? '';
+            String placeId = doc['placeId'];
             String userUid = doc['user_uid'];
             int rating = doc['Rating'];
             List? likeCount = doc['Like_count'];
@@ -222,8 +258,9 @@ class _Review_widgetState extends State<Review_widget> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) =>
-                                            ProfileScreen(userId: userDoc.id)),
+                                      builder: (context) =>
+                                          ProfileScreen(userId: userDoc.id)
+                                    ),
                                   );
                                 },
                                 child: CircleAvatar(
@@ -256,9 +293,9 @@ class _Review_widgetState extends State<Review_widget> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      ProfileScreen(
-                                                          userId: userDoc.id)),
+                                                builder: (context) =>
+                                                    ProfileScreen(userId: userDoc.id)
+                                              ),
                                             );
                                           }
                                         },
@@ -338,43 +375,41 @@ class _Review_widgetState extends State<Review_widget> {
                                 ],
                               ),
                               Spacer(),
-                              PopupMenuButton<String>(
-                                icon:
-                                    Icon(Icons.more_vert, color: Colors.black),
-                                onSelected: (value) {
-                                  if (value == 'delete') {
-                                    if (userUid == active_userid) {
-                                      _showDeleteConfirmationDialog(review_id);
-                                    }
-                                  } else if (value == 'share') {
-                                    // Share.share('Check out this review: $reviewText');
-                                  } else if (value == 'report') {
-                                    _reportService.navigateToReportScreen(
-                                        context, review_id);
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) {
-                                  return [
-                                    if (userUid == active_userid)
-                                      PopupMenuItem<String>(
-                                        value: 'delete',
-                                        child: Text(
-                                          'Delete Review',
-                                          style: TextStyle(color: Colors.red),
-                                        ),
-                                      ),
-                                    if (userUid != active_userid)
-                                      PopupMenuItem<String>(
-                                        value: 'report',
-                                        child: Text('Report'),
-                                      ),
-                                    PopupMenuItem<String>(
-                                      value: 'share',
-                                      child: Text('Share'),
+                          PopupMenuButton<String>(
+                            icon: Icon(Icons.more_vert, color: Colors.black),
+                            onSelected: (value) {
+                              if (value == 'delete') {
+                                if (userUid == active_userid) {
+                                  _showDeleteConfirmationDialog(review_id);
+                                }
+                              } else if (value == 'share') {
+                                // Share.share('Check out this review: $reviewText');
+                              } else if (value == 'report') {
+                                _reportService.navigateToReportScreen(context, review_id); 
+                              }
+                            },
+                            itemBuilder: (BuildContext context) {
+                              return [
+                                if (userUid == active_userid)
+                                  PopupMenuItem<String>(
+                                    value: 'delete',
+                                    child: Text(
+                                      'Delete Review',
+                                      style: TextStyle(color: Colors.red),
                                     ),
-                                  ];
-                                },
-                              ),
+                                  ),
+                                if (userUid != active_userid) 
+                                  PopupMenuItem<String>(
+                                    value: 'report',
+                                    child: Text('Report'),
+                                  ),
+                                PopupMenuItem<String>(
+                                  value: 'share',
+                                  child: Text('Share'),
+                                ),
+                              ];
+                            },
+                          ),
                             ],
                           ),
                           SizedBox(height: 16),
@@ -407,13 +442,12 @@ class _Review_widgetState extends State<Review_widget> {
                                   isBookmarked
                                       ? Icons.bookmark
                                       : Icons.bookmark_border,
-                                  color: isBookmarked
-                                      ? Color(0xFF800020)
-                                      : Colors.grey,
+                                  color:
+                                      isBookmarked ? Color(0xFF800020) : Colors.grey,
                                 ),
                                 onPressed: () async {
-                                  await toggleBookmark(review_id);
-                                },
+                                  await toggleBookmark(review_id); 
+                                 },
                               )
                             ],
                           ),
