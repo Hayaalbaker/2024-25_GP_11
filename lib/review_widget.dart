@@ -13,8 +13,9 @@ import 'view_Place.dart';
 class Review_widget extends StatefulWidget {
   final String? place_Id;
   final String? userId;
+  final List<String>? reviewIds;
 
-  Review_widget({this.place_Id, this.userId});
+  Review_widget({this.place_Id, this.userId, this.reviewIds});
 
   @override
   _Review_widgetState createState() => _Review_widgetState();
@@ -45,41 +46,52 @@ class _Review_widgetState extends State<Review_widget> {
     }
   }
 
-Future<void> toggleBookmark(String reviewId) async {
-  if (active_userid == null) return;
+  Future<void> toggleBookmark(String reviewId) async {
+    if (active_userid == null) return;
 
-  final reviewRef = FirebaseFirestore.instance
-      .collection('bookmarks')
-      .doc(active_userid)
-      .collection('reviews')
-      .doc(reviewId);
+    final reviewRef = FirebaseFirestore.instance
+        .collection('bookmarks')
+        .doc(active_userid)
+        .collection('reviews')
+        .doc(reviewId);
 
-  final doc = await reviewRef.get();
+    final reviewDoc = await FirebaseFirestore.instance
+        .collection('Review')
+        .doc(reviewId)
+        .get();
 
-  if (doc.exists) {
-    await reviewRef.delete();
-    setState(() {
-      bookmarkedReviews[reviewId] = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Review unbookmarked and deleted')),
-    );
-  } else {
-    await reviewRef.set({
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    setState(() {
-      bookmarkedReviews[reviewId] = true;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Review bookmarked')),
-    );
+    if (!reviewDoc.exists) {
+      print('Review does not exist');
+      return;
+    }
+
+    final doc = await reviewRef.get();
+
+    if (doc.exists) {
+      await reviewRef.delete();
+      setState(() {
+        bookmarkedReviews[reviewId] = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Review unbookmarked')),
+      );
+    } else {
+      final bookmarkData = {
+        'bookmark_id': reviewId,
+        'user_uid': active_userid,
+        'bookmark_date': FieldValue.serverTimestamp(),
+        'bookmark_type': 'review',
+      };
+
+      await reviewRef.set(bookmarkData);
+      setState(() {
+        bookmarkedReviews[reviewId] = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Review bookmarked')),
+      );
+    }
   }
-
-  setState(() {
-    bookmarkedReviews[reviewId] = !bookmarkedReviews[reviewId]!;
-  });
-}
 
   Future<void> deleteReview(String reviewId) async {
     try {
