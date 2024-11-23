@@ -4,7 +4,7 @@ import 'database.dart';
 import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-
+import 'add_place.dart'; // Import the Add Place page
 void main() {
   runApp(CreatePostPage(
     //placeId: null, 
@@ -53,6 +53,9 @@ class _ReviewFormState extends State<ReviewForm> {
   String? selectedPlaceName;
   String? selectedPlaceId;
 
+
+final TextEditingController _placeController = TextEditingController();
+String? _placeErrorText;
  @override
 void initState() {
   super.initState();
@@ -139,7 +142,20 @@ void initState() {
     }
   }
 
-  @override
+
+
+void _validatePlaceSelection() {
+  if (selectedPlaceName == null || !places.any((place) => place['name'] == selectedPlaceName)) {
+    setState(() {
+      _placeErrorText = 'Please select a valid place from the list.';
+    });
+  } else {
+    setState(() {
+      _placeErrorText = null; // Clear error if valid
+    });
+  }
+}
+@override
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
@@ -165,30 +181,28 @@ Widget build(BuildContext context) {
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, 
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-  controller: _reviewController,
-  onChanged: (value) {
-    setState(() {
-      ReviewText = value; // Update ReviewText on change
-    });
-  },
-  decoration: InputDecoration(
-    labelText: 'Write your review',
-    border: OutlineInputBorder(),
-  ),
-  maxLines: 5,
-),
-
+              controller: _reviewController,
+              onChanged: (value) {
+                setState(() {
+                  ReviewText = value;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: 'Write your review',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 5,
+            ),
             SizedBox(height: 20),
             RatingBar.builder(
               initialRating: Rating.toDouble(),
               minRating: 1,
               direction: Axis.horizontal,
               itemCount: 5,
-              itemBuilder: (context, _) =>
-                  Icon(Icons.star, color: Colors.amber),
+              itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
               onRatingUpdate: (rating) {
                 setState(() {
                   Rating = rating.toInt();
@@ -201,47 +215,109 @@ Widget build(BuildContext context) {
                     'Place: $selectedPlaceName',
                     style: TextStyle(fontSize: 16),
                   )
-                : Autocomplete<String>(
-                    optionsBuilder: (TextEditingValue textEditingValue) {
-                      if (textEditingValue.text.isEmpty) {
-                        return const Iterable<String>.empty();
-                      }
-                      return places
-                          .map((place) => place['name']!) 
-                          .where((name) => name.toLowerCase().contains(
-                              textEditingValue.text.toLowerCase()));
-                    },
-                    onSelected: (String selectedPlace) {
-                      setState(() {
-                        selectedPlaceName = selectedPlace;
-                        selectedPlaceId = places.firstWhere(
-                            (place) => place['name'] == selectedPlace)['id'];
-                      });
-                    },
-                    fieldViewBuilder: (BuildContext context,
-                        TextEditingController textEditingController,
-                        FocusNode focusNode,
-                        VoidCallback onFieldSubmitted) {
-                      return TextField(
-                        controller: textEditingController,
-                        focusNode: focusNode,
-                        decoration: InputDecoration(
-                          labelText: 'Search for a place',
-                          border: OutlineInputBorder(),
-                          hintText: 'Enter a place name',
-                        ),
-                      );
-                    },
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Autocomplete<String>(
+                        optionsBuilder: (TextEditingValue textEditingValue) {
+                          if (textEditingValue.text.isEmpty) {
+                            return const Iterable<String>.empty();
+                          }
+                          return places
+                              .map((place) => place['name']!)
+                              .where((name) => name.toLowerCase().contains(
+                                  textEditingValue.text.toLowerCase()));
+                        },
+                        onSelected: (String selectedPlace) {
+                          setState(() {
+                            selectedPlaceName = selectedPlace;
+                            selectedPlaceId = places.firstWhere(
+                                (place) =>
+                                    place['name'] == selectedPlace)['id'];
+                            _placeErrorText = null; // Clear error
+                          });
+                        },
+                        fieldViewBuilder: (BuildContext context,
+                            TextEditingController textEditingController,
+                            FocusNode focusNode,
+                            VoidCallback onFieldSubmitted) {
+                          return TextField(
+                            controller: textEditingController,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Search for a place',
+                              border: OutlineInputBorder(),
+                              hintText: 'Enter a place name',
+                              errorText: _placeErrorText,
+                            ),
+                            onChanged: (value) {
+                              setState(() {
+                                if (value.isEmpty) {
+                                  _placeErrorText =
+                                      'Place name cannot be empty.';
+                                  selectedPlaceName = null;
+                                  selectedPlaceId = null;
+                                } else if (!places.any(
+                                    (place) => place['name'] == value)) {
+                                  _placeErrorText =
+                                      'Place not found. If you don’t find the place, ';
+                                  selectedPlaceName = null;
+                                  selectedPlaceId = null;
+                                } else {
+                                  _placeErrorText = null; // Clear error
+                                  selectedPlaceName = value;
+                                  selectedPlaceId = places
+                                      .firstWhere((place) =>
+                                          place['name'] == value)['id'];
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                      if (_placeErrorText != null)
+                        linktoaddpage(), // Call the link widget when needed
+                    ],
                   ),
-            SizedBox(height: 20), 
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: saveReview,
+              onPressed: () {
+                _validatePlaceSelection();
+                if (_formKey.currentState!.validate() &&
+                    _placeErrorText == null) {
+                  saveReview();
+                }
+              },
               child: Text('Submit Review'),
             ),
           ],
         ),
       ),
     ),
+  );
+}
+
+Widget linktoaddpage() {
+  return Row(
+children: [
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddPlacePage(),
+            ),
+          );
+        },
+        child: Text(
+          'go to Add Place Page.',
+          style: TextStyle(
+            color: Colors.blue,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
+    ],
   );
 }
 }

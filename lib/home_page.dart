@@ -237,8 +237,13 @@ class _HomePageState extends State<HomePage>
         body: TabBarView(
           controller: _tabController,
           children: [
-            Review_widget(), // Replace with actual reviews content
-            Places_widget(), // Display the Places widget here
+            Review_widget(), 
+                Container(
+      padding: EdgeInsets.zero, // Ensures no padding
+      child: viewPlaces(),
+    ),
+            // Replace with actual reviews content
+             // Display the Places widget here
           ],
         ),
       ),
@@ -314,7 +319,106 @@ class _HomePageState extends State<HomePage>
       floatingActionButtonLocation: FloatingActionButtonLocation
           .centerDocked, // Center the button above the nav bar
     );
+ 
+
   }
+ Widget viewPlaces() {
+  return DefaultTabController(
+    length: 5, // Number of tabs
+    child: Column(
+      children: [
+        TabBar(
+          isScrollable: true, // Enable scrolling for the tabs
+          indicatorSize: TabBarIndicatorSize.label,
+          labelColor: Color(0xFF800020),
+          unselectedLabelColor: Colors.grey,
+          padding: EdgeInsets.zero, // Remove extra padding
+          labelPadding: EdgeInsets.symmetric(horizontal: 8.0), // Adjust tab padding
+          tabs: const [
+            Tab(
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Minimize the size of the tab
+                children: [
+                  Icon(Icons.place, size: 20), // Smaller icon size
+                  SizedBox(height: 4), // Adjust spacing
+                  Text(
+                    "All",
+                    style: TextStyle(fontSize: 12), // Smaller text size
+                  ),
+                ],
+              ),
+            ),
+            Tab(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.restaurant, size: 20),
+                  SizedBox(height: 4),
+                  Text(
+                    "Restaurants",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Tab(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.park, size: 20),
+                  SizedBox(height: 4),
+                  Text(
+                    "Parks",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Tab(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.shopping_bag, size: 20),
+                  SizedBox(height: 4),
+                  Text(
+                    "Shopping",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Tab(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.child_care, size: 20),
+                  SizedBox(height: 4),
+                  Text(
+                    "Children",
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            children: [
+              Places_widget(filterCategory: "All Categories"),
+              Places_widget(filterCategory: "Restaurants"),
+              Places_widget(filterCategory: "Parks"),
+              Places_widget(filterCategory: "Shopping"),
+              Places_widget(filterCategory: "Children"),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
@@ -337,4 +441,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
     return false;
   }
+
+       
+  
+
 }
