@@ -41,7 +41,8 @@ class _PlaceFormState extends State<PlaceForm> {
 
   TextEditingController _placeNameController = TextEditingController();
   TextEditingController _categoryController = TextEditingController();
-// Main categories for the first dropdown
+
+  // Main categories for the first dropdown
   final List<String> mainCategories = [
     'Restaurants',
     'Parks',
@@ -84,9 +85,18 @@ class _PlaceFormState extends State<PlaceForm> {
     ],
   };
 
+  // Image paths map
+  final Map<String, String> categoryImages = {
+    'Restaurants': 'images/Restaurant.png',
+    'Parks': 'images/Park.png',
+    'Shopping': 'images/Shopping.png',
+    'Children': 'images/children.png',
+  };
+
   String? selectedMainCategory;
   List<String>? availableSubCategories;
   String? selectedSubCategory;
+  String? selectedImagePath;
 
   bool check_values = false;
   final FirestoreService _firestoreService =
@@ -119,27 +129,22 @@ class _PlaceFormState extends State<PlaceForm> {
     }
   }
 
-  Future<void> _saveProfile() async {
-    setState(() {
-      isLoading = true;
-    });
-  }
-
-
-
-
-// Update user profile in Firestore
   Future<void> checkPlace() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-      //  User? user = _auth.currentUser;
-          DocumentReference newPlaceRef = FirebaseFirestore.instance.collection('places').doc();
-        // Convert input to lowercase for case-insensitive checking
+        if (selectedImagePath == null || selectedImagePath!.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Please select a valid category with an image'),
+          ));
+          return;
+        }
+
+        DocumentReference newPlaceRef =
+            FirebaseFirestore.instance.collection('places').doc();
         String lowerCasePlaceName = placeName.trim().toLowerCase();
         String lowerCaseCategory = category.trim().toLowerCase();
 
-        // Check if email or username already exists
         QuerySnapshot placeNameCheck = await FirebaseFirestore.instance
             .collection('places')
             .where('place_name', isEqualTo: lowerCasePlaceName)
@@ -149,49 +154,40 @@ class _PlaceFormState extends State<PlaceForm> {
             .where('category', isEqualTo: lowerCaseCategory)
             .get();
 
-        // Check if the email already exists and does not belong to the current user
-        if (placeNameCheck.docs.isNotEmpty &&
-            categoryCheck.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('cant add the place becouse it is already exists. please add other one ')));
+        if (placeNameCheck.docs.isNotEmpty && categoryCheck.docs.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(
+                  'Cannot add the place because it already exists. Please add another one.')));
           return;
-        }else{
+        } else {
+          await newPlaceRef.set({
+            'placeId': newPlaceRef.id,
+            'place_name': placeName,
+            'description': description,
+            'location': location,
+            'category': category,
+            'subcategory': subcategory,
+            'created_at': FieldValue.serverTimestamp(),
+            'Neighborhood': Neighborhood,
+            'Street': Street,
+            'user_uid': userID,
+            'imageUrl': selectedImagePath,
+          });
 
-                    newPlaceRef.set({
-                      'placeId': newPlaceRef.id, // Save the generated place ID
-                      'place_name': placeName,
-                      'description': description,
-                      'location': location,
-                      'category': category,
-                      'subcategory': subcategory, // Save selected subcategory
-                      'created_at': FieldValue.serverTimestamp(),
-                      'Neighborhood': Neighborhood,
-                      'Street': Street,
-                      'user_uid': userID,
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Place Added: $placeName Successfully!'),
-                    )
-                    
-                    );
-                                        Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              HomePage()), // Ensure this points to your AddPlacePage
-                    );
-
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Place Added: $placeName Successfully!'),
+          ));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
         }
-
-
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to update profile: $e')));
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -260,12 +256,11 @@ class _PlaceFormState extends State<PlaceForm> {
                   suffixIcon: InfoPopupWidget(
                     contentTitle: ' (Provide Google Maps Link)',
                     child: Row(
-                      mainAxisSize: MainAxisSize.min, // Wrap content tightly
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('More Info'), // The text goes first
-                        SizedBox(
-                            width: 10), // Add spacing between text and icon
-                        Icon(Icons.info), // The icon goes after the text
+                        Text('More Info'),
+                        SizedBox(width: 10),
+                        Icon(Icons.info),
                       ],
                     ),
                   ),
@@ -286,7 +281,6 @@ class _PlaceFormState extends State<PlaceForm> {
                   location = value!;
                 },
               ),
-
               TextFormField(
                 decoration: InputDecoration(labelText: 'Description*'),
                 validator: (value) {
@@ -299,7 +293,6 @@ class _PlaceFormState extends State<PlaceForm> {
                   description = value!;
                 },
               ),
-              // First Dropdown (Main Category)
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(labelText: 'Category*'),
                 value: selectedMainCategory,
@@ -314,8 +307,9 @@ class _PlaceFormState extends State<PlaceForm> {
                     selectedMainCategory = value!;
                     availableSubCategories =
                         subCategories[value]; // Update available subcategories
-                    selectedSubCategory =
-                        null; // Reset subcategory when main category changes
+                    selectedSubCategory = null; // Reset subcategory
+                    selectedImagePath =
+                        categoryImages[value]; // Update image path
                   });
                 },
                 validator: (value) {
@@ -328,8 +322,6 @@ class _PlaceFormState extends State<PlaceForm> {
                   category = value!;
                 },
               ),
-
-              // Second Dropdown (Sub Category), shown only when a main category is selected
               if (availableSubCategories != null)
                 DropdownButtonFormField<String>(
                   decoration: InputDecoration(labelText: 'Subcategory'),
@@ -355,17 +347,11 @@ class _PlaceFormState extends State<PlaceForm> {
                     subcategory = value!;
                   },
                 ),
-
               SizedBox(height: 20),
-
-
-
               ElevatedButton(
                 onPressed: checkPlace,
                 child: Text('Add Place'),
-                
               ),
-
             ],
           ),
         ),

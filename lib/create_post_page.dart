@@ -12,7 +12,7 @@ void main() {
 class CreatePostPage extends StatelessWidget {
   final String? placeId;
 
-  CreatePostPage({super.key, this.placeId}); 
+  CreatePostPage({super.key, this.placeId});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +21,7 @@ class CreatePostPage extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ReviewForm(placeId: placeId), 
+      home: ReviewForm(placeId: placeId),
     );
   }
 }
@@ -29,7 +29,9 @@ class CreatePostPage extends StatelessWidget {
 class ReviewForm extends StatefulWidget {
   final String? placeId;
 
-  ReviewForm({super.key, required this.placeId}); // Constructor now accepts a nullable String
+  ReviewForm(
+      {super.key,
+      required this.placeId}); // Constructor now accepts a nullable String
 
   @override
   _ReviewFormState createState() => _ReviewFormState();
@@ -57,7 +59,8 @@ class _ReviewFormState extends State<ReviewForm> {
     // If placeId is passed, pre-fill the dropdown
     if (widget.placeId != null) {
       selectedPlaceId = widget.placeId;
-      final place = places.firstWhere((place) => place['id'] == selectedPlaceId, orElse: () => {});
+      final place = places.firstWhere((place) => place['id'] == selectedPlaceId,
+          orElse: () => {});
       if (place.isNotEmpty) {
         selectedPlaceName = place['name'];
       }
@@ -79,7 +82,8 @@ class _ReviewFormState extends State<ReviewForm> {
 
   Future<void> fetchPlaces() async {
     try {
-      final querySnapshot = await FirebaseFirestore.instance.collection('places').get();
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('places').get();
       setState(() {
         places = querySnapshot.docs.map((doc) {
           return {
@@ -87,13 +91,12 @@ class _ReviewFormState extends State<ReviewForm> {
             'name': doc['place_name'] as String,
           };
         }).toList();
-        
+
         // After places are fetched, pre-fill the selected place if a placeId is provided
         if (widget.placeId != null && places.isNotEmpty) {
           final place = places.firstWhere(
-            (place) => place['id'] == widget.placeId, 
-            orElse: () => {}
-          );
+              (place) => place['id'] == widget.placeId,
+              orElse: () => {});
           if (place.isNotEmpty) {
             selectedPlaceId = widget.placeId;
             selectedPlaceName = place['name'];
@@ -109,7 +112,8 @@ class _ReviewFormState extends State<ReviewForm> {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        DocumentReference newReviewRef = FirebaseFirestore.instance.collection('Review').doc();
+        DocumentReference newReviewRef =
+            FirebaseFirestore.instance.collection('Review').doc();
 
         await newReviewRef.set({
           'Review_Text': ReviewText,
@@ -131,8 +135,8 @@ class _ReviewFormState extends State<ReviewForm> {
           ),
         );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to post review: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
       }
     }
   }
@@ -178,29 +182,52 @@ class _ReviewFormState extends State<ReviewForm> {
                 minRating: 1,
                 direction: Axis.horizontal,
                 itemCount: 5,
-                itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                itemBuilder: (context, _) =>
+                    Icon(Icons.star, color: Colors.amber),
                 onRatingUpdate: (rating) {
                   setState(() {
                     Rating = rating.toInt();
                   });
                 },
               ),
-              DropdownButton<String>(
-                hint: Text("Select a place"),
-                value: selectedPlaceName,
-                onChanged: (value) {
+              Autocomplete<String>(
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<String>.empty();
+                  }
+                  return places
+                      .map((place) => place['name']!) // Extract place names
+                      .where((name) => name
+                          .toLowerCase()
+                          .contains(textEditingValue.text.toLowerCase()));
+                },
+                onSelected: (String selectedPlace) {
                   setState(() {
-                    selectedPlaceName = value;
-                    selectedPlaceId = places
-                        .firstWhere((place) => place['name'] == value)['id'];
+                    selectedPlaceName = selectedPlace;
+                    selectedPlaceId = places.firstWhere(
+                        (place) => place['name'] == selectedPlace)['id'];
                   });
                 },
-                items: places.map((place) {
-                  return DropdownMenuItem<String>(
-                    value: place['name'],
-                    child: Text(place['name']!),
+                fieldViewBuilder: (BuildContext context,
+                    TextEditingController textEditingController,
+                    FocusNode focusNode,
+                    VoidCallback onFieldSubmitted) {
+                  return TextField(
+                    controller: textEditingController,
+                    focusNode: focusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Search for a place',
+                      border: OutlineInputBorder(),
+                      hintText: 'Enter a place name',
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPlaceName = value;
+                        // Optional: Validate the entered value
+                      });
+                    },
                   );
-                }).toList(),
+                },
               ),
               SizedBox(height: 20),
               ElevatedButton(

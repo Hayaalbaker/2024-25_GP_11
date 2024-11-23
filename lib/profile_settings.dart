@@ -6,9 +6,7 @@ import 'signin_screen.dart';
 import 'delete_user.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
-  // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
-    // ignore: unused_field
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -24,7 +22,8 @@ class ProfileSettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AccountInformationPage()),
+                MaterialPageRoute(
+                    builder: (context) => AccountInformationPage()),
               );
             },
           ),
@@ -42,7 +41,8 @@ class ProfileSettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => DeleteAccountConfirmationPage()),
+                MaterialPageRoute(
+                    builder: (context) => DeleteAccountConfirmationPage()),
               );
             },
           ),
@@ -69,7 +69,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
   bool _hasUnsavedChanges = false;
 
   final Map<String, List<String>> cities = {
-    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Mecca', 'Medina'],
+    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam'],
     'Egypt': ['Cairo', 'Alexandria', 'Giza'],
     'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah'],
     'Kuwait': ['Kuwait City', 'Salmiya', 'Hawalli'],
@@ -104,7 +104,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
     }
   }
 
-  Future<void> _updateUserInfo() async {
+  Future<void> _updateUserInfo(BuildContext context) async {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('users').doc(user.uid).update({
@@ -128,7 +128,8 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         builder: (context) {
           return AlertDialog(
             title: Text('Unsaved Changes'),
-            content: Text('You have unsaved changes. Do you want to discard them?'),
+            content:
+                Text('You have unsaved changes. Do you want to discard them?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false), // Stay
@@ -147,7 +148,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
     return true;
   }
 
-  void _signOut() async {
+  void _signOut(BuildContext context) async {
     await _auth.signOut();
     Navigator.pushAndRemoveUntil(
       context,
@@ -191,7 +192,12 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                       _hasUnsavedChanges = true;
                     });
                   },
-                  items: ['Saudi Arabia', 'Egypt', 'United Arab Emirates', 'Kuwait']
+                  items: [
+                    'Saudi Arabia',
+                    'Egypt',
+                    'United Arab Emirates',
+                    'Kuwait'
+                  ]
                       .map((country) => DropdownMenuItem(
                             value: country,
                             child: Text(country),
@@ -213,24 +219,26 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     });
                   },
                   items: _selectedCountry != null
-                      ? cities[_selectedCountry]!.map((city) => DropdownMenuItem(
-                            value: city,
-                            child: Text(city),
-                          )).toList()
+                      ? cities[_selectedCountry]!
+                          .map((city) => DropdownMenuItem(
+                                value: city,
+                                child: Text(city),
+                              ))
+                          .toList()
                       : [],
                 ),
               ),
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: _updateUserInfo,
+                  onPressed: () => _updateUserInfo(context),
                   child: Text('Update Information'),
                 ),
               ),
               SizedBox(height: 20),
               Center(
                 child: GestureDetector(
-                  onTap: _signOut,
+                  onTap: () => _signOut(context),
                   child: Text(
                     'Sign Out',
                     style: TextStyle(
@@ -259,20 +267,20 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   TextEditingController _currentPasswordController = TextEditingController();
   TextEditingController _newPasswordController = TextEditingController();
 
-  Future<void> _changePassword() async {
+  Future<void> _changePassword(BuildContext context) async {
     User? user = _auth.currentUser;
     try {
-      // Re-authenticate the user
       String email = user!.email!;
-      AuthCredential credential = EmailAuthProvider.credential(email: email, password: _currentPasswordController.text);
+      AuthCredential credential = EmailAuthProvider.credential(
+          email: email, password: _currentPasswordController.text);
       await user.reauthenticateWithCredential(credential);
-      
-      // Update password
       await user.updatePassword(_newPasswordController.text);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Password changed successfully!')));
       Navigator.pop(context); // Return to Profile Settings
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error changing password: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error changing password: $e')));
     }
   }
 
@@ -296,7 +304,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => ResetPasswordScreen()),
                 );
               },
               child: const Text('Forgot Password?'),
@@ -308,18 +317,20 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _changePassword,
+              onPressed: () => _changePassword(context),
               child: Text('Change Password'),
             ),
             SizedBox(height: 20),
             // Password requirements display
             Column(
               children: [
-                _passwordRequirement('At least 8 characters', _newPasswordController.text.length >= 8),
-                _passwordRequirement('One uppercase letter', _newPasswordController.text.contains(RegExp(r'[A-Z]'))),
-                _passwordRequirement('One lowercase letter', _newPasswordController.text.contains(RegExp(r'[a-z]'))),
-                _passwordRequirement('One digit', _newPasswordController.text.contains(RegExp(r'[0-9]'))),
-                _passwordRequirement('One special character', _newPasswordController.text.contains(RegExp(r'[!@#\$&*~]'))),
+                _passwordRequirement(
+                    'Password must be at least 6 characters long'),
+                _passwordRequirement('Password must contain at least 1 digit'),
+                _passwordRequirement(
+                    'Password must contain at least 1 uppercase letter'),
+                _passwordRequirement(
+                    'Password must contain at least 1 lowercase letter'),
               ],
             ),
           ],
@@ -328,13 +339,60 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     );
   }
 
-  Widget _passwordRequirement(String text, bool requirementMet) {
+  Widget _passwordRequirement(String text) {
     return Row(
       children: [
-        Icon(requirementMet ? Icons.check : Icons.clear, color: requirementMet ? Colors.green : Colors.red),
-        SizedBox(width: 8),
+        Icon(Icons.check, color: Colors.green),
+        SizedBox(width: 5),
         Text(text),
       ],
+    );
+  }
+}
+
+class DeleteAccountConfirmationPage extends StatelessWidget {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    User? user = _auth.currentUser;
+    try {
+      await user?.delete();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Account deleted')));
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => SignInScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error deleting account: $e')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Delete Account"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Text(
+              'Are you sure you want to delete your account? This action is irreversible.',
+              style: TextStyle(fontSize: 18),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _deleteAccount(context),
+              child: Text('Delete Account'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

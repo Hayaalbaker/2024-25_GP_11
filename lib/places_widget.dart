@@ -3,13 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'view_Place.dart';
 
 class Places_widget extends StatelessWidget {
+  final List<String>? placeIds;
+
+  Places_widget({this.placeIds}); // Updated constructor
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
-          child: PlacesList(),
+          child: PlacesList(placeIds: placeIds), // Pass placeIds to PlacesList
         ),
       ),
     );
@@ -17,13 +21,24 @@ class Places_widget extends StatelessWidget {
 }
 
 class PlacesList extends StatelessWidget {
+  final List<String>? placeIds;
+
+  PlacesList({this.placeIds}); // Constructor to accept placeIds
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('places')
-          .orderBy('created_at', descending: true)
-          .snapshots(),
+      stream: placeIds != null && placeIds!.isNotEmpty
+          ? FirebaseFirestore.instance
+              .collection('places')
+              .where(FieldPath.documentId,
+                  whereIn: placeIds) // Filter by placeIds
+              .orderBy('created_at', descending: true)
+              .snapshots()
+          : FirebaseFirestore.instance
+              .collection('places')
+              .orderBy('created_at', descending: true)
+              .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final List<DocumentSnapshot> documents = snapshot.data!.docs;
@@ -51,7 +66,12 @@ class PlacesList extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: imageUrl.isNotEmpty
-                              ? Image.network(imageUrl, width: 200, height: 150, fit: BoxFit.cover)
+                              ? Image.asset(
+                                  imageUrl,
+                                  width: 200,
+                                  height: 150,
+                                  fit: BoxFit.cover,
+                                )
                               : Icon(Icons.image, size: 150),
                         ),
                       ),
@@ -67,12 +87,14 @@ class PlacesList extends StatelessWidget {
                             const SizedBox(height: 5),
                             Text(
                               doc['category'],
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(color: Colors.grey[600]),
                             ),
                           ],
                         ),
                       ),
-                      
                     ],
                   ),
                 ),

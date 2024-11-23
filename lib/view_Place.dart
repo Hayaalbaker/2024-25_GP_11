@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'bookmark_service.dart';
 import 'create_post_page.dart';
 import 'review_widget.dart';
 import 'package:rating_summary/rating_summary.dart';
+
 class ViewPlace extends StatefulWidget {
   final String place_Id;
 
@@ -14,7 +16,8 @@ class ViewPlace extends StatefulWidget {
   _PlaceScreenState createState() => _PlaceScreenState();
 }
 
-class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateMixin {
+class _PlaceScreenState extends State<ViewPlace>
+    with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String? placeId;
@@ -47,55 +50,56 @@ class _PlaceScreenState extends State<ViewPlace> with SingleTickerProviderStateM
     _fetchRatingSummary();
   }
 
-Future<void> _loadPlaceProfile() async {
-  if (placeId == null || placeId!.isEmpty) {
-    // If placeId is null or empty, show an error message and return early.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid place ID.')),
-      );
-    });
-    return; // Exit the method if placeId is invalid.
-  }
-
-  try {
-    DocumentSnapshot placeDoc = await _firestore.collection('places').doc(placeId).get();
-    if (placeDoc.exists) {
-      setState(() {
-        var data = placeDoc.data() as Map<String, dynamic>;
-        _placeName = data['place_name'];
-        _description = data['description'] ?? 'description';
-        _location = data['location'] ?? 'location';
-        _category = data['category'] ?? 'category';
-        _subcategory = data['subcategory'] ?? 'subcategory';
-        _neighborhood = data['Neighborhood'] ?? 'Neighborhood';
-        _street = data['Street'] ?? 'Street';
-        _imageUrl = data['imageUrl'] ?? '';
-      });
-    } else {
+  Future<void> _loadPlaceProfile() async {
+    if (placeId == null || placeId!.isEmpty) {
+      // If placeId is null or empty, show an error message and return early.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Place not found.')),
+          SnackBar(content: Text('Invalid place ID.')),
+        );
+      });
+      return; // Exit the method if placeId is invalid.
+    }
+
+    try {
+      DocumentSnapshot placeDoc =
+          await _firestore.collection('places').doc(placeId).get();
+      if (placeDoc.exists) {
+        setState(() {
+          var data = placeDoc.data() as Map<String, dynamic>;
+          _placeName = data['place_name'];
+          _description = data['description'] ?? 'description';
+          _location = data['location'] ?? 'location';
+          _category = data['category'] ?? 'category';
+          _subcategory = data['subcategory'] ?? 'subcategory';
+          _neighborhood = data['Neighborhood'] ?? 'Neighborhood';
+          _street = data['Street'] ?? 'Street';
+          _imageUrl = data['imageUrl'] ?? '';
+        });
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Place not found.')),
+          );
+        });
+      }
+    } catch (e) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load profile: $e')),
         );
       });
     }
-  } catch (e) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e')),
-      );
-    });
   }
-}
 
-Future<void> _launchLocation(String url) async {
-  final uri = Uri.parse(url);
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
+  Future<void> _launchLocation(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
-}
 
   Future<void> _checkIfBookmarked() async {
     final userId = _auth.currentUser?.uid;
@@ -117,75 +121,82 @@ Future<void> _launchLocation(String url) async {
     final userId = _auth.currentUser?.uid;
     if (userId == null || placeId == null) return;
 
-    final placeRef = _firestore.collection('bookmarks').doc(userId).collection('places').doc(placeId);
+    final placeRef = _firestore
+        .collection('bookmarks')
+        .doc(userId)
+        .collection('places')
+        .doc(placeId);
 
-    if (isBookmarked) {
-      await placeRef.delete();
-      setState(() {
-        isBookmarked = false;
-      });
-    } else {
-      await placeRef.set({'timestamp': FieldValue.serverTimestamp()});
-      setState(() {
-        isBookmarked = true;
-      });
-    }
-  }
-  void _fetchRatingSummary() async {
-  try {
-    QuerySnapshot reviewsSnapshot = await _firestore
-        .collection('Review')
-        .where('placeId', isEqualTo: widget.place_Id)
-        .get();
-
-    int totalReviews = reviewsSnapshot.docs.length;
-    int totalRatingSum = 0;
-    int countFiveStars = 0;
-    int countFourStars = 0;
-    int countThreeStars = 0;
-    int countTwoStars = 0;
-    int countOneStars = 0;
-
-    for (var doc in reviewsSnapshot.docs) {
-      int rating = doc['Rating'];
-      totalRatingSum += rating;
-      switch (rating) {
-        case 5:
-          countFiveStars++;
-          break;
-        case 4:
-          countFourStars++;
-          break;
-        case 3:
-          countThreeStars++;
-          break;
-        case 2:
-          countTwoStars++;
-          break;
-        case 1:
-          countOneStars++;
-          break;
-        default:
-          break;
+    try {
+      if (isBookmarked) {
+        await placeRef.delete();
+        setState(() {
+          isBookmarked = false;
+        });
+      } else {
+        await placeRef.set({'timestamp': FieldValue.serverTimestamp()});
+        setState(() {
+          isBookmarked = true;
+        });
       }
+    } catch (e) {
+      print("Error toggling bookmark: $e");
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Failed to update bookmark")));
     }
-
-    double averageRating = totalReviews > 0 ? totalRatingSum / totalReviews : 0.0;
-
-    setState(() {
-      _totalReviews = totalReviews;
-      _averageRating = averageRating;
-      _countFiveStars = countFiveStars;
-      _countFourStars = countFourStars;
-      _countThreeStars = countThreeStars;
-      _countTwoStars = countTwoStars;
-      _countOneStars = countOneStars;
-    });
-  } catch (e) {
-    print("Failed to fetch rating summary: $e");
-    //show a SnackBar or other UI ???
   }
-}
+
+  void _fetchRatingSummary() async {
+    try {
+      QuerySnapshot reviewsSnapshot = await _firestore
+          .collection('Review')
+          .where('placeId', isEqualTo: widget.place_Id)
+          .get();
+
+      int totalReviews = reviewsSnapshot.docs.length;
+      int totalRatingSum = 0;
+      int countFiveStars = 0;
+      int countFourStars = 0;
+      int countThreeStars = 0;
+      int countTwoStars = 0;
+      int countOneStars = 0;
+
+      for (var doc in reviewsSnapshot.docs) {
+        int rating = doc['Rating'];
+        totalRatingSum += rating;
+        switch (rating) {
+          case 5:
+            countFiveStars++;
+          case 4:
+            countFourStars++;
+          case 3:
+            countThreeStars++;
+          case 2:
+            countTwoStars++;
+          case 1:
+            countOneStars++;
+          default:
+            break;
+        }
+      }
+
+      double averageRating =
+          totalReviews > 0 ? totalRatingSum / totalReviews : 0.0;
+
+      setState(() {
+        _totalReviews = totalReviews;
+        _averageRating = averageRating;
+        _countFiveStars = countFiveStars;
+        _countFourStars = countFourStars;
+        _countThreeStars = countThreeStars;
+        _countTwoStars = countTwoStars;
+        _countOneStars = countOneStars;
+      });
+    } catch (e) {
+      print("Failed to fetch rating summary: $e");
+      //show a SnackBar or other UI ???
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,16 +210,22 @@ Future<void> _launchLocation(String url) async {
       body: Column(
         children: [
           _imageUrl.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    _imageUrl,
-                    height: 250,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+              ? Image.asset(
+                  _imageUrl,
+                  height: 20,
+                  width: 20,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.broken_image,
+                    size: 100,
+                    color: Colors.grey,
                   ),
                 )
-              : Icon(Icons.image, size: 150, color: Colors.grey),
+              : Icon(
+                  Icons.image,
+                  size: 150,
+                  color: Colors.grey,
+                ),
           SizedBox(height: 16),
           TabBar(
             controller: _tabController,
@@ -217,36 +234,37 @@ Future<void> _launchLocation(String url) async {
               Tab(text: "Reviews"),
             ],
           ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RatingSummary(
-                      counter: _totalReviews,
-                      average: double.parse(_averageRating.toStringAsFixed(1)),
-                      counterFiveStars: _countFiveStars,
-                      counterFourStars: _countFourStars,
-                      counterThreeStars: _countThreeStars,
-                      counterTwoStars: _countTwoStars,
-                      counterOneStars: _countOneStars,
-                    ),
-                    SizedBox(height: 20), 
-                    _buildDetailItem("", _description),
-                    _buildDetailItem("Category:", _category),
-                    _buildDetailItem("Subcategory:", _subcategory),
-                    _buildDetailItem("Neighborhood:", _neighborhood),
-                    _buildDetailItem("Street:", _street),
-                    _buildLocationLink("Location:", _location),
-                  ],
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RatingSummary(
+                        counter: _totalReviews,
+                        average:
+                            double.parse(_averageRating.toStringAsFixed(1)),
+                        counterFiveStars: _countFiveStars,
+                        counterFourStars: _countFourStars,
+                        counterThreeStars: _countThreeStars,
+                        counterTwoStars: _countTwoStars,
+                        counterOneStars: _countOneStars,
+                      ),
+                      SizedBox(height: 20),
+                      _buildDetailItem("", _description),
+                      _buildDetailItem("Category:", _category),
+                      _buildDetailItem("Subcategory:", _subcategory),
+                      _buildDetailItem("Neighborhood:", _neighborhood),
+                      _buildDetailItem("Street:", _street),
+                      _buildLocationLink("Location:", _location),
+                    ],
+                  ),
                 ),
-              ),
-              Review_widget(place_Id: placeId),
-            ],
+                Review_widget(place_Id: placeId),
+              ],
             ),
           ),
         ],
@@ -264,26 +282,34 @@ Future<void> _launchLocation(String url) async {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreatePostPage(placeId: placeId!), 
+                      builder: (context) =>
+                          CreatePostPage(placeId: placeId ?? ''),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF800020),
                   minimumSize: Size(250, 60),
-                  padding: EdgeInsets.symmetric(horizontal: 40),  
+                  padding: EdgeInsets.symmetric(horizontal: 40),
                 ),
-                child: Text("Review $_placeName",
-                style: TextStyle(color: Colors.white),),
+                child: Text(
+                  "Review $_placeName",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-              
+
               // Bookmark icon
               IconButton(
                 icon: Icon(
                   isBookmarked ? Icons.bookmark : Icons.bookmark_outline,
                   color: isBookmarked ? Color(0xFF800020) : Colors.grey,
                 ),
-                onPressed: toggleBookmarkForPlace,
+                onPressed: () async {
+                  await toggleBookmarkForPlace();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Place bookmarked!')),
+                  );
+                },
               ),
             ],
           ),
@@ -300,12 +326,14 @@ Future<void> _launchLocation(String url) async {
         children: [
           Text(
             "$label ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 16, color: Colors.black.withOpacity(0.7)),
+              style:
+                  TextStyle(fontSize: 16, color: Colors.black.withOpacity(0.7)),
               softWrap: true,
             ),
           ),
@@ -323,7 +351,8 @@ Future<void> _launchLocation(String url) async {
         children: [
           Text(
             "$label ",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
           ),
           Flexible(
             child: GestureDetector(

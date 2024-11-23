@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'bookmark_service.dart';
 import 'create_post_page.dart';
 import 'otherUser_profile.dart';
 import 'post_like.dart';
 import 'database.dart';
 import 'profile_screen.dart';
+import 'report_service.dart';
 import 'view_Place.dart';
+import 'Notifications_page.dart';
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
@@ -20,6 +23,7 @@ class Review_widget extends StatefulWidget {
 
 class _Review_widgetState extends State<Review_widget> {
   String? active_userid;
+  final ReportService _reportService = ReportService();
   final FirestoreService _firestoreService = FirestoreService();
   Map<String, bool> bookmarkedReviews = {};
 
@@ -45,22 +49,37 @@ class _Review_widgetState extends State<Review_widget> {
   Future<void> toggleBookmark(String reviewId) async {
     if (active_userid == null) return;
 
-    final userRef =
-        FirebaseFirestore.instance.collection('users').doc(active_userid);
-    final userDoc = await userRef.get();
-    final bookmarks = List<String>.from(userDoc.data()?['bookmarks'] ?? []);
+    final reviewRef = FirebaseFirestore.instance
+        .collection('bookmarks')
+        .doc(active_userid)
+        .collection('reviews')
+        .doc(reviewId);
+
+    final doc = await reviewRef.get();
+
+    if (doc.exists) {
+      await reviewRef.delete();
+      setState(() {
+        bookmarkedReviews[reviewId] = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Review unbookmarked and deleted')),
+      );
+    } else {
+      await reviewRef.set({
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      setState(() {
+        bookmarkedReviews[reviewId] = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Review bookmarked')),
+      );
+    }
 
     setState(() {
-      if (bookmarks.contains(reviewId)) {
-        bookmarks.remove(reviewId);
-        bookmarkedReviews[reviewId] = false;
-      } else {
-        bookmarks.add(reviewId);
-        bookmarkedReviews[reviewId] = true;
-      }
+      bookmarkedReviews[reviewId] = !bookmarkedReviews[reviewId]!;
     });
-
-    await userRef.update({'bookmarks': bookmarks});
   }
 
   Future<void> deleteReview(String reviewId) async {
@@ -145,7 +164,7 @@ class _Review_widgetState extends State<Review_widget> {
             var doc = filteredDocs[index];
             String review_id = doc.id;
             String reviewText = doc['Review_Text'];
-            String placeId = doc['placeId'];
+            String placeId = doc['placeId'] ?? '';
             String userUid = doc['user_uid'];
             int rating = doc['Rating'];
             List? likeCount = doc['Like_count'];
@@ -203,10 +222,8 @@ class _Review_widgetState extends State<Review_widget> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          OtherUserProfileScreen(
-                                              userId: userUid),
-                                    ),
+                                        builder: (context) =>
+                                            ProfileScreen(userId: userDoc.id)),
                                   );
                                 },
                                 child: CircleAvatar(
@@ -239,10 +256,9 @@ class _Review_widgetState extends State<Review_widget> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) =>
-                                                    OtherUserProfileScreen(
-                                                        userId: userUid),
-                                              ),
+                                                  builder: (context) =>
+                                                      ProfileScreen(
+                                                          userId: userDoc.id)),
                                             );
                                           }
                                         },
@@ -332,6 +348,9 @@ class _Review_widgetState extends State<Review_widget> {
                                     }
                                   } else if (value == 'share') {
                                     // Share.share('Check out this review: $reviewText');
+                                  } else if (value == 'report') {
+                                    _reportService.navigateToReportScreen(
+                                        context, review_id);
                                   }
                                 },
                                 itemBuilder: (BuildContext context) {
@@ -343,6 +362,11 @@ class _Review_widgetState extends State<Review_widget> {
                                           'Delete Review',
                                           style: TextStyle(color: Colors.red),
                                         ),
+                                      ),
+                                    if (userUid != active_userid)
+                                      PopupMenuItem<String>(
+                                        value: 'report',
+                                        child: Text('Report'),
                                       ),
                                     PopupMenuItem<String>(
                                       value: 'share',
@@ -383,12 +407,12 @@ class _Review_widgetState extends State<Review_widget> {
                                   isBookmarked
                                       ? Icons.bookmark
                                       : Icons.bookmark_border,
-                                  color:
-                                      isBookmarked ? Colors.blue : Colors.grey,
+                                  color: isBookmarked
+                                      ? Color(0xFF800020)
+                                      : Colors.grey,
                                 ),
-                                onPressed: () {
-                                  toggleBookmark(review_id);
-                                  setState(() {});
+                                onPressed: () async {
+                                  await toggleBookmark(review_id);
                                 },
                               )
                             ],

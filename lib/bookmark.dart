@@ -15,7 +15,8 @@ class BookmarksScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BookmarkedReviewsScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => BookmarkedReviewsScreen()),
                 );
               },
               child: Card(
@@ -36,7 +37,8 @@ class BookmarksScreen extends StatelessWidget {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => BookmarkedPlacesScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => BookmarkedPlacesScreen()),
                 );
               },
               child: Card(
@@ -70,7 +72,6 @@ class BookmarkedReviewsScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text('Display bookmarked reviews here'),
-        
       ),
     );
   }
