@@ -29,7 +29,7 @@ class BookmarksScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Text(
-                      'Bookmarked Reviews',
+                      'Reviews',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -50,7 +50,7 @@ class BookmarksScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(16.0),
                   child: Center(
                     child: Text(
-                      'Bookmarked Places',
+                      'Places',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
@@ -75,7 +75,7 @@ class BookmarkedReviewsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bookmarked Reviews'),
+        title: Text('Reviews'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -110,7 +110,7 @@ class BookmarkedPlacesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bookmarked Places'),
+        title: Text('Places'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: BookmarkService.fetchBookmarks('place'),

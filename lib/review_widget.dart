@@ -27,11 +27,31 @@ class _Review_widgetState extends State<Review_widget> {
   final FirestoreService _firestoreService = FirestoreService();
   Map<String, bool> bookmarkedReviews = {};
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserData();
+@override
+void initState() {
+  super.initState();
+  _loadUserData();
+  _loadBookmarks();
+}
+
+Future<void> _loadBookmarks() async {
+  if (active_userid == null) return;
+
+  final snapshot = await FirebaseFirestore.instance
+      .collection('bookmarks')
+      .doc(active_userid)
+      .collection('reviews')
+      .get();
+
+  Map<String, bool> tempBookmarks = {};
+  for (var doc in snapshot.docs) {
+    tempBookmarks[doc.id] = true;
   }
+
+  setState(() {
+    bookmarkedReviews = tempBookmarks;
+  });
+}
 
   Future<void> _loadUserData() async {
     try {
@@ -46,52 +66,54 @@ class _Review_widgetState extends State<Review_widget> {
     }
   }
 
-  Future<void> toggleBookmark(String reviewId) async {
-    if (active_userid == null) return;
+Future<void> toggleBookmark(String reviewId) async {
+  if (active_userid == null) return;
 
-    final reviewRef = FirebaseFirestore.instance
-        .collection('bookmarks')
-        .doc(active_userid)
-        .collection('reviews')
-        .doc(reviewId);
+  final reviewRef = FirebaseFirestore.instance
+      .collection('bookmarks')
+      .doc(active_userid)
+      .collection('reviews')
+      .doc(reviewId);
 
-    final reviewDoc = await FirebaseFirestore.instance
-        .collection('Review')
-        .doc(reviewId)
-        .get();
+  final reviewDoc = await FirebaseFirestore.instance
+      .collection('Review')
+      .doc(reviewId)
+      .get();
 
-    if (!reviewDoc.exists) {
-      print('Review does not exist');
-      return;
-    }
-
-    final doc = await reviewRef.get();
-
-    if (doc.exists) {
-      await reviewRef.delete();
-      setState(() {
-        bookmarkedReviews[reviewId] = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review unbookmarked')),
-      );
-    } else {
-      final bookmarkData = {
-        'bookmark_id': reviewId,
-        'user_uid': active_userid,
-        'bookmark_date': FieldValue.serverTimestamp(),
-        'bookmark_type': 'review',
-      };
-
-      await reviewRef.set(bookmarkData);
-      setState(() {
-        bookmarkedReviews[reviewId] = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review bookmarked')),
-      );
-    }
+  if (!reviewDoc.exists) {
+    print('Review does not exist');
+    return;
   }
+
+  final doc = await reviewRef.get();
+
+  if (!mounted) return;  
+
+  if (doc.exists) {
+    await reviewRef.delete();
+    setState(() {
+      bookmarkedReviews[reviewId] = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review unbookmarked')),
+    );
+  } else {
+    final bookmarkData = {
+      'bookmark_id': reviewId,
+      'user_uid': active_userid,
+      'bookmark_date': FieldValue.serverTimestamp(),
+      'bookmark_type': 'review',
+    };
+
+    await reviewRef.set(bookmarkData);
+    setState(() {
+      bookmarkedReviews[reviewId] = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Review bookmarked')),
+    );
+  }
+}
 
   Future<void> deleteReview(String reviewId) async {
     try {
@@ -159,8 +181,11 @@ class _Review_widgetState extends State<Review_widget> {
         }
 
         final filteredDocs = snapshot.data!.docs.where((doc) {
-          return widget.place_Id == null || doc['placeId'] == widget.place_Id;
-        }).toList();
+          if (widget.reviewIds != null) {
+            return widget.reviewIds!.contains(doc.id);
+            }
+            return widget.place_Id == null || doc['placeId'] == widget.place_Id;
+          }).toList();
 
         return ListView.separated(
           padding: EdgeInsets.symmetric(horizontal: 8),
