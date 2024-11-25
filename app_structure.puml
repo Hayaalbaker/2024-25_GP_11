@@ -1,0 +1,43 @@
+@startuml app_structure
+' Define application structure based on the lib directory
+
+package "lib" {
+  [welcome_screen.dart] --> [login_screen.dart]
+  [login_screen.dart] --> [register_screen.dart]
+  [register_screen.dart] --> [interests_screen.dart]
+  [interests_screen.dart] --> [home_page.dart]
+  
+  [home_page.dart] --> [review_widget.dart]
+  [home_page.dart] --> [place_widget.dart]
+  [home_page.dart] --> [search_page.dart]
+  [home_page.dart] --> [profile_screen.dart]
+  
+  [review_widget.dart] --> [profile_screen.dart] : "User press"
+  [review_widget.dart] --> [view_Place.dart] : "Place press"
+  
+  [place_widget.dart] --> [view_Place.dart]
+  
+  [search_page.dart] --> [profile_screen.dart]
+  [search_page.dart] --> [view_Place.dart]
+  
+  [profile_screen.dart] --> [message_list_screen.dart]
+  [profile_screen.dart] --> [edit_profile_screen.dart]
+  [profile_screen.dart] --> [view_Place.dart]
+  
+  [edit_profile_screen.dart] --> [profile_settings.dart]
+}
+
+' Services and utilities
+package "services" {
+  [auth_service.dart]
+  [bookmark_service.dart]
+  [database.dart]
+  [report_service.dart]
+}
+
+package "utilities" {
+  [AESHelper.dart]
+  [firebase_options.dart]
+}
+
+@enduml

@@ -267,21 +267,45 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   TextEditingController _currentPasswordController = TextEditingController();
   TextEditingController _newPasswordController = TextEditingController();
 
-  Future<void> _changePassword(BuildContext context) async {
+  String? _errorMessage;
+
+  Future<void> _changePassword() async {
     User? user = _auth.currentUser;
     try {
       String email = user!.email!;
       AuthCredential credential = EmailAuthProvider.credential(
-          email: email, password: _currentPasswordController.text);
+        email: email,
+        password: _currentPasswordController.text,
+      );
       await user.reauthenticateWithCredential(credential);
-      await user.updatePassword(_newPasswordController.text);
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password changed successfully!')));
-      Navigator.pop(context); // Return to Profile Settings
+
+      // Validate password requirements
+      if (_validatePasswordRequirements(_newPasswordController.text)) {
+        // Update password
+        await user.updatePassword(_newPasswordController.text);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!')));
+        Navigator.pop(context); // Return to Profile Settings
+      } else {
+        setState(() {
+          _errorMessage = 'Your new password does not meet the required criteria.';
+        });
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error changing password: $e')));
+      // Handle reauthentication failure (wrong current password)
+      setState(() {
+        _errorMessage = 'Incorrect current password. Please try again.';
+      });
     }
+  }
+
+  bool _validatePasswordRequirements(String password) {
+    bool isValid = true;
+    if (password.length < 8) isValid = false;
+    if (!password.contains(RegExp(r'[A-Z]'))) isValid = false;
+    if (!password.contains(RegExp(r'[a-z]'))) isValid = false;
+    if (!password.contains(RegExp(r'[0-9]'))) isValid = false;
+    if (!password.contains(RegExp(r'[!@#\$&*~]'))) isValid = false;
+    return isValid;
   }
 
   @override
@@ -293,45 +317,62 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _currentPasswordController,
-              decoration: InputDecoration(labelText: 'Current Password'),
-              obscureText: true,
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _currentPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'Current Password',
+                        errorText: _errorMessage != null && _errorMessage!.contains('current') ? _errorMessage : null,
+                      ),
+                      obscureText: true,
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+                        );
+                      },
+                      child: const Text('Forgot Password?'),
+                    ),
+                    TextField(
+                      controller: _newPasswordController,
+                      decoration: InputDecoration(
+                        labelText: 'New Password',
+                        errorText: _errorMessage != null && _errorMessage!.contains('new') ? _errorMessage : null,
+                      ),
+                      obscureText: true,
+                    ),
+                    SizedBox(height: 20),
+                    // Password requirements display
+                    Column(
+                      children: [
+                        _passwordRequirement('At least 8 characters', _newPasswordController.text.length >= 8),
+                        _passwordRequirement('One uppercase letter',
+                            _newPasswordController.text.contains(RegExp(r'[A-Z]'))),
+                        _passwordRequirement('One lowercase letter',
+                            _newPasswordController.text.contains(RegExp(r'[a-z]'))),
+                        _passwordRequirement('One digit', _newPasswordController.text.contains(RegExp(r'[0-9]'))),
+                        _passwordRequirement('One special character',
+                            _newPasswordController.text.contains(RegExp(r'[!@#\$&*~]'))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ResetPasswordScreen()),
-                );
-              },
-              child: const Text('Forgot Password?'),
-            ),
-            TextField(
-              controller: _newPasswordController,
-              decoration: InputDecoration(labelText: 'New Password'),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _changePassword(context),
-              child: Text('Change Password'),
-            ),
-            SizedBox(height: 20),
-            // Password requirements display
-            Column(
-              children: [
-                _passwordRequirement(
-                    'Password must be at least 6 characters long'),
-                _passwordRequirement('Password must contain at least 1 digit'),
-                _passwordRequirement(
-                    'Password must contain at least 1 uppercase letter'),
-                _passwordRequirement(
-                    'Password must contain at least 1 lowercase letter'),
-              ],
+            // Change Password Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _changePassword,
+                child: Text('Change Password'),
+              ),
             ),
           ],
         ),
@@ -342,57 +383,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Widget _passwordRequirement(String text) {
     return Row(
       children: [
-        Icon(Icons.check, color: Colors.green),
-        SizedBox(width: 5),
+        Icon(requirementMet ? Icons.check : Icons.clear,
+            color: requirementMet ? Colors.green : Colors.red),
+        SizedBox(width: 8),
         Text(text),
       ],
-    );
-  }
-}
-
-class DeleteAccountConfirmationPage extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  Future<void> _deleteAccount(BuildContext context) async {
-    User? user = _auth.currentUser;
-    try {
-      await user?.delete();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Account deleted')));
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => SignInScreen()),
-        (route) => false,
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error deleting account: $e')));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Delete Account"),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              'Are you sure you want to delete your account? This action is irreversible.',
-              style: TextStyle(fontSize: 18),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _deleteAccount(context),
-              child: Text('Delete Account'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

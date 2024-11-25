@@ -252,7 +252,7 @@ Widget build(BuildContext context) {
     body: Stack(
       children: [
         Opacity(
-          opacity: 0.2,
+          opacity: 0.1,
           child: Container(
             decoration: const BoxDecoration(
               image: DecorationImage(

@@ -269,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: Text(
-                  'Bookmarked Reviews',
+                  'Reviews',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
@@ -290,7 +290,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               padding: const EdgeInsets.all(16.0),
               child: Center(
                 child: Text(
-                  'Bookmarked Places',
+                  'Places',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),

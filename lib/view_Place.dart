@@ -219,8 +219,7 @@ class _PlaceScreenState extends State<ViewPlace>
                     Icons.broken_image,
                     size: 100,
                     color: Colors.grey,
-                  ),
-                )
+                ),)
               : Icon(
                   Icons.image,
                   size: 150,
@@ -282,7 +281,8 @@ class _PlaceScreenState extends State<ViewPlace>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreatePostPage(
+                      builder: (context) =>
+                          CreatePostPage(
                           placeId: placeId ?? '', ISselectplace: true),
                     ),
                   );

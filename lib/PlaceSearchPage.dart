@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'places_widget.dart';
-import 'add_place.dart';
-
+import 'add_place.dart'; 
 class PlaceSearchPage extends StatefulWidget {
   @override
   _PlaceSearchPageState createState() => _PlaceSearchPageState();
@@ -12,7 +11,7 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
   List<Map<String, String>> places = [];
   String? selectedPlaceName;
   String? selectedPlaceId;
-  String? _placeErrorText;
+String? _placeErrorText;
   @override
   void initState() {
     super.initState();
@@ -36,19 +35,17 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
     }
   }
 
-  void _validatePlaceSelection() {
-    if (selectedPlaceName == null ||
-        !places.any((place) => place['name'] == selectedPlaceName)) {
-      setState(() {
-        _placeErrorText = 'Please select a valid place from the list.';
-      });
-    } else {
-      setState(() {
-        _placeErrorText = null; // Clear error if valid
-      });
-    }
+void _validatePlaceSelection() {
+  if (selectedPlaceName == null || !places.any((place) => place['name'] == selectedPlaceName)) {
+    setState(() {
+      _placeErrorText = 'Please select a valid place from the list.';
+    });
+  } else {
+    setState(() {
+      _placeErrorText = null; // Clear error if valid
+    });
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,17 +61,18 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
                 if (textEditingValue.text.isEmpty) {
                   return const Iterable<String>.empty();
                 }
-                return places.map((place) => place['name']!).where((name) =>
-                    name
+                return places
+                    .map((place) => place['name']!)
+                    .where((name) => name
                         .toLowerCase()
                         .contains(textEditingValue.text.toLowerCase()));
               },
               onSelected: (String selectedPlace) {
                 setState(() {
                   selectedPlaceName = selectedPlace;
-                  selectedPlaceId = places.firstWhere(
-                      (place) => place['name'] == selectedPlace)['id'];
-                  _placeErrorText = null;
+                  selectedPlaceId = places
+                      .firstWhere((place) => place['name'] == selectedPlace)['id'];
+                      _placeErrorText = null; 
                 });
               },
               fieldViewBuilder: (BuildContext context,
@@ -82,70 +80,76 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
                   FocusNode focusNode,
                   VoidCallback onFieldSubmitted) {
                 return TextField(
-                  controller: textEditingController,
-                  focusNode: focusNode,
-                  decoration: InputDecoration(
-                    labelText: 'Search for a place',
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter a place name',
-                    errorText: _placeErrorText,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value.isEmpty) {
-                        _placeErrorText = 'Place name cannot be empty.';
-                        selectedPlaceName = null;
-                        selectedPlaceId = null;
-                      } else if (!places
-                          .any((place) => place['name'] == value)) {
-                        _placeErrorText = 'Place not found. ';
-                        selectedPlaceName = null;
-                        selectedPlaceId = null;
-                      } else {
-                        _placeErrorText = null; // Clear error
-                        selectedPlaceName = value;
-                        selectedPlaceId = places.firstWhere(
-                            (place) => place['name'] == value)['id'];
-                      }
-                    });
-                  },
+                            controller: textEditingController,
+                            focusNode: focusNode,
+                            decoration: InputDecoration(
+                              labelText: 'Search for a place',
+                              border: OutlineInputBorder(),
+                              hintText: 'Enter a place name',
+                              errorText: _placeErrorText,
+                            ),
+       onChanged: (value) {
+                              setState(() {
+                                if (value.isEmpty) {
+                                  _placeErrorText =
+                                      'Place name cannot be empty.';
+                                  selectedPlaceName = null;
+                                  selectedPlaceId = null;
+                                } else if (!places.any(
+                                    (place) => place['name'] == value)) {
+                                  _placeErrorText =
+                                      'Place not found. ';
+                                  selectedPlaceName = null;
+                                  selectedPlaceId = null;
+                                } else {
+                                  _placeErrorText = null; // Clear error
+                                  selectedPlaceName = value;
+                                  selectedPlaceId = places
+                                      .firstWhere((place) =>
+                                          place['name'] == value)['id'];
+                                }
+                              });
+                            },
                 );
               },
             ),
-            if (_placeErrorText != null) linktoaddpage(),
+                                  if (_placeErrorText != null)
+                        linktoaddpage(), 
             const SizedBox(height: 20),
             Expanded(
               child: Places_widget(
                 placeIds: selectedPlaceId != null ? [selectedPlaceId!] : null,
               ),
             ),
+
           ],
         ),
       ),
     );
   }
 
-  Widget linktoaddpage() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddPlacePage(),
-              ),
-            );
-          },
-          child: Text(
-            'go to Add Place Page.',
-            style: TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
+  
+Widget linktoaddpage() {
+  return Row(
+children: [
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AddPlacePage(),
             ),
+          );
+        },
+        child: Text(
+          'go to Add Place Page.',
+          style: TextStyle(
+            color: Colors.blue,
+            decoration: TextDecoration.underline,
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 }
