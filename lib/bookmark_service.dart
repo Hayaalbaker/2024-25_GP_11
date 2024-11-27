@@ -14,7 +14,7 @@ class BookmarkService {
         .doc(reviewId);
 
     final doc = await reviewRef.get();
-    return doc.exists;  // Returns true if the review is bookmarked
+    return doc.exists;  
   }
 
   Future<void> toggleBookmark(String reviewId) async {
@@ -60,11 +60,11 @@ static Future<void> addBookmark(String targetId, String type) async {
       final bookmarkDoc = FirebaseFirestore.instance.collection('bookmarks').doc();
 
       final bookmarkData = {
-        'bookmark_id': bookmarkDoc.id, // Auto-generated document ID
-        'user_uid': user.uid,         // Current user ID
-        'target_id': targetId,        // ID of the review or place
-        'bookmark_type': type,        // Type of bookmark (e.g., "review", "place")
-        'bookmark_date': FieldValue.serverTimestamp(), // Timestamp for the bookmark date
+        'bookmark_id': bookmarkDoc.id, 
+        'user_uid': user.uid,         
+        'target_id': targetId,       
+        'bookmark_type': type,       
+        'bookmark_date': FieldValue.serverTimestamp(), 
       };
 
       print("Saving to Firestore: $bookmarkData");
