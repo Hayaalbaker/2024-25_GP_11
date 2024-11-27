@@ -34,7 +34,7 @@ class AuthService {
   required String displayName,
   required bool isLocalGuide,
   required String city,
-  required String country, // Add the country parameter here
+  required String country, 
 }) async {
   try {
     // Check if email or username already exists

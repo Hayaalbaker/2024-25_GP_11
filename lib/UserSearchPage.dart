@@ -10,10 +10,16 @@ class UserSearchPage extends StatefulWidget {
 class _UserSearchPageState extends State<UserSearchPage> {
   final TextEditingController _searchController = TextEditingController();
   List<QueryDocumentSnapshot> _searchResults = [];
-
+  bool _isSearching = false;
+  String? _noResultsMessage;
   void _searchUsers() async {
     String searchQuery = _searchController.text.trim();
     if (searchQuery.isNotEmpty) {
+      setState(() {
+        _isSearching = true;
+        _noResultsMessage = null;
+      });
+
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('user_name', isEqualTo: searchQuery)
@@ -21,6 +27,12 @@ class _UserSearchPageState extends State<UserSearchPage> {
 
       setState(() {
         _searchResults = snapshot.docs;
+        _isSearching = false;
+
+        if (_searchResults.isEmpty) {
+          _noResultsMessage =
+              'No users found with the username "$searchQuery".';
+        }
       });
     }
   }
@@ -45,36 +57,46 @@ class _UserSearchPageState extends State<UserSearchPage> {
                 ),
               ),
             ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _searchResults.length,
-                itemBuilder: (context, index) {
-                  var userDoc = _searchResults[index];
-                  String profileImageUrl = userDoc['profileImageUrl'] ?? '';
+            const SizedBox(height: 10),
+            _isSearching
+                ? CircularProgressIndicator()
+                : _noResultsMessage != null
+                    ? Text(
+                        _noResultsMessage!,
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      )
+                    : Expanded(
+                        child: ListView.builder(
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            var userDoc = _searchResults[index];
+                            String profileImageUrl =
+                                userDoc['profileImageUrl'] ?? '';
 
-                  return ListTile(
-                    leading: profileImageUrl.isNotEmpty
-                        ? CircleAvatar(
-                            backgroundImage: NetworkImage(profileImageUrl),
-                          )
-                        : CircleAvatar(
-                            child: Icon(Icons.person),
-                          ),
-                    title: Text(userDoc['Name']),
-                    subtitle: Text(userDoc['user_name']),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProfileScreen(userId: userDoc.id),
+                            return ListTile(
+                              leading: profileImageUrl.isNotEmpty
+                                  ? CircleAvatar(
+                                      backgroundImage:
+                                          NetworkImage(profileImageUrl),
+                                    )
+                                  : CircleAvatar(
+                                      child: Icon(Icons.person),
+                                    ),
+                              title: Text(userDoc['Name']),
+                              subtitle: Text(userDoc['user_name']),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ProfileScreen(userId: userDoc.id),
+                                  ),
+                                );
+                              },
+                            );
+                          },
                         ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
+                      ),
           ],
         ),
       ),

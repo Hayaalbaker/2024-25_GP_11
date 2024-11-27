@@ -208,23 +208,29 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
               ),
             SizedBox(height: 10),
-            TabBar(
-              controller: _tabController,
-              labelColor: const Color(0xFF800020),
-              unselectedLabelColor: Colors.black,
-              indicatorColor: const Color(0xFF800020),
-              indicatorWeight: 3,
-              tabs: [
-                Tab(text: 'Reviews'),
-                Tab(text: 'Bookmarks'),
-              ],
-            ),
+
+            // Display TabBar only for current user
+            if (_isCurrentUser)
+              TabBar(
+                controller: _tabController,
+                labelColor: const Color(0xFF800020),
+                unselectedLabelColor: Colors.black,
+                indicatorColor: const Color(0xFF800020),
+                indicatorWeight: 3,
+                tabs: [
+                  Tab(text: 'Reviews'),
+                  Tab(text: 'Bookmarks'),
+                ],
+              ),
+
+            // Expanded TabBarView, showing reviews and bookmarks
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
                   _buildReviewsList(),
-                  _buildBookmarksSection(),
+                  if (_isCurrentUser)
+                    _buildBookmarksSection(), // Show bookmarks only for the current user
                 ],
               ),
             ),
@@ -234,11 +240,17 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
+// Function to display the reviews list
   Widget _buildReviewsList() {
-    return Review_widget(userId: widget.userId); // Pass the current user's ID
+    return Review_widget(userId: widget.userId); // Display reviews for the user
   }
 
+// Function to display bookmarks section
   Widget _buildBookmarksSection() {
+    if (!_isCurrentUser) {
+      return Container(); // Don't show bookmarks if it's not the current user's profile
+    }
+
     return Column(
       children: [
         SizedBox(height: 10),

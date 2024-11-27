@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:localize/Notifications_page.dart';
 import 'package:localize/message_screen.dart';
 import 'search_page.dart'; // Import the search page
 import 'create_post_page.dart'; // Import the create post page
-import 'activity_page.dart'; // Import the activity page
+import 'Notifications_page.dart'; // Import the activity page
 import 'add_place.dart'; // Import the Add Place page
 import 'welcome_screen.dart'; // Import the welcome screen
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +12,8 @@ import 'places_widget.dart'; // Import the Places widget
 import 'profile_screen.dart'; // Import the profile screen
 import 'review_widget.dart';
 import 'Message_List_Screen.dart';
+import 'package:badges/badges.dart' as badges;
+
 
 void main() {
   runApp(MyApp());
@@ -286,10 +289,34 @@ class _HomePageState extends State<HomePage>
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.notifications,
-              color:
-                  _selectedIndex == 3 ? const Color(0xFF800020) : Colors.grey,
+            icon: StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('Notifications')
+                  .where('receiverUid',
+                      isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                  .where('isRead', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                bool hasUnreadNotifications = false;
+
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  hasUnreadNotifications = true;
+                }
+
+                return badges.Badge(
+                  showBadge: hasUnreadNotifications,
+                  badgeStyle: const badges.BadgeStyle(
+                    badgeColor: Colors.red,
+                    padding: EdgeInsets.all(5),
+                  ),
+                  child: Icon(
+                    Icons.notifications,
+                    color: _selectedIndex == 3
+                        ? const Color(0xFF800020)
+                        : Colors.grey,
+                  ),
+                );
+              },
             ),
             label: '',
           ),
