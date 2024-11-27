@@ -64,6 +64,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             SnackBar(
                               content: Text(
                                   'Log in failed. Please check your credentials.'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
                             ),
                           );
                         }
@@ -189,6 +191,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     if (selectedCountry == null || selectedCity == null) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                         content: Text('Please select a country and a city.'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
                       ));
                       return;
                     }
@@ -243,7 +247,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         );
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Registration failed. Please try again.')),
+                          SnackBar(content: Text('Registration failed. Please try again.'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
                         );
                       }
                     } catch (e) {
@@ -251,7 +257,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         isLoading = false;
                       });
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Registration failed: $e')),
+                        SnackBar(content: Text('Registration failed: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
                       );
                     }
                   },

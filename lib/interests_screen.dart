@@ -121,7 +121,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 if (finalInterests.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content: Text('Please select at least one interest!')),
+                        content: Text('Please select at least one interest!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
                   );
                   return;
                 }
@@ -131,7 +133,9 @@ class _InterestsScreenState extends State<InterestsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                       content:
-                          Text('Your interests have been saved successfully!')),
+                          Text('Your interests have been saved successfully!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
                 );
 
                 Navigator.pushReplacement(

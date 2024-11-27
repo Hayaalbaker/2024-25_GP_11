@@ -46,7 +46,9 @@ class DeleteAccountConfirmationPage extends StatelessWidget {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error deleting account: $e")),
+          SnackBar(content: Text("Error deleting account: $e"),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
         );
       }
     }

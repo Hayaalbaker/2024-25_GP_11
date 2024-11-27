@@ -95,7 +95,9 @@ Future<void> toggleBookmark(String reviewId) async {
       bookmarkedReviews[reviewId] = false;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Review unbookmarked')),
+      SnackBar(content: Text('Review unbookmarked'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
     );
   } else {
     final bookmarkData = {
@@ -110,7 +112,9 @@ Future<void> toggleBookmark(String reviewId) async {
       bookmarkedReviews[reviewId] = true;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Review bookmarked')),
+      SnackBar(content: Text('Review bookmarked'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
     );
   }
 }
@@ -122,10 +126,15 @@ Future<void> toggleBookmark(String reviewId) async {
           .doc(reviewId)
           .delete();
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Review deleted")));
+          .showSnackBar(SnackBar(content: Text("Review deleted"),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+          ));
     } catch (e) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed to delete review")));
+          .showSnackBar(SnackBar(content: Text("Failed to delete review"),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
     }
   }
 

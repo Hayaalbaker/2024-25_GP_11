@@ -4,7 +4,7 @@ import 'package:localize/Notifications_page.dart';
 import 'package:localize/message_screen.dart';
 import 'search_page.dart'; // Import the search page
 import 'create_post_page.dart'; // Import the create post page
-import 'Notifications_page.dart'; // Import the activity page
+// Import the activity page
 import 'add_place.dart'; // Import the Add Place page
 import 'welcome_screen.dart'; // Import the welcome screen
 import 'package:firebase_auth/firebase_auth.dart';

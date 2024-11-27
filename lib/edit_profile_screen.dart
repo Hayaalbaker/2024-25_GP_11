@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'home_page.dart';
 import 'profile_settings.dart'; 
 
 class EditProfileScreen extends StatefulWidget {
@@ -17,33 +18,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // Controllers
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _usernameController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
+  TextEditingController _bioController = TextEditingController();  
 
   String? _imageUrl;
   File? _pickedImage;
 
-  // For dropdown lists
-  String? _selectedCity;
-  String? _selectedCountry;
-
-  List<String> countries = [
-    'Saudi Arabia',
-    'Egypt',
-    'United Arab Emirates',
-    'Kuwait',
-  ];
-
-  Map<String, List<String>> cities = {
-    'Saudi Arabia': ['Riyadh', 'Jeddah', 'Dammam'],
-    'Egypt': ['Cairo', 'Alexandria', 'Giza'],
-    'United Arab Emirates': ['Dubai', 'Abu Dhabi', 'Sharjah'],
-    'Kuwait': ['Kuwait City', 'Hawalli', 'Salmiya'],
-  };
-
-  // Selected interests and sub-interests
   Map<String, List<String>> selectedSubInterests = {
     'Restaurants': [],
     'Parks': [],
@@ -87,6 +67,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Sports Facilities',
     'Educational Workshops',
   ];
+  
+  bool _hasChanges = false; // Flag to track if there are changes
 
   @override
   void initState() {
@@ -94,150 +76,123 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadUserData();
   }
 
-  // Load user data from Firestore
   void _loadUserData() async {
     User? user = _auth.currentUser;
     if (user != null) {
       DocumentSnapshot userDoc =
           await _firestore.collection('users').doc(user.uid).get();
       setState(() {
-        _emailController.text = user.email!;
+        _nameController.text = userDoc['Name'] ?? '';
+        _bioController.text = userDoc['bio'] ?? '';
+        _imageUrl = userDoc['profileImageUrl'];
 
-        if (userDoc.exists && userDoc.data() != null) {
-          var data = userDoc.data() as Map<String, dynamic>;
+        selectedInterests = List<String>.from(userDoc['interests'] ?? []);
 
-          _usernameController.text = data['user_name'] ?? '';
-          _nameController.text = data['Name'] ?? '';
-          _selectedCity = data['city'];
-          _selectedCountry = data['country'];
-          _imageUrl = data['profileImageUrl'];
-
-          // Load existing interests
-          selectedInterests = List<String>.from(data['interests'] ?? []);
-
-          // Populate the selectedSubInterests based on existing interests
-          for (var interest in selectedInterests) {
-            if (restaurantTypes.contains(interest)) {
-              selectedSubInterests['Restaurants']!.add(interest);
-            } else if (parkTypes.contains(interest)) {
-              selectedSubInterests['Parks']!.add(interest);
-            } else if (shoppingTypes.contains(interest)) {
-              selectedSubInterests['Shopping']!.add(interest);
-            } else if (childrenTypes.contains(interest)) {
-              selectedSubInterests['Children']!.add(interest);
-            }
+        for (var interest in selectedInterests) {
+          if (restaurantTypes.contains(interest)) {
+            selectedSubInterests['Restaurants']!.add(interest);
+          } else if (parkTypes.contains(interest)) {
+            selectedSubInterests['Parks']!.add(interest);
+          } else if (shoppingTypes.contains(interest)) {
+            selectedSubInterests['Shopping']!.add(interest);
+          } else if (childrenTypes.contains(interest)) {
+            selectedSubInterests['Children']!.add(interest);
           }
         }
       });
     }
   }
 
-  // Pick an image
+  void _trackChanges() {
+    setState(() {
+      _hasChanges = true; 
+    });
+  }
+
   Future<void> _pickImage() async {
     final pickedImageFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedImageFile != null) {
       setState(() {
         _pickedImage = File(pickedImageFile.path);
+        _trackChanges();
       });
     }
   }
 
-// Update user profile in Firestore
-  Future<void> _updateProfile() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        User? user = _auth.currentUser;
-
-        // Convert input to lowercase for case-insensitive checking
-        String lowerCaseEmail = _emailController.text.trim().toLowerCase();
-        String lowerCaseUsername = _usernameController.text.trim().toLowerCase();
-
-        // Check if email or username already exists
-        QuerySnapshot emailCheck = await _firestore
-            .collection('users')
-            .where('email', isEqualTo: lowerCaseEmail)
-            .get();
-        QuerySnapshot usernameCheck = await _firestore
-            .collection('users')
-            .where('user_name', isEqualTo: lowerCaseUsername)
-            .get();
-
-        // Check if the email already exists and does not belong to the current user
-        if (emailCheck.docs.isNotEmpty &&
-            emailCheck.docs.first.id != user?.uid) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Email already exists.')));
-          return;
-        }
-
-        // Check if the username already exists and does not belong to the current user
-        if (usernameCheck.docs.isNotEmpty &&
-            usernameCheck.docs.first.id != user?.uid) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Username already exists.')));
-          return;
-        }
-
-        // Update user email if necessary
-        if (user != null && user.email != lowerCaseEmail) {
-          await user.updateEmail(lowerCaseEmail);
-        }
-
-        // Upload new profile picture if selected
-        String? profileImageUrl;
-        if (_pickedImage != null) {
-          final storageRef =
-          _storage.ref().child('profileImages/${user!.uid}.jpg');
-          await storageRef.putFile(_pickedImage!);
-          profileImageUrl = await storageRef.getDownloadURL();
-        } else {
-          profileImageUrl = _imageUrl;
-        }
-
-        // Prepare the selected interests (only the ones that are currently checked)
-        List<String> newInterests = [];
-        selectedSubInterests.forEach((category, interests) {
-          newInterests.addAll(interests);
-        });
-
-        // Load the current interests from Firestore to check if there is a change
-        DocumentSnapshot userDoc =
-        await _firestore.collection('users').doc(user!.uid).get();
-        List<String> currentInterests =
-        List<String>.from(userDoc['interests'] ?? []);
-
-        // Update Firestore only if interests have changed
-        if (newInterests
-            .toSet()
-            .difference(currentInterests.toSet())
-            .isNotEmpty) {
-          await _firestore.collection('users').doc(user.uid).update({
-            'interests': newInterests, // Only update if there's a change
-          });
-        }
-
-        // Update other fields without affecting interests unnecessarily
-        await _firestore.collection('users').doc(user.uid).update({
-          'user_name': lowerCaseUsername, // Store in lowercase
-          'Name': _nameController.text.trim(), // Trimmed Name
-          'city': _selectedCity,
-          'country': _selectedCountry,
-          'email': lowerCaseEmail, // Store in lowercase
-          'profileImageUrl': profileImageUrl,
-        });
-
-        _loadUserData();
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Profile updated successfully!')));
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e')));
-      }
+  Future<bool> _onWillPop() async {
+    if (_hasChanges) {
+      return (await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Discard Changes?'),
+              content: Text('You have unsaved changes. Do you want to discard them?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text('Discard'),
+                ),
+              ],
+            ),
+          )) ??
+          false;
     }
+    return true; 
   }
 
-  // Subinterest selection widget
+Future<void> _updateProfile() async {
+  if (_formKey.currentState!.validate()) {
+    try {
+      User? user = _auth.currentUser;
+
+      String? profileImageUrl;
+      if (_pickedImage != null) {
+        final storageRef = _storage.ref().child('profileImages/${user!.uid}.jpg');
+        await storageRef.putFile(_pickedImage!);
+        profileImageUrl = await storageRef.getDownloadURL();
+      } else {
+        profileImageUrl = _imageUrl;
+      }
+
+      List<String> newInterests = [];
+      selectedSubInterests.forEach((category, interests) {
+        newInterests.addAll(interests);
+      });
+
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user!.uid).get();
+      List<String> currentInterests =
+          List<String>.from(userDoc['interests'] ?? []);
+
+      if (newInterests.toSet().difference(currentInterests.toSet()).isNotEmpty) {
+        await _firestore.collection('users').doc(user.uid).update({
+          'interests': newInterests,
+        });
+      }
+
+      await _firestore.collection('users').doc(user.uid).update({
+        'Name': _nameController.text.trim(),
+        'profileImageUrl': profileImageUrl,
+        'bio': _bioController.text.trim(),
+      });
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),  
+);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update profile: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
+    }
+  }
+}
+
   Widget _buildSubInterestSelection(String category, List<String> options) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,10 +208,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               onSelected: (selected) {
                 setState(() {
                   if (selected) {
-                    // Add to the list of selected sub-interests
                     selectedSubInterests[category]!.add(option);
                   } else {
-                    // Remove from the list of selected sub-interests
                     selectedSubInterests[category]!.remove(option);
                   }
                 });
@@ -271,127 +224,78 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Edit Profile'),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.settings), 
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
-            );
-          },
+    return WillPopScope(
+      onWillPop: _onWillPop, // Use WillPopScope here
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Edit Profile'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.settings), 
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+                );
+              },
+            ),
+          ],
         ),
-      ]
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: _pickedImage != null
-                      ? FileImage(_pickedImage!)
-                      : (_imageUrl != null
-                          ? NetworkImage(_imageUrl!) as ImageProvider
-                          : null),
-                  child: _pickedImage == null && _imageUrl == null
-                      ? Icon(Icons.camera_alt, size: 50)
-                      : null,
+        body: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundImage: _pickedImage != null
+                        ? FileImage(_pickedImage!)
+                        : (_imageUrl != null
+                            ? NetworkImage(_imageUrl!) as ImageProvider
+                            : null),
+                    child: _pickedImage == null && _imageUrl == null
+                        ? Icon(Icons.camera_alt, size: 50)
+                        : null,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a valid name.';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email.';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _usernameController,
-                decoration: InputDecoration(labelText: 'Username'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a valid username.';
-                  }
-                  return null;
-                },
-              ),
-              DropdownButtonFormField<String>(
-                value: _selectedCountry,
-                decoration: InputDecoration(labelText: 'Country'),
-                items: countries.map((country) {
-                  return DropdownMenuItem(
-                    value: country,
-                    child: Text(country),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCountry = value;
-                    _selectedCity = null; // Reset the city when country changes
-                  });
-                },
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a country.';
-                  }
-                  return null;
-                },
-              ),
-              if (_selectedCountry != null)
-                DropdownButtonFormField<String>(
-                  value: _selectedCity,
-                  decoration: InputDecoration(labelText: 'City'),
-                  items: cities[_selectedCountry]!.map((city) {
-                    return DropdownMenuItem(
-                      value: city,
-                      child: Text(city),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCity = value;
-                    });
-                  },
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(labelText: 'Name'),
                   validator: (value) {
-                    if (value == null) {
-                      return 'Please select a city.';
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a valid name.';
                     }
                     return null;
                   },
                 ),
-              SizedBox(height: 20),
-              _buildSubInterestSelection('Restaurants', restaurantTypes),
-              _buildSubInterestSelection('Parks', parkTypes),
-              _buildSubInterestSelection('Shopping', shoppingTypes),
-              _buildSubInterestSelection('Children', childrenTypes),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _updateProfile,
-                child: Text('Save Changes'),
-              ),
-            ],
+                TextFormField(
+                  controller: _bioController,
+                  decoration: InputDecoration(labelText: 'Bio'),
+                  maxLines: 3,
+                  onChanged: (value) => _trackChanges(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return null;  
+                    }
+                    return null;
+                  },
+                ),
+                SizedBox(height: 20),
+                _buildSubInterestSelection('Restaurants', restaurantTypes),
+                _buildSubInterestSelection('Parks', parkTypes),
+                _buildSubInterestSelection('Shopping', shoppingTypes),
+                _buildSubInterestSelection('Children', childrenTypes),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _updateProfile,
+                  child: Text('Save Changes'),
+                ),
+              ],
+            ),
           ),
         ),
       ),

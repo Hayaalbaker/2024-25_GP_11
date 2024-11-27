@@ -48,7 +48,9 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e')),
+        SnackBar(content: Text('Failed to load profile: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
     }
   }

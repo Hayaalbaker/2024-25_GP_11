@@ -15,13 +15,13 @@ class ProfileScreen extends StatefulWidget {
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
-    with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   String _profileImageUrl = '';
   String _displayName = 'Display Name';
+  String _bio = '';
   String _username = 'Username';
   bool _isLocalGuide = false;
 
@@ -40,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     _loadUserProfile();
   }
 
+  // Load the user profile data
   void _loadUserProfile() async {
     try {
       DocumentSnapshot userDoc =
@@ -50,6 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           _profileImageUrl = data['profileImageUrl'] ?? '';
           _displayName = data['Name'] ?? 'Display Name';
           _username = data['user_name'] ?? 'Username';
+          _bio = data['bio'] ?? '';
           _isLocalGuide = data['local_guide'] == 'yes';
         });
 
@@ -59,11 +61,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e')),
+        SnackBar(content: Text('Failed to load profile: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
     }
   }
 
+  // Load user reviews
   void _loadUserReviews(String userId) async {
     try {
       var reviewSnapshot = await _firestore
@@ -78,6 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  // Load user bookmarks
   void _loadUserBookmarks(String userId) async {
     try {
       var bookmarkReviewsSnapshot = await _firestore
@@ -104,7 +110,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profile'),
+        title: null,
+        flexibleSpace: Center(
+          child: Text(
+            _displayName,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
         actions: [
           if (!_isCurrentUser)
             IconButton(
@@ -150,13 +162,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                 if (_isCurrentUser)
                   IconButton(
                     icon: Icon(Icons.edit, color: Colors.white, size: 18),
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => EditProfileScreen(),
                         ),
                       );
+                      if (result != null) {
+                        // If result is not null, refresh profile data
+                        setState(() {
+                          _displayName = result['name'] ?? _displayName;
+                          _bio = result['bio'] ?? _bio;
+                          _profileImageUrl = result['profileImageUrl'] ?? _profileImageUrl;
+                        });
+                      }
                     },
                   ),
               ],
@@ -165,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             Column(
               children: [
                 Text(
-                  _displayName,
+                  '@$_username',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 if (_isLocalGuide)
@@ -184,10 +204,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ],
                   ),
-                Text(
-                  '@$_username',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
               ],
             ),
             SizedBox(height: 10),
@@ -208,8 +224,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
               ),
             SizedBox(height: 10),
-
-            // Display TabBar only for current user
+            if (_bio.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(_bio, style: TextStyle(fontSize: 16), textAlign: TextAlign.center),
+              ),
             if (_isCurrentUser)
               TabBar(
                 controller: _tabController,
@@ -222,15 +241,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Tab(text: 'Bookmarks'),
                 ],
               ),
-
-            // Expanded TabBarView, showing reviews and bookmarks
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
                   _buildReviewsList(),
-                  if (_isCurrentUser)
-                    _buildBookmarksSection(), // Show bookmarks only for the current user
+                  if (_isCurrentUser) _buildBookmarksSection(),
                 ],
               ),
             ),
@@ -240,12 +256,10 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-// Function to display the reviews list
   Widget _buildReviewsList() {
-    return Review_widget(userId: widget.userId); // Display reviews for the user
+    return Review_widget(userId: widget.userId);
   }
 
-// Function to display bookmarks section
   Widget _buildBookmarksSection() {
     if (!_isCurrentUser) {
       return Container(); // Don't show bookmarks if it's not the current user's profile

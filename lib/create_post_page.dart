@@ -88,6 +88,8 @@ void initState() {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to load user data: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
       ));
     }
   }
@@ -127,6 +129,8 @@ void initState() {
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Review posted successfully!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
         ));
 
         Navigator.push(
@@ -137,7 +141,9 @@ void initState() {
         );
       } catch (e) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
+            .showSnackBar(SnackBar(content: Text('Failed to post review: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
       }
     }
   }

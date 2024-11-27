@@ -121,6 +121,9 @@ class _PlaceFormState extends State<PlaceForm> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to load user data: $e'),
+        behavior: SnackBarBehavior.floating, 
+        margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+        
       ));
     } finally {
       setState(() {
@@ -136,6 +139,8 @@ class _PlaceFormState extends State<PlaceForm> {
         if (selectedImagePath == null || selectedImagePath!.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Please select a valid category with an image'),
+           behavior: SnackBarBehavior.floating, 
+           margin: EdgeInsets.only(top: 50, left: 20, right: 20),
           ));
           return;
         }
@@ -156,8 +161,9 @@ class _PlaceFormState extends State<PlaceForm> {
 
         if (placeNameCheck.docs.isNotEmpty && categoryCheck.docs.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                  'Cannot add the place because it already exists. Please add another one.')));
+            content: Text('Cannot add the place because it already exists. Please add another one.'),
+            behavior: SnackBarBehavior.floating, 
+            margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
           return;
         } else {
           await newPlaceRef.set({
@@ -176,6 +182,8 @@ class _PlaceFormState extends State<PlaceForm> {
 
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Place Added: $placeName Successfully!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
           ));
           Navigator.push(
             context,
@@ -184,7 +192,9 @@ class _PlaceFormState extends State<PlaceForm> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e')));
+            SnackBar(content: Text('Failed to update profile: $e'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
       }
     }
   }

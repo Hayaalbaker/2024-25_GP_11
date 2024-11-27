@@ -44,7 +44,9 @@ class _PostLikeState extends State<PostLike> {
       await _sendNotification();
     } on FirebaseException {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error liking post')),
+        const SnackBar(content: Text('Error liking post'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
     }
   }
@@ -73,7 +75,9 @@ class _PostLikeState extends State<PostLike> {
       }
     } on FirebaseException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error disliking post: ${e.message}')),
+        SnackBar(content: Text('Error disliking post: ${e.message}'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
     }
   }

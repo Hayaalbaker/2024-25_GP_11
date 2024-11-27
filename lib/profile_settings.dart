@@ -117,7 +117,9 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         _hasUnsavedChanges = false;
       });
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Information updated!')));
+          .showSnackBar(SnackBar(content: Text('Information updated!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
     }
   }
 
@@ -276,7 +278,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (_validatePasswordRequirements(_newPasswordController.text)) {
         // Update password
         await user.updatePassword(_newPasswordController.text);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
         Navigator.pop(context); // Return to Profile Settings
       } else {
         setState(() {
@@ -383,3 +387,4 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ],
     );
   }
+}

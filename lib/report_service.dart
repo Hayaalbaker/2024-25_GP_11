@@ -12,7 +12,9 @@ class ReportService {
 
       if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('You must be logged in to report a review')),
+          SnackBar(content: Text('You must be logged in to report a review'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
         );
         return;
       }
@@ -28,13 +30,17 @@ class ReportService {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Review has been reported')),
+        SnackBar(content: Text('Review has been reported'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
       await Future.delayed(Duration(seconds: 1));
       Navigator.of(context).pop(); 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to report review')),
+        SnackBar(content: Text('Failed to report review'),
+          behavior: SnackBarBehavior.floating, 
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
     }
   }
