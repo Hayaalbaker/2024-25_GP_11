@@ -246,9 +246,7 @@ Expanded(
   child: TabBarView(
     controller: _tabController,
     children: [
-      // Reviews tab - Always visible
       _buildReviewsList(),
-      // Bookmarks tab
       _isCurrentUser
           ? _buildBookmarksSection()
           : Center(
