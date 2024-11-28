@@ -274,7 +274,9 @@ Future<void> toggleBookmark(String reviewId) async {
                                 },
                                 child: CircleAvatar(
                                   backgroundImage:
-                                      NetworkImage(profileImageUrl),
+                                        (Uri.tryParse(profileImageUrl)?.isAbsolute == true
+              ? NetworkImage(profileImageUrl) as ImageProvider<Object>
+              : AssetImage(profileImageUrl) as ImageProvider<Object>),
                                   radius: 24,
                                 ),
                               ),
@@ -317,6 +319,10 @@ Future<void> toggleBookmark(String reviewId) async {
                                           ),
                                         ),
                                       ),
+                                         ],
+                                  ),
+                                   Row(
+                                     children: [ 
                                       Text(
                                         'reviewed',
                                         style: TextStyle(

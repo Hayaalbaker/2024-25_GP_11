@@ -44,7 +44,7 @@ class _ReviewFormState extends State<ReviewForm> {
   final _formKey = GlobalKey<FormState>();
   String ReviewText = '';
   List<String> LikeCount = [];
-  int Rating = 1;
+  int Rating = 0;
   String user_uid = '';
   final TextEditingController _reviewController = TextEditingController();
  bool ISselectplace=false;
@@ -52,10 +52,12 @@ class _ReviewFormState extends State<ReviewForm> {
   List<Map<String, String>> places = [];
   String? selectedPlaceName;
   String? selectedPlaceId;
-
-
-final TextEditingController _placeController = TextEditingController();
+TextEditingController textEditingController = TextEditingController();
+FocusNode focusNode = FocusNode();
+final TextEditingController _placeController = TextEditingController();// Default to 0 if no rating is selected
 String? _placeErrorText;
+String? _ratingErrorText; // Error message for the rating field
+
  @override
 void initState() {
   super.initState();
@@ -74,6 +76,34 @@ void initState() {
           selectedPlaceName = place['name'];
         });
       }
+    }
+  });
+    // Add a listener to the FocusNode
+  focusNode.addListener(() {
+    if (!focusNode.hasFocus) {
+      // User has finished typing (lost focus)
+      _validatePlaceName();
+    }
+  });
+}
+
+void _validatePlaceName() {
+  String value = textEditingController.text;
+  setState(() {
+    if (value.isEmpty) {
+      _placeErrorText = 'Place name cannot be empty.';
+      selectedPlaceName = null;
+      selectedPlaceId = null;
+    } else if (!places.any((place) => place['name'] == value)) {
+      _placeErrorText =
+          'Place not found. If you don’t find the place, add it.';
+      selectedPlaceName = null;
+      selectedPlaceId = null;
+    } else {
+      _placeErrorText = null; // Clear error
+      selectedPlaceName = value;
+      selectedPlaceId =
+          places.firstWhere((place) => place['name'] == value)['id'];
     }
   });
 }
@@ -110,7 +140,7 @@ void initState() {
     print('Error fetching places: $e');
   }
 }
-
+/*
   Future<void> saveReview() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -146,9 +176,25 @@ void initState() {
           margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
       }
     }
+  }*/
+@override
+void dispose() {
+  textEditingController.dispose();
+  focusNode.dispose();
+  super.dispose();
+}
+
+void _validateRating() {
+  if (Rating == 0) { // Check if rating is not selected
+    setState(() {
+      _ratingErrorText = 'Please select a rating.'; // Display error
+    });
+  } else {
+    setState(() {
+      _ratingErrorText = null; // Clear error if rating is valid
+    });
   }
-
-
+}
 
 void _validatePlaceSelection() {
   if (selectedPlaceName == null || !places.any((place) => place['name'] == selectedPlaceName)) {
@@ -159,6 +205,38 @@ void _validatePlaceSelection() {
     setState(() {
       _placeErrorText = null; // Clear error if valid
     });
+  }
+}
+Future<void> saveReview() async {
+  if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+    _formKey.currentState!.save();
+    try {
+      DocumentReference newReviewRef =
+          FirebaseFirestore.instance.collection('Review').doc();
+
+      await newReviewRef.set({
+        'Review_Text': ReviewText,
+        'user_uid': user_uid,
+        'placeId': selectedPlaceId, // Use selectedPlaceId
+        'Rating': Rating,
+        'Post_Date': FieldValue.serverTimestamp(),
+        'Like_count': LikeCount,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Review posted successfully!'),
+      ));
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
+    }
   }
 }
 @override
@@ -203,17 +281,26 @@ Widget build(BuildContext context) {
               maxLines: 5,
             ),
             SizedBox(height: 20),
-            RatingBar.builder(
-              initialRating: Rating.toDouble(),
-              minRating: 1,
-              direction: Axis.horizontal,
-              itemCount: 5,
-              itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
-              onRatingUpdate: (rating) {
-                setState(() {
-                  Rating = rating.toInt();
-                });
-              },
+            Column(
+              children: [
+                RatingBar.builder(
+                  initialRating: Rating.toDouble(),
+                  minRating: 1,
+                  direction: Axis.horizontal,
+                  itemCount: 5,
+                  itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                  onRatingUpdate: (rating) {
+                    setState(() {
+                      Rating = rating.toInt();
+                    });
+                  },
+                ),
+                if (_ratingErrorText != null) // Display error if any
+                  Text(
+                    _ratingErrorText!,
+                    style: TextStyle(color: Colors.red),
+                  ),
+              ],
             ),
             SizedBox(height: 20),
             ISselectplace
@@ -256,28 +343,6 @@ Widget build(BuildContext context) {
                               hintText: 'Enter a place name',
                               errorText: _placeErrorText,
                             ),
-                            onChanged: (value) {
-                              setState(() {
-                                if (value.isEmpty) {
-                                  _placeErrorText =
-                                      'Place name cannot be empty.';
-                                  selectedPlaceName = null;
-                                  selectedPlaceId = null;
-                                } else if (!places.any(
-                                    (place) => place['name'] == value)) {
-                                  _placeErrorText =
-                                      'Place not found. If you don’t find the place, ';
-                                  selectedPlaceName = null;
-                                  selectedPlaceId = null;
-                                } else {
-                                  _placeErrorText = null; // Clear error
-                                  selectedPlaceName = value;
-                                  selectedPlaceId = places
-                                      .firstWhere((place) =>
-                                          place['name'] == value)['id'];
-                                }
-                              });
-                            },
                           );
                         },
                       ),
@@ -288,7 +353,9 @@ Widget build(BuildContext context) {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
+                 // Validate both the place and rating before submitting
                 _validatePlaceSelection();
+                 _validateRating(); // Validate rating
                 if (_formKey.currentState!.validate() &&
                     _placeErrorText == null) {
                   saveReview();

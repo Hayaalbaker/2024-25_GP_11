@@ -217,21 +217,21 @@ class _PlaceScreenState extends State<ViewPlace>
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          _imageUrl.isNotEmpty
-              ? Image.asset(
-                  _imageUrl,
-                  height: 150,
-                  width: 150,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.broken_image,
-                    size: 100,
-                    color: Colors.grey,
-                ),)
-              : Icon(
-                  Icons.image,
-                  size: 150,
-                  color: Colors.grey,
+          Container(
+  width: 200, // Set appropriate width
+  height: 200, // Set appropriate height
+  decoration: BoxDecoration(
+    shape: BoxShape.rectangle,
+    image: DecorationImage(
+  image: _imageUrl.isNotEmpty
+      ? (Uri.tryParse(_imageUrl)?.isAbsolute == true
+              ? NetworkImage(_imageUrl) as ImageProvider<Object>
+              : AssetImage(_imageUrl) as ImageProvider<Object>)
+          : AssetImage('images/place_default_image.png') , // Fallback image
+  fit: BoxFit.cover,
+),
+
+  ),
                 ),
           SizedBox(height: 16),
           TabBar(

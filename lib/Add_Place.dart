@@ -4,6 +4,10 @@ import 'database.dart';
 import 'home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:info_popup/info_popup.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'dart:developer';
 
 void main() {
   runApp(AddPlacePage());
@@ -38,6 +42,8 @@ class _PlaceFormState extends State<PlaceForm> {
   String? subcategory;
   bool isLoading = false;
   String userID = '';
+  XFile? imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   TextEditingController _placeNameController = TextEditingController();
   TextEditingController _categoryController = TextEditingController();
@@ -87,10 +93,10 @@ class _PlaceFormState extends State<PlaceForm> {
 
   // Image paths map
   final Map<String, String> categoryImages = {
-    'Restaurants': 'images/Restaurant.png',
-    'Parks': 'images/Park.png',
-    'Shopping': 'images/Shopping.png',
-    'Children': 'images/children.png',
+    'restaurants': 'images/Restaurant.png',
+    'parks': 'images/Park.png',
+    'shopping': 'images/Shopping.png',
+    'children': 'images/children.png',
   };
 
   String? selectedMainCategory;
@@ -121,9 +127,8 @@ class _PlaceFormState extends State<PlaceForm> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to load user data: $e'),
-        behavior: SnackBarBehavior.floating, 
+        behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-        
       ));
     } finally {
       setState(() {
@@ -132,71 +137,117 @@ class _PlaceFormState extends State<PlaceForm> {
     }
   }
 
-  Future<void> checkPlace() async {
+  Future<bool> doesPlaceExist() async {
+    // Normalize the input data
+    String lowerCasePlaceName =
+        placeName.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+    String lowerCaseCategory =
+        category.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+// Fetch all documents from the 'places' collection
+    QuerySnapshot allPlaces =
+        await FirebaseFirestore.instance.collection('places').get();
+
+    try {
+// Query Firestore
+
+      // Combine filtering for both place_name and category
+      List<QueryDocumentSnapshot> matchingPlaces = allPlaces.docs.where((doc) {
+        String dbPlaceName = doc['place_name']
+            .toString()
+            .replaceAll(RegExp(r'\s+'), '')
+            .toLowerCase();
+        String dbCategory = doc['category']
+            .toString()
+            .replaceAll(RegExp(r'\s+'), '')
+            .toLowerCase();
+        return dbPlaceName == lowerCasePlaceName &&
+            dbCategory == lowerCaseCategory;
+      }).toList();
+      // Return true if a match is found, false otherwise
+      return matchingPlaces.isNotEmpty;
+    } catch (e) {
+      print("Error querying Firestore: $e");
+      return false;
+    }
+  }
+
+  Future<void> _submitPlace() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
       try {
-        if (selectedImagePath == null || selectedImagePath!.isEmpty) {
+        bool exists = await doesPlaceExist();
+        if (exists) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Please select a valid category with an image'),
-           behavior: SnackBarBehavior.floating, 
-           margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+            content: Text(
+                'Cannot add the place because it already exists. Please add another one.'),
           ));
           return;
         }
 
+        // Generate Firestore document reference
         DocumentReference newPlaceRef =
             FirebaseFirestore.instance.collection('places').doc();
-        String lowerCasePlaceName = placeName.trim().toLowerCase();
-        String lowerCaseCategory = category.trim().toLowerCase();
 
-        QuerySnapshot placeNameCheck = await FirebaseFirestore.instance
-            .collection('places')
-            .where('place_name', isEqualTo: lowerCasePlaceName)
-            .get();
-        QuerySnapshot categoryCheck = await FirebaseFirestore.instance
-            .collection('places')
-            .where('category', isEqualTo: lowerCaseCategory)
-            .get();
+        String imageUrl;
 
-        if (placeNameCheck.docs.isNotEmpty && categoryCheck.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Cannot add the place because it already exists. Please add another one.'),
-            behavior: SnackBarBehavior.floating, 
-            margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
-          return;
+        if (imageFile != null) {
+          // Create a Firebase Storage reference
+          final storageRef = FirebaseStorage.instance.ref();
+          final imageRef = storageRef
+              .child('places/${DateTime.now().toIso8601String()}.jpg');
+
+          // Upload the image file
+          await imageRef.putFile(File(imageFile!.path));
+          imageUrl = await imageRef.getDownloadURL();
         } else {
-          await newPlaceRef.set({
-            'placeId': newPlaceRef.id,
-            'place_name': placeName,
-            'description': description,
-            'location': location,
-            'category': category,
-            'subcategory': subcategory,
-            'created_at': FieldValue.serverTimestamp(),
-            'Neighborhood': Neighborhood,
-            'Street': Street,
-            'user_uid': userID,
-            'imageUrl': selectedImagePath,
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Place Added: $placeName Successfully!'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-          ));
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
+          // Use default image URL if no image is uploaded
+          imageUrl = categoryImages[category.toLowerCase()] ??
+              'images/place_default_image.png'; // Fallback for unexpected category
         }
+
+        // Save place details in Firestore
+        await newPlaceRef.set({
+          'placeId': newPlaceRef.id,
+          'place_name': placeName,
+          'description': description,
+          'location': location,
+          'category': category,
+          'subcategory': subcategory,
+          'created_at': FieldValue.serverTimestamp(),
+          'Neighborhood': Neighborhood,
+          'Street': Street,
+          'user_uid': userID,
+          'imageUrl': imageUrl, // Save the uploaded image URL
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Place Added: $placeName Successfully!'),
+        ));
+
+        // Reset the form
+        _formKey.currentState!.reset();
+        setState(() {
+          imageFile = null;
+          category = '';
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to update profile: $e'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to add place: $e'),
+        ));
       }
     }
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      imageFile = pickedFile;
+    });
   }
 
   @override
@@ -358,8 +409,21 @@ class _PlaceFormState extends State<PlaceForm> {
                   },
                 ),
               SizedBox(height: 20),
+              TextButton.icon(
+                onPressed: _pickImage,
+                icon: Icon(Icons.image),
+                label: Text('Upload Image'),
+              ),
+              if (imageFile != null)
+                Image.file(
+                  File(imageFile!.path),
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              const SizedBox(height: 16.0),
               ElevatedButton(
-                onPressed: checkPlace,
+                onPressed: _submitPlace,
                 child: Text('Add Place'),
               ),
             ],

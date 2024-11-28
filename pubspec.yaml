@@ -27,7 +27,8 @@ dependencies:
   ionicons: ^0.2.2
   rating_summary: ^1.0.2+1
   badges: ^3.0.3
-
+  path_provider: ^2.0.15
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -46,3 +47,4 @@ flutter:
     - images/Shopping.png
     - images/Restaurant.png
     - images/children.png
+    - images/place_default_image.png

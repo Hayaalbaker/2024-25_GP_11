@@ -23,30 +23,39 @@ class Places_widget extends StatelessWidget {
 
 class PlacesList extends StatelessWidget {
   final List<String>? placeIds;
-  final String? filterCategory;
-
-  PlacesList({this.placeIds, this.filterCategory});
+  final String? filterCategory; // Added category filter
+  PlacesList({this.placeIds,this.filterCategory}); // Constructor to accept placeIds
 
   @override
   Widget build(BuildContext context) {
-    Query query = FirebaseFirestore.instance.collection('places');
-
-    if (filterCategory != null && filterCategory != "All Categories") {
-      query = query.where('category', isEqualTo: filterCategory);
-    }
-
-    if (placeIds != null && placeIds!.isNotEmpty) {
-      query = query.where(FieldPath.documentId, whereIn: placeIds);
-    }
-
-    query = query.orderBy('created_at', descending: true);
-
     return StreamBuilder<QuerySnapshot>(
-      stream: query.snapshots(),
+stream: placeIds != null && placeIds!.isNotEmpty
+    ? FirebaseFirestore.instance
+        .collection('places')
+        .where(FieldPath.documentId,
+            whereIn: placeIds) // Filter by placeIds
+        .where(
+          'category',
+          isEqualTo: filterCategory != null && filterCategory != "All Categories" 
+              ? filterCategory 
+              : null,
+        ) // Add category filter dynamically
+        .orderBy('created_at', descending: true)
+        .snapshots()
+    : FirebaseFirestore.instance
+        .collection('places')
+        .where(
+          'category',
+          isEqualTo: filterCategory != null && filterCategory != "All Categories" 
+              ? filterCategory 
+              : null,
+        ) // Add category filter dynamically
+        .orderBy('created_at', descending: true)
+        .snapshots(),
+
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           final List<DocumentSnapshot> documents = snapshot.data!.docs;
-
           return ListView.builder(
             itemCount: documents.length,
             itemBuilder: (context, index) {
@@ -55,65 +64,66 @@ class PlacesList extends StatelessWidget {
               String placeId = doc.id;
               String placeName = doc['place_name'];
               String category = doc['category'];
-
               return FutureBuilder<bool>(
                 future: BookmarkService().isBookmarked(placeId),
                 builder: (context, bookmarkSnapshot) {
                   bool isBookmarked = bookmarkSnapshot.data ?? false;
 
-                  return InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ViewPlace(place_Id: placeId),
+              return InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ViewPlace(place_Id: doc.id),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Row(
+                    children: [
+                    Hero(
+  tag: doc.id,
+child: Container(
+  width: 150, // Set appropriate width
+  height: 100, // Set appropriate height
+  decoration: BoxDecoration(
+    shape: BoxShape.rectangle,
+    image: DecorationImage(
+  image: imageUrl.isNotEmpty
+      ? (Uri.tryParse(imageUrl)?.isAbsolute == true
+              ? NetworkImage(imageUrl) as ImageProvider<Object>
+              : AssetImage(imageUrl) as ImageProvider<Object>)
+          : AssetImage('images/place_default_image.png'), // Fallback image
+  fit: BoxFit.cover,
+),
+
+  ),
+),
+
+),
+
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              doc['place_name'],
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              doc['category'],
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          Hero(
-                            tag: placeId,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: imageUrl.isNotEmpty
-                                  ? Image.network(
-                                      imageUrl,
-                                      width: 200,
-                                      height: 150,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.asset(
-                                      'assets/placeholder.png',
-                                      width: 200,
-                                      height: 150,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  placeName,
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  category,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(color: Colors.grey[600]),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
+                      ),
+                      IconButton(
                             icon: Icon(
                               isBookmarked
                                   ? Icons.bookmark
@@ -126,20 +136,37 @@ class PlacesList extends StatelessWidget {
                               await BookmarkService().toggleBookmark(placeId);
                             },
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                    ],
+                  ),
+                ),
               );
+
+
+            },
+          );
             },
           );
         } else if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         } else {
-          return Center(child: CircularProgressIndicator());
+         return Center(child: CircularProgressIndicator());
         }
       },
     );
   }
 }
+/*
+
+child: Container(
+  width: 150, // Set appropriate width
+  height: 100, // Set appropriate height
+  decoration: BoxDecoration(
+    shape: BoxShape.rectangle,
+    image: DecorationImage(
+      image: Uri.tryParse(imageUrl)?.isAbsolute == true
+          ? NetworkImage(imageUrl) as ImageProvider
+          : AssetImage(imageUrl) as ImageProvider,
+      fit: BoxFit.cover,
+    ),
+  ),
+),*/
