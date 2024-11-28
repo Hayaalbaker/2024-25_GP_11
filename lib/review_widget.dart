@@ -310,7 +310,8 @@ Future<void> toggleBookmark(String reviewId) async {
                                             );
                                           }
                                         },
-                                        child: Text(
+                                        child: Row(children: [ 
+                                        Text(
                                           '$Name ',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
@@ -318,8 +319,18 @@ Future<void> toggleBookmark(String reviewId) async {
                                             color: Colors.black,
                                           ),
                                         ),
-                                      ),
-                                         ],
+                                        if (_isLocalGuide) ...[
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.check_circle,
+                                            color: Colors.green,
+                                            size: 16,
+                                            ),
+                                            ],
+                                        ],
+                                      )
+                                    ),
+                                  ],
                                   ),
                                    Row(
                                      children: [ 
@@ -353,39 +364,16 @@ Future<void> toggleBookmark(String reviewId) async {
                                     ],
                                   ),
                                   SizedBox(height: 4),
-                                  _isLocalGuide
-                                      ? Row(
-                                          children: [
-                                            Text(
-                                              'Local Guide',
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey),
-                                            ),
-                                            SizedBox(width: 4),
-                                            Icon(
-                                              Icons.check_circle,
-                                              color: Colors.green,
-                                              size: 16,
-                                            ),
-                                          ],
-                                        )
-                                      : Row(
-                                          children: [
-                                            Text(
-                                              'Normal User',
-                                              style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey),
-                                            ),
-                                            SizedBox(width: 4),
-                                            Icon(
-                                              Icons.check_circle,
-                                              color: Colors.grey,
-                                              size: 16,
-                                            ),
-                                          ],
+                                  Row(
+                                    children: [
+                                      Text(
+                                        userData != null && userData.containsKey('city') ? 
+                                        'Based in ${userData['city']}' : 
+                                        'Based in ?',
+                                        style: TextStyle(fontSize: 14, color: Colors.grey),
                                         ),
+                                      ],
+                                    ),
                                   SizedBox(height: 4),
                                 ],
                               ),
