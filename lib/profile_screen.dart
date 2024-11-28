@@ -230,26 +230,36 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 child: Text(_bio, style: TextStyle(fontSize: 16), textAlign: TextAlign.center),
               ),
             if (_isCurrentUser)
-              TabBar(
-                controller: _tabController,
-                labelColor: const Color(0xFF800020),
-                unselectedLabelColor: Colors.black,
-                indicatorColor: const Color(0xFF800020),
-                indicatorWeight: 3,
-                tabs: [
-                  Tab(text: 'Reviews'),
-                  Tab(text: 'Bookmarks'),
-                ],
-              ),
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildReviewsList(),
-                  if (_isCurrentUser) _buildBookmarksSection(),
-                ],
+              SizedBox(height: 10),
+TabBar(
+  controller: _tabController,
+  labelColor: const Color(0xFF800020),
+  unselectedLabelColor: Colors.black,
+  indicatorColor: const Color(0xFF800020),
+  indicatorWeight: 3,
+  tabs: [
+    Tab(text: 'Reviews'),
+    Tab(text: 'Bookmarks'),
+  ],
+),
+Expanded(
+  child: TabBarView(
+    controller: _tabController,
+    children: [
+      // Reviews tab - Always visible
+      _buildReviewsList(),
+      // Bookmarks tab
+      _isCurrentUser
+          ? _buildBookmarksSection()
+          : Center(
+              child: Text(
+                "Bookmarks are private.",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ),
+    ],
+  ),
+),
           ],
         ),
       ),
