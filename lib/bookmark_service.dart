@@ -2,83 +2,80 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class BookmarkService {
-
-  Future<bool> isBookmarked(String reviewId) async {
+  // This method will stream the bookmark status for a place or review
+  Stream<bool> bookmarkStream(String targetId, String type) {
     String? activeUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (activeUserId == null) return false;
+    if (activeUserId == null) return Stream.value(false);
 
-    final reviewRef = FirebaseFirestore.instance
+    final targetRef = FirebaseFirestore.instance
         .collection('bookmarks')
         .doc(activeUserId)
-        .collection('reviews')
-        .doc(reviewId);
+        .collection(type) // 'places' or 'reviews'
+        .doc(targetId);
 
-    final doc = await reviewRef.get();
-    return doc.exists;  
+    return targetRef.snapshots().map((docSnapshot) {
+      return docSnapshot.exists; // Return true if the document exists (bookmarked), false otherwise
+    });
   }
 
-  Future<void> toggleBookmark(String reviewId) async {
+  Future<void> toggleBookmark(String targetId, String type) async {
     String? activeUserId = FirebaseAuth.instance.currentUser?.uid;
     if (activeUserId == null) return;
 
-    final reviewRef = FirebaseFirestore.instance
+    final targetRef = FirebaseFirestore.instance
         .collection('bookmarks')
         .doc(activeUserId)
-        .collection('reviews')
-        .doc(reviewId);
+        .collection(type) // 'places' or 'reviews'
+        .doc(targetId);
 
-    final reviewDoc = await FirebaseFirestore.instance
-        .collection('Review')
-        .doc(reviewId)
-        .get();
-
-    if (!reviewDoc.exists) {
-      print('Review does not exist');
-      return;
-    }
-
-    final doc = await reviewRef.get();
+    final doc = await targetRef.get();
 
     if (doc.exists) {
-      await reviewRef.delete();
+      // Remove bookmark if it exists
+      await targetRef.delete();
+      print('Bookmark removed for $type: $targetId');
     } else {
+      // Create bookmark if it doesn't exist
       final bookmarkData = {
-        'bookmark_id': reviewId,
-        'user_uid': activeUserId,
-        'bookmark_date': FieldValue.serverTimestamp(),
-        'bookmark_type': 'review',
-      };
-      await reviewRef.set(bookmarkData);
-    }
-  }
-  
-static Future<void> addBookmark(String targetId, String type) async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      final bookmarkDoc = FirebaseFirestore.instance.collection('bookmarks').doc();
-
-      final bookmarkData = {
-        'bookmark_id': bookmarkDoc.id, 
-        'user_uid': user.uid,         
-        'target_id': targetId,       
-        'bookmark_type': type,       
-        'bookmark_date': FieldValue.serverTimestamp(), 
+        'bookmark_id': targetId,          // Target ID for the bookmark (place or review)
+        'user_uid': activeUserId,         // User ID who made the bookmark
+        'bookmark_date': FieldValue.serverTimestamp(),  // Timestamp for when it was bookmarked
+        'bookmark_type': type,            // 'places' or 'reviews'
       };
 
-      print("Saving to Firestore: $bookmarkData");
-
-      await bookmarkDoc.set(bookmarkData);
-
-      print('Bookmark added successfully');
-    } else {
-      print('Error: No user logged in.');
+      // Add the new bookmark data
+      await targetRef.set(bookmarkData);
+      print('Bookmark added for $type: $targetId');
     }
-  } catch (e) {
-    print('Error adding bookmark: $e');
   }
-}
+
+  static Future<void> addBookmark(String targetId, String type) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        final bookmarkDoc = FirebaseFirestore.instance.collection('bookmarks').doc();
+
+        final bookmarkData = {
+          'bookmark_id': bookmarkDoc.id,
+          'user_uid': user.uid,
+          'target_id': targetId,
+          'bookmark_type': type,
+          'bookmark_date': FieldValue.serverTimestamp(),
+        };
+
+        print("Saving to Firestore: $bookmarkData");
+
+        await bookmarkDoc.set(bookmarkData);
+
+        print('Bookmark added successfully');
+      } else {
+        print('Error: No user logged in.');
+      }
+    } catch (e) {
+      print('Error adding bookmark: $e');
+    }
+  }
 
   static Stream<QuerySnapshot> fetchBookmarks(String type) {
     final user = FirebaseAuth.instance.currentUser;

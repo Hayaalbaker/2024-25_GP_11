@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'bookmark_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'places_widget.dart';
 import 'review_widget.dart';
 
 class BookmarksScreen extends StatelessWidget {
@@ -108,31 +109,37 @@ class BookmarkedReviewsScreen extends StatelessWidget {
 class BookmarkedPlacesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return Center(child: Text('Please log in to view your bookmarked places.'));
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Places'),
+        title: Text('Bookmarked Places'),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: BookmarkService.fetchBookmarks('place'),
+        stream: FirebaseFirestore.instance
+            .collection('bookmarks')
+            .doc(userId)
+            .collection('places') 
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(child: Text('No bookmarked places found.'));
           }
 
-          final bookmarks = snapshot.data!.docs;
+          final bookmarkedPlaceIds = snapshot.data!.docs
+              .map((doc) => doc['bookmark_id'] as String)
+              .toList();
 
-          return ListView.builder(
-            itemCount: bookmarks.length,
-            itemBuilder: (context, index) {
-              final bookmark = bookmarks[index].data() as Map<String, dynamic>;
-              return ListTile(
-                title: Text(bookmark['target_id']),
-                subtitle: Text(bookmark['bookmark_date']?.toDate().toString() ?? ''),
-              );
-            },
+          return Places_widget(
+            placeIds: bookmarkedPlaceIds,  
           );
         },
       ),
