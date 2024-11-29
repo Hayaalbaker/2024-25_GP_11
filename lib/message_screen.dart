@@ -26,9 +26,19 @@ class _MessageScreenState extends State<MessageScreen> {
       : '${widget.otherUserId}_${widget.currentUserId}';
 
   Future<String> getUserName() async {
-    var userDoc =
-        await _firestore.collection('users').doc(widget.otherUserId).get();
-    return userDoc['user_name'] ?? 'Unknown';
+    try {
+      var userDoc =
+          await _firestore.collection('users').doc(widget.otherUserId).get();
+
+      if (userDoc.exists && userDoc.data()!.containsKey('user_name')) {
+        return userDoc['user_name'] ?? 'Unknown';
+      } else {
+        return 'Unknown';
+      }
+    } catch (e) {
+      print('Error fetching user_name: $e');
+      return 'Unknown';
+    }
   }
 
   Future<void> _pickImage() async {
@@ -185,7 +195,9 @@ class _MessageScreenState extends State<MessageScreen> {
               } else if (snapshot.hasError) {
                 return Text('Error');
               } else {
-                return Text('Chat with ${snapshot.data}');
+                String userName = snapshot.data ?? 'Unknown';
+                return Text(
+                    'Chat with ${userName.isNotEmpty ? userName : "Unknown"}');
               }
             },
           ),

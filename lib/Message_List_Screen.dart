@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'message_screen.dart';
-import 'AESHelper.dart'; 
+import 'AESHelper.dart';
+
 class MessageListScreen extends StatelessWidget {
   final String currentUserId;
 
@@ -17,6 +18,8 @@ class MessageListScreen extends StatelessWidget {
         stream: FirebaseFirestore.instance
             .collection('chats')
             .where('participants', arrayContains: currentUserId)
+                .orderBy('timestamp', descending: true) 
+
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) {
@@ -52,13 +55,25 @@ class MessageListScreen extends StatelessWidget {
                     .get(),
                 builder:
                     (context, AsyncSnapshot<DocumentSnapshot> userSnapshot) {
-                  if (!userSnapshot.hasData) {
+                  if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
                     return ListTile(
                       leading: CircleAvatar(child: Icon(Icons.person)),
-                      title: Text('Loading...'),
+                      title: Text('Unknown'),
                       subtitle: Text(lastMessage),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MessageScreen(
+                              currentUserId: currentUserId,
+                              otherUserId: otherUserId,
+                            ),
+                          ),
+                        );
+                      },
                     );
                   }
+
                   String otherUsername =
                       userSnapshot.data!['user_name'] ?? 'Unknown';
 
