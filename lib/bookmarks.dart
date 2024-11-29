@@ -135,8 +135,12 @@ class BookmarkedPlacesScreen extends StatelessWidget {
           }
 
           final bookmarkedPlaceIds = snapshot.data!.docs
-              .map((doc) => doc['bookmark_id'] as String)
+              .where((doc) =>
+                  doc.data() != null &&
+                  (doc.data() as Map<String, dynamic>).containsKey('bookmark_id'))
+              .map((doc) => (doc.data() as Map<String, dynamic>)['bookmark_id'] as String)
               .toList();
+
 
           return Places_widget(
             placeIds: bookmarkedPlaceIds,  

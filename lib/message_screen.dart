@@ -111,10 +111,49 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   void initState() {
     super.initState();
-    markMessagesAsRead();
+ 
+   
+     markMessagesAsRead();
+
   }
 
+
+Future<void> checkAndCreateChat( ) async {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  print('-------------------------');
+  print(chatId);
+  print('-------------------------');
+  try {
+    // Reference to the specific chat document
+    DocumentReference chatRef = _firestore.collection('chats').doc(chatId);
+
+    // Check if the document exists
+    DocumentSnapshot chatSnapshot = await chatRef.get();
+
+    if (!chatSnapshot.exists) {
+      // If the chat doesn't exist, create a new document with default data
+      await chatRef.set({
+          // Initialize an empty messages array or other fields as needed
+          'timestamp': FieldValue.serverTimestamp(),
+      });
+        print('-------------------------');
+      print('Chat created with ID: $chatId');
+        print('-------------------------');
+    } else {
+        print('-------------------------');
+      print('Chat already exists with ID: $chatId');
+        print('-------------------------');
+    }
+  } catch (e) {
+      print('-------------------------');
+    print('Error checking or creating chat: $e');
+      print('-------------------------');
+  }
+}
+
   void markMessagesAsRead() async {
+ try {
+   await checkAndCreateChat();
     await _firestore.collection('chats').doc(chatId).update({
       'unreadCount.${widget.currentUserId}': 0,
     });
@@ -125,6 +164,9 @@ class _MessageScreenState extends State<MessageScreen> {
         .collection('messages')
         .where('receiverId', isEqualTo: widget.currentUserId)
         .get();
+          } catch (e) {
+    print('Error fetching messages: $e');
+  }
   }
 
   void _updateReaction(String messageId, String reaction) async {
@@ -137,6 +179,12 @@ class _MessageScreenState extends State<MessageScreen> {
       'reaction': reaction,
     });
   }
+
+
+
+
+
+
 
   // Display reaction options in a bottom sheet
   void _showReactionOptions(String messageId) {

@@ -55,9 +55,11 @@ class _PlaceScreenState extends State<ViewPlace>
       // If placeId is null or empty, show an error message and return early.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Invalid place ID.'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
+          SnackBar(
+            content: Text('Invalid place ID.'),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+          ),
         );
       });
       return; // Exit the method if placeId is invalid.
@@ -81,18 +83,22 @@ class _PlaceScreenState extends State<ViewPlace>
       } else {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Place not found.'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
+            SnackBar(
+              content: Text('Place not found.'),
+              behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+            ),
           );
         });
       }
     } catch (e) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load profile: $e'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
+          SnackBar(
+            content: Text('Failed to load profile: $e'),
+            behavior: SnackBarBehavior.floating,
+            margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+          ),
         );
       });
     }
@@ -132,7 +138,7 @@ class _PlaceScreenState extends State<ViewPlace>
         .doc(userId)
         .collection('places')
         .doc(placeId);
-
+////////////////////////
     try {
       if (isBookmarked) {
         await placeRef.delete();
@@ -140,17 +146,27 @@ class _PlaceScreenState extends State<ViewPlace>
           isBookmarked = false;
         });
       } else {
-        await placeRef.set({'timestamp': FieldValue.serverTimestamp()});
+        final bookmarkData = {
+          'bookmark_id': placeId,
+          'user_uid': userId,
+          'bookmark_date': FieldValue.serverTimestamp(),
+          'bookmark_type': 'place',
+        };
+
+        print('---Toggling bookmark for place: $placeId----');
+
+        await placeRef.set(bookmarkData);
         setState(() {
           isBookmarked = true;
         });
       }
     } catch (e) {
       print("Error toggling bookmark: $e");
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Failed to update bookmark"),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Failed to update bookmark"),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+      ));
     }
   }
 
@@ -218,21 +234,21 @@ class _PlaceScreenState extends State<ViewPlace>
       body: Column(
         children: [
           Container(
-  width: 200, // Set appropriate width
-  height: 200, // Set appropriate height
-  decoration: BoxDecoration(
-    shape: BoxShape.rectangle,
-    image: DecorationImage(
-  image: _imageUrl.isNotEmpty
-      ? (Uri.tryParse(_imageUrl)?.isAbsolute == true
-              ? NetworkImage(_imageUrl) as ImageProvider<Object>
-              : AssetImage(_imageUrl) as ImageProvider<Object>)
-          : AssetImage('images/place_default_image.png') , // Fallback image
-  fit: BoxFit.cover,
-),
-
-  ),
-                ),
+            width: 200, // Set appropriate width
+            height: 200, // Set appropriate height
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              image: DecorationImage(
+                image: _imageUrl.isNotEmpty
+                    ? (Uri.tryParse(_imageUrl)?.isAbsolute == true
+                        ? NetworkImage(_imageUrl) as ImageProvider<Object>
+                        : AssetImage(_imageUrl) as ImageProvider<Object>)
+                    : AssetImage(
+                        'images/place_default_image.png'), // Fallback image
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
           SizedBox(height: 16),
           TabBar(
             controller: _tabController,
@@ -289,8 +305,7 @@ class _PlaceScreenState extends State<ViewPlace>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CreatePostPage(
+                      builder: (context) => CreatePostPage(
                           placeId: placeId ?? '', ISselectplace: true),
                     ),
                   );
@@ -315,9 +330,11 @@ class _PlaceScreenState extends State<ViewPlace>
                 onPressed: () async {
                   await toggleBookmarkForPlace();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Place bookmarked!'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
+                    SnackBar(
+                      content: Text('Place bookmarked!'),
+                      behavior: SnackBarBehavior.floating,
+                      margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+                    ),
                   );
                 },
               ),
