@@ -8,7 +8,7 @@ import 'delete_user.dart';
 class ProfileSettingsPage extends StatelessWidget {
   // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
-    // ignore: unused_field
+  // ignore: unused_field
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -24,7 +24,8 @@ class ProfileSettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => AccountInformationPage()),
+                MaterialPageRoute(
+                    builder: (context) => AccountInformationPage()),
               );
             },
           ),
@@ -42,7 +43,8 @@ class ProfileSettingsPage extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => DeleteAccountConfirmationPage()),
+                MaterialPageRoute(
+                    builder: (context) => DeleteAccountConfirmationPage()),
               );
             },
           ),
@@ -130,7 +132,8 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         builder: (context) {
           return AlertDialog(
             title: Text('Unsaved Changes'),
-            content: Text('You have unsaved changes. Do you want to discard them?'),
+            content:
+                Text('You have unsaved changes. Do you want to discard them?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false), // Stay
@@ -193,7 +196,12 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                       _hasUnsavedChanges = true;
                     });
                   },
-                  items: ['Saudi Arabia', 'Egypt', 'United Arab Emirates', 'Kuwait']
+                  items: [
+                    'Saudi Arabia',
+                    'Egypt',
+                    'United Arab Emirates',
+                    'Kuwait'
+                  ]
                       .map((country) => DropdownMenuItem(
                             value: country,
                             child: Text(country),
@@ -215,10 +223,12 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                     });
                   },
                   items: _selectedCountry != null
-                      ? cities[_selectedCountry]!.map((city) => DropdownMenuItem(
-                            value: city,
-                            child: Text(city),
-                          )).toList()
+                      ? cities[_selectedCountry]!
+                          .map((city) => DropdownMenuItem(
+                                value: city,
+                                child: Text(city),
+                              ))
+                          .toList()
                       : [],
                 ),
               ),
@@ -278,13 +288,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (_validatePasswordRequirements(_newPasswordController.text)) {
         // Update password
         await user.updatePassword(_newPasswordController.text);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password changed successfully!'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Password changed successfully!')));
         Navigator.pop(context); // Return to Profile Settings
       } else {
         setState(() {
-          _errorMessage = 'Your new password does not meet the required criteria.';
+          _errorMessage =
+              'Your new password does not meet the required criteria.';
         });
       }
     } catch (e) {
@@ -324,7 +334,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       controller: _currentPasswordController,
                       decoration: InputDecoration(
                         labelText: 'Current Password',
-                        errorText: _errorMessage != null && _errorMessage!.contains('current') ? _errorMessage : null,
+                        errorText: _errorMessage != null &&
+                                _errorMessage!.contains('current')
+                            ? _errorMessage
+                            : null,
                       ),
                       obscureText: true,
                     ),
@@ -332,7 +345,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ResetPasswordScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => ResetPasswordScreen()),
                         );
                       },
                       child: const Text('Forgot Password?'),
@@ -341,7 +355,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       controller: _newPasswordController,
                       decoration: InputDecoration(
                         labelText: 'New Password',
-                        errorText: _errorMessage != null && _errorMessage!.contains('new') ? _errorMessage : null,
+                        errorText: _errorMessage != null &&
+                                _errorMessage!.contains('new')
+                            ? _errorMessage
+                            : null,
                       ),
                       obscureText: true,
                     ),
@@ -349,14 +366,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     // Password requirements display
                     Column(
                       children: [
-                        _passwordRequirement('At least 8 characters', _newPasswordController.text.length >= 8),
-                        _passwordRequirement('One uppercase letter',
-                            _newPasswordController.text.contains(RegExp(r'[A-Z]'))),
-                        _passwordRequirement('One lowercase letter',
-                            _newPasswordController.text.contains(RegExp(r'[a-z]'))),
-                        _passwordRequirement('One digit', _newPasswordController.text.contains(RegExp(r'[0-9]'))),
-                        _passwordRequirement('One special character',
-                            _newPasswordController.text.contains(RegExp(r'[!@#\$&*~]'))),
+                        _passwordRequirement('At least 8 characters',
+                            _newPasswordController.text.length >= 8),
+                        _passwordRequirement(
+                            'One uppercase letter',
+                            _newPasswordController.text
+                                .contains(RegExp(r'[A-Z]'))),
+                        _passwordRequirement(
+                            'One lowercase letter',
+                            _newPasswordController.text
+                                .contains(RegExp(r'[a-z]'))),
+                        _passwordRequirement(
+                            'One digit',
+                            _newPasswordController.text
+                                .contains(RegExp(r'[0-9]'))),
+                        _passwordRequirement(
+                            'One special character',
+                            _newPasswordController.text
+                                .contains(RegExp(r'[!@#\$&*~]'))),
                       ],
                     ),
                   ],

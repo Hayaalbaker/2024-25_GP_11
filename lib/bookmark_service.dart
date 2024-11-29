@@ -14,7 +14,8 @@ class BookmarkService {
         .doc(targetId);
 
     return targetRef.snapshots().map((docSnapshot) {
-      return docSnapshot.exists; // Return true if the document exists (bookmarked), false otherwise
+      return docSnapshot
+          .exists; // Return true if the document exists (bookmarked), false otherwise
     });
   }
 
@@ -37,10 +38,11 @@ class BookmarkService {
     } else {
       // Create bookmark if it doesn't exist
       final bookmarkData = {
-        'bookmark_id': targetId,          // Target ID for the bookmark (place or review)
-        'user_uid': activeUserId,         // User ID who made the bookmark
-        'bookmark_date': FieldValue.serverTimestamp(),  // Timestamp for when it was bookmarked
-        'bookmark_type': type,            // 'places' or 'reviews'
+        'bookmark_id': targetId, // Target ID for the bookmark (place or review)
+        'user_uid': activeUserId, // User ID who made the bookmark
+        'bookmark_date': FieldValue
+            .serverTimestamp(), // Timestamp for when it was bookmarked
+        'bookmark_type': type, // 'places' or 'reviews'
       };
 
       // Add the new bookmark data
@@ -54,7 +56,8 @@ class BookmarkService {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        final bookmarkDoc = FirebaseFirestore.instance.collection('bookmarks').doc();
+        final bookmarkDoc =
+            FirebaseFirestore.instance.collection('bookmarks').doc();
 
         final bookmarkData = {
           'bookmark_id': bookmarkDoc.id,
