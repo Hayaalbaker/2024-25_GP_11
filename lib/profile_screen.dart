@@ -21,7 +21,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   String _profileImageUrl = '';
   String _displayName = 'Display Name';
-  String _bio = '';
   String _username = 'Username';
   bool _isLocalGuide = false;
 
@@ -51,7 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           _profileImageUrl = data['profileImageUrl'] ?? '';
           _displayName = data['Name'] ?? 'Display Name';
           _username = data['user_name'] ?? 'Username';
-          _bio = data['bio'] ?? '';
           _isLocalGuide = data['local_guide'] == 'yes';
         });
 
@@ -61,9 +59,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile: $e'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
+        SnackBar(
+          content: Text('Failed to load profile: $e'),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+        ),
       );
     }
   }
@@ -173,8 +173,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         // If result is not null, refresh profile data
                         setState(() {
                           _displayName = result['name'] ?? _displayName;
-                          _bio = result['bio'] ?? _bio;
-                          _profileImageUrl = result['profileImageUrl'] ?? _profileImageUrl;
+                          _profileImageUrl =
+                              result['profileImageUrl'] ?? _profileImageUrl;
                         });
                       }
                     },
@@ -224,40 +224,33 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 child: Text('Edit Profile', style: TextStyle(fontSize: 14)),
               ),
             SizedBox(height: 10),
-            if (_bio.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(_bio, style: TextStyle(fontSize: 16), textAlign: TextAlign.center),
-              ),
-            if (_isCurrentUser)
-              SizedBox(height: 10),
-TabBar(
-  controller: _tabController,
-  labelColor: const Color(0xFF800020),
-  unselectedLabelColor: Colors.black,
-  indicatorColor: const Color(0xFF800020),
-  indicatorWeight: 3,
-  tabs: [
-    Tab(text: 'Reviews'),
-    Tab(text: 'Bookmarks'),
-  ],
-),
-Expanded(
-  child: TabBarView(
-    controller: _tabController,
-    children: [
-      _buildReviewsList(),
-      _isCurrentUser
-          ? _buildBookmarksSection()
-          : Center(
-              child: Text(
-                "Bookmarks are private.",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+            TabBar(
+              controller: _tabController,
+              labelColor: const Color(0xFF800020),
+              unselectedLabelColor: Colors.black,
+              indicatorColor: const Color(0xFF800020),
+              indicatorWeight: 3,
+              tabs: [
+                Tab(text: 'Reviews'),
+                Tab(text: 'Bookmarks'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildReviewsList(),
+                  _isCurrentUser
+                      ? _buildBookmarksSection()
+                      : Center(
+                          child: Text(
+                            "Bookmarks are private.",
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                ],
               ),
             ),
-    ],
-  ),
-),
           ],
         ),
       ),
@@ -269,10 +262,6 @@ Expanded(
   }
 
   Widget _buildBookmarksSection() {
-    if (!_isCurrentUser) {
-      return Container(); // Don't show bookmarks if it's not the current user's profile
-    }
-
     return Column(
       children: [
         SizedBox(height: 10),

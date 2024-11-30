@@ -5,7 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'home_page.dart';
-import 'profile_settings.dart'; 
+import 'profile_settings.dart';
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -19,7 +19,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   TextEditingController _nameController = TextEditingController();
-  TextEditingController _bioController = TextEditingController();  
 
   String? _imageUrl;
   File? _pickedImage;
@@ -67,7 +66,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Sports Facilities',
     'Educational Workshops',
   ];
-  
+
   bool _hasChanges = false; // Flag to track if there are changes
 
   @override
@@ -83,7 +82,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           await _firestore.collection('users').doc(user.uid).get();
       setState(() {
         _nameController.text = userDoc['Name'] ?? '';
-        _bioController.text = userDoc['bio'] ?? '';
         _imageUrl = userDoc['profileImageUrl'];
 
         selectedInterests = List<String>.from(userDoc['interests'] ?? []);
@@ -105,7 +103,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void _trackChanges() {
     setState(() {
-      _hasChanges = true; 
+      _hasChanges = true;
     });
   }
 
@@ -141,57 +139,58 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           )) ??
           false;
     }
-    return true; 
+    return true;
   }
 
-Future<void> _updateProfile() async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      User? user = _auth.currentUser;
+  Future<void> _updateProfile() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        User? user = _auth.currentUser;
 
-      String? profileImageUrl;
-      if (_pickedImage != null) {
-        final storageRef = _storage.ref().child('profileImages/${user!.uid}.jpg');
-        await storageRef.putFile(_pickedImage!);
-        profileImageUrl = await storageRef.getDownloadURL();
-      } else {
-        profileImageUrl = _imageUrl;
-      }
+        String? profileImageUrl;
+        if (_pickedImage != null) {
+          final storageRef =
+              _storage.ref().child('profileImages/${user!.uid}.jpg');
+          await storageRef.putFile(_pickedImage!);
+          profileImageUrl = await storageRef.getDownloadURL();
+        } else {
+          profileImageUrl = _imageUrl;
+        }
 
-      List<String> newInterests = [];
-      selectedSubInterests.forEach((category, interests) {
-        newInterests.addAll(interests);
-      });
-
-      DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(user!.uid).get();
-      List<String> currentInterests =
-          List<String>.from(userDoc['interests'] ?? []);
-
-      if (newInterests.toSet().difference(currentInterests.toSet()).isNotEmpty) {
-        await _firestore.collection('users').doc(user.uid).update({
-          'interests': newInterests,
+        List<String> newInterests = [];
+        selectedSubInterests.forEach((category, interests) {
+          newInterests.addAll(interests);
         });
+
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user!.uid).get();
+        List<String> currentInterests =
+            List<String>.from(userDoc['interests'] ?? []);
+
+        if (newInterests.toSet().difference(currentInterests.toSet()).isNotEmpty) {
+          await _firestore.collection('users').doc(user.uid).update({
+            'interests': newInterests,
+          });
+        }
+
+        await _firestore.collection('users').doc(user.uid).update({
+          'Name': _nameController.text.trim(),
+          'profileImageUrl': profileImageUrl,
+        });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Failed to update profile: $e'),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+        ));
       }
-
-      await _firestore.collection('users').doc(user.uid).update({
-        'Name': _nameController.text.trim(),
-        'profileImageUrl': profileImageUrl,
-        'bio': _bioController.text.trim(),
-      });
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),  
-);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update profile: $e'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
     }
   }
-}
 
   Widget _buildSubInterestSelection(String category, List<String> options) {
     return Column(
@@ -231,11 +230,12 @@ Future<void> _updateProfile() async {
           title: Text('Edit Profile'),
           actions: [
             IconButton(
-              icon: Icon(Icons.settings), 
+              icon: Icon(Icons.settings),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => ProfileSettingsPage()),
+                  MaterialPageRoute(
+                      builder: (context) => ProfileSettingsPage()),
                 );
               },
             ),
@@ -268,18 +268,6 @@ Future<void> _updateProfile() async {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a valid name.';
-                    }
-                    return null;
-                  },
-                ),
-                TextFormField(
-                  controller: _bioController,
-                  decoration: InputDecoration(labelText: 'Bio'),
-                  maxLines: 3,
-                  onChanged: (value) => _trackChanges(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return null;  
                     }
                     return null;
                   },
