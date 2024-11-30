@@ -385,8 +385,6 @@ Future<void> toggleBookmark(String reviewId) async {
                                 if (userUid == active_userid) {
                                   _showDeleteConfirmationDialog(review_id);
                                 }
-                              } else if (value == 'share') {
-                                // Share.share('Check out this review: $reviewText');
                               } else if (value == 'report') {
                                 _reportService.navigateToReportScreen(context, review_id); 
                               }
@@ -405,11 +403,7 @@ Future<void> toggleBookmark(String reviewId) async {
                                   PopupMenuItem<String>(
                                     value: 'report',
                                     child: Text('Report'),
-                                  ),
-                                PopupMenuItem<String>(
-                                  value: 'share',
-                                  child: Text('Share'),
-                                ),
+                                  ),                                
                               ];
                             },
                           ),
