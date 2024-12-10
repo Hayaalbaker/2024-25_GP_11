@@ -48,6 +48,8 @@ Future<void> _loadBookmarks() async {
     tempBookmarks[doc.id] = true;
   }
 
+  if (!mounted) return; 
+
   setState(() {
     bookmarkedReviews = tempBookmarks;
   });
