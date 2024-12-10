@@ -67,7 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Educational Workshops',
   ];
 
-  bool _hasChanges = false; // Flag to track if there are changes
+  bool _hasChanges = false; 
 
   @override
   void initState() {
@@ -224,7 +224,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: _onWillPop, // Use WillPopScope here
+      onWillPop: _onWillPop, 
       child: Scaffold(
         appBar: AppBar(
           title: Text('Edit Profile'),

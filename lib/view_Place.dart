@@ -52,7 +52,6 @@ class _PlaceScreenState extends State<ViewPlace>
 
   Future<void> _loadPlaceProfile() async {
     if (placeId == null || placeId!.isEmpty) {
-      // If placeId is null or empty, show an error message and return early.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -62,7 +61,7 @@ class _PlaceScreenState extends State<ViewPlace>
           ),
         );
       });
-      return; // Exit the method if placeId is invalid.
+      return; 
     }
 
     try {
@@ -138,7 +137,6 @@ class _PlaceScreenState extends State<ViewPlace>
         .doc(userId)
         .collection('places')
         .doc(placeId);
-////////////////////////
     try {
       if (isBookmarked) {
         await placeRef.delete();
@@ -234,8 +232,8 @@ class _PlaceScreenState extends State<ViewPlace>
       body: Column(
         children: [
           Container(
-            width: 200, // Set appropriate width
-            height: 200, // Set appropriate height
+            width: 200, 
+            height: 200, 
             decoration: BoxDecoration(
               shape: BoxShape.rectangle,
               image: DecorationImage(
@@ -244,7 +242,7 @@ class _PlaceScreenState extends State<ViewPlace>
                         ? NetworkImage(_imageUrl) as ImageProvider<Object>
                         : AssetImage(_imageUrl) as ImageProvider<Object>)
                     : AssetImage(
-                        'images/place_default_image.png'), // Fallback image
+                        'images/place_default_image.png'), 
                 fit: BoxFit.cover,
               ),
             ),
@@ -299,7 +297,6 @@ class _PlaceScreenState extends State<ViewPlace>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Review button
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
@@ -321,7 +318,6 @@ class _PlaceScreenState extends State<ViewPlace>
                 ),
               ),
 
-              // Bookmark icon
               IconButton(
                 icon: Icon(
                   isBookmarked ? Icons.bookmark : Icons.bookmark_outline,

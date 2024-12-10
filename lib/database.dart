@@ -5,7 +5,6 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Add user details to Firestore (including local guide status)
   Future<void> addUserDetails(String userName, String country, String city,
       List<String> interests, bool isLocalGuide, {String? profileImageUrl}) async {
     try {
@@ -17,7 +16,7 @@ class FirestoreService {
           'city': city,
           'email': user.email,
           'interests': interests,
-          'local_guide': isLocalGuide ? 'yes' : 'no', // Save local guide status
+          'local_guide': isLocalGuide ? 'yes' : 'no', 
           'created_at': FieldValue.serverTimestamp(),
           'Name': user.displayName,
           'profileImageUrl': profileImageUrl ?? '', 

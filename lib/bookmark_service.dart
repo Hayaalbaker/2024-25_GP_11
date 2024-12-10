@@ -26,26 +26,23 @@ class BookmarkService {
     final targetRef = FirebaseFirestore.instance
         .collection('bookmarks')
         .doc(activeUserId)
-        .collection(type) // 'places' or 'reviews'
+        .collection(type) 
         .doc(targetId);
 
     final doc = await targetRef.get();
 
     if (doc.exists) {
-      // Remove bookmark if it exists
       await targetRef.delete();
       print('Bookmark removed for $type: $targetId');
     } else {
-      // Create bookmark if it doesn't exist
       final bookmarkData = {
-        'bookmark_id': targetId, // Target ID for the bookmark (place or review)
-        'user_uid': activeUserId, // User ID who made the bookmark
+        'bookmark_id': targetId,
+        'user_uid': activeUserId,
         'bookmark_date': FieldValue
-            .serverTimestamp(), // Timestamp for when it was bookmarked
-        'bookmark_type': type, // 'places' or 'reviews'
+            .serverTimestamp(), 
+        'bookmark_type': type, 
       };
 
-      // Add the new bookmark data
       await targetRef.set(bookmarkData);
       print('Bookmark added for $type: $targetId');
     }

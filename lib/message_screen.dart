@@ -101,7 +101,7 @@ class _MessageScreenState extends State<MessageScreen> {
         'receiverId': widget.otherUserId,
         'message': AESHelper.encryptMessage(messageText),
         'timestamp': FieldValue.serverTimestamp(),
-        'reaction': null, // No reaction initially
+        'reaction': null, 
       });
 
       _messageController.clear();
@@ -124,16 +124,12 @@ Future<void> checkAndCreateChat( ) async {
   print(chatId);
   print('-------------------------');
   try {
-    // Reference to the specific chat document
     DocumentReference chatRef = _firestore.collection('chats').doc(chatId);
 
-    // Check if the document exists
     DocumentSnapshot chatSnapshot = await chatRef.get();
 
     if (!chatSnapshot.exists) {
-      // If the chat doesn't exist, create a new document with default data
       await chatRef.set({
-          // Initialize an empty messages array or other fields as needed
           'timestamp': FieldValue.serverTimestamp(),
       });
         print('-------------------------');
@@ -180,13 +176,6 @@ Future<void> checkAndCreateChat( ) async {
     });
   }
 
-
-
-
-
-
-
-  // Display reaction options in a bottom sheet
   void _showReactionOptions(String messageId) {
     List<String> reactions = ['❤️', '👍', '😂', '😮', '😢', '😡'];
     showModalBottomSheet(
@@ -200,7 +189,7 @@ Future<void> checkAndCreateChat( ) async {
                 title: Text(reaction, style: TextStyle(fontSize: 24)),
                 onTap: () {
                   _updateReaction(messageId, reaction);
-                  Navigator.pop(context); // Close the bottom sheet
+                  Navigator.pop(context); 
                 },
               );
             }).toList(),
@@ -210,13 +199,12 @@ Future<void> checkAndCreateChat( ) async {
     );
   }
 
-  // Display reaction button
   Widget _reactionButtons(String messageId, String? selectedReaction) {
     return GestureDetector(
       onTap: () =>
-          _showReactionOptions(messageId), // Show reaction options on tap
+          _showReactionOptions(messageId),
       child: Text(
-        selectedReaction ?? '+', // Display 'No reaction' if none is selected
+        selectedReaction ?? '+', 
         style: TextStyle(fontSize: 20, color: Colors.grey),
       ),
     );
@@ -271,7 +259,6 @@ Future<void> checkAndCreateChat( ) async {
                     var message = AESHelper.decryptMessage(doc['message']);
                     bool isMe = doc['senderId'] == widget.currentUserId;
 
-                    // Check if the reaction is null or empty
                     String? selectedReaction = doc['reaction'];
 
                     return ListTile(
@@ -294,7 +281,7 @@ Future<void> checkAndCreateChat( ) async {
                                   : Text(message),
                             ),
                             _reactionButtons(
-                                doc.id, selectedReaction), // Show reaction
+                                doc.id, selectedReaction), 
                           ],
                         ),
                       ),

@@ -2,14 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:localize/Notifications_page.dart';
 import 'package:localize/message_screen.dart';
-import 'search_page.dart'; // Import the search page
-import 'create_post_page.dart'; // Import the create post page
-// Import the activity page
-import 'add_place.dart'; // Import the Add Place page
-import 'welcome_screen.dart'; // Import the welcome screen
+import 'search_page.dart'; 
+import 'create_post_page.dart'; 
+import 'add_place.dart'; 
+import 'welcome_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'places_widget.dart'; // Import the Places widget
-import 'profile_screen.dart'; // Import the profile screen
+import 'places_widget.dart';
+import 'profile_screen.dart'; 
 import 'review_widget.dart';
 import 'Message_List_Screen.dart';
 import 'package:badges/badges.dart' as badges;
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Remove the debug banner here
+      debugShowCheckedModeBanner: false, 
       home: HomePage(),
     );
   }
@@ -36,40 +35,36 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0; // Index to track the selected page
-  static const Color _iconColor = Color(0xFF800020); // Constant color for icons
-  late TabController _tabController; // TabController for managing tabs
+  int _selectedIndex = 0; 
+  static const Color _iconColor = Color(0xFF800020); 
+  late TabController _tabController; 
 
   @override
   void initState() {
     super.initState();
     _tabController =
-        TabController(length: 2, vsync: this); // Initialize TabController
+        TabController(length: 2, vsync: this); 
   }
 
-  // Method to change the selected page
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index; // Update the selected index
+      _selectedIndex = index; 
     });
   }
 
-  // Method to handle sign-out process
   void _signOut() async {
     try {
-      await FirebaseAuth.instance.signOut(); // Sign out from Firebase
+      await FirebaseAuth.instance.signOut(); 
       print("User signed out");
 
-      // Navigate to the welcome screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => WelcomeScreen()),
       );
     } catch (e) {
-      print("Error signing out: $e"); // Print any errors
+      print("Error signing out: $e"); 
     }
   }
 
-  // Method to show modal bottom sheet for creating posts or adding places
   void _onCreatePost() {
     showModalBottomSheet(
       context: context,
@@ -79,7 +74,7 @@ class _HomePageState extends State<HomePage>
       builder: (BuildContext context) {
         return Container(
           padding: EdgeInsets.all(16),
-          height: 220, // Height of modal bottom sheet
+          height: 220, 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -90,26 +85,26 @@ class _HomePageState extends State<HomePage>
               SizedBox(height: 20),
               ListTile(
                 leading: Icon(Icons.rate_review,
-                    color: const Color(0xFF800020)), // Set color
+                    color: const Color(0xFF800020)),
                 title: Text('Post a Review'),
                 onTap: () {
-                  Navigator.pop(context); // Close the modal
+                  Navigator.pop(context); 
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => CreatePostPage(ISselectplace: false)),
-                  ); // Navigate to Create Post Page
+                  ); 
                 },
               ),
               ListTile(
                 leading: Icon(Icons.add_location_alt,
-                    color: const Color(0xFF800020)), // Set color
+                    color: const Color(0xFF800020)), 
                 title: Text('Add a Place'),
                 onTap: () {
-                  Navigator.pop(context); // Close the modal
+                  Navigator.pop(context); 
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AddPlacePage()),
-                  ); // Navigate to Add Place Page
+                  ); 
                 },
               ),
             ],
@@ -121,7 +116,7 @@ class _HomePageState extends State<HomePage>
 
   @override
   void dispose() {
-    _tabController.dispose(); // Dispose of the TabController
+    _tabController.dispose(); 
     super.dispose();
   }
 
@@ -242,27 +237,24 @@ class _HomePageState extends State<HomePage>
           children: [
             Review_widget(), 
                 Container(
-      padding: EdgeInsets.zero, // Ensures no padding
+      padding: EdgeInsets.zero, 
       child: viewPlaces(),
     ),
-            // Replace with actual reviews content
-             // Display the Places widget here
           ],
         ),
       ),
-      SearchPage(), // Navigate to Search Page
-      CreatePostPage(ISselectplace: false), // Navigate to Create Post Page
-      ActivityPage(), // Navigate to Activity Page
+      SearchPage(), 
+      CreatePostPage(ISselectplace: false), 
+      ActivityPage(), 
       ProfileScreen(userId: FirebaseAuth.instance.currentUser!.uid),
-      // Navigate to Profile Page
     ];
 
     return Scaffold(
       body: _pages[
-          _selectedIndex], // Display the selected page based on the index
+          _selectedIndex], 
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex, // Highlight the selected icon
-        onTap: _onItemTapped, // Change selected page on tap
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         items: [
           BottomNavigationBarItem(
             icon: Icon(
@@ -334,43 +326,43 @@ class _HomePageState extends State<HomePage>
         type: BottomNavigationBarType.fixed,
       ),
       floatingActionButton: GestureDetector(
-        onTap: _onCreatePost, // Show modal on tapping the floating button
+        onTap: _onCreatePost, 
         child: FloatingActionButton(
           elevation: 4.0,
-          onPressed: _onCreatePost, // Show modal bottom sheet on press
-          backgroundColor: _iconColor, // Set color for the floating button
+          onPressed: _onCreatePost, 
+          backgroundColor: _iconColor, 
           child: Icon(Icons.add,
-              color: Colors.white), // Floating plus icon with white color
+              color: Colors.white), 
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation
-          .centerDocked, // Center the button above the nav bar
+          .centerDocked,
     );
  
 
   }
  Widget viewPlaces() {
   return DefaultTabController(
-    length: 5, // Number of tabs
+    length: 5, 
     child: Column(
       children: [
         TabBar(
-          isScrollable: true, // Enable scrolling for the tabs
+          isScrollable: true, 
           indicatorSize: TabBarIndicatorSize.label,
           labelColor: Color(0xFF800020),
           unselectedLabelColor: Colors.grey,
-          padding: EdgeInsets.zero, // Remove extra padding
-          labelPadding: EdgeInsets.symmetric(horizontal: 8.0), // Adjust tab padding
+          padding: EdgeInsets.zero,
+          labelPadding: EdgeInsets.symmetric(horizontal: 8.0),
           tabs: const [
             Tab(
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Minimize the size of the tab
+                mainAxisSize: MainAxisSize.min, 
                 children: [
-                  Icon(Icons.place, size: 20), // Smaller icon size
-                  SizedBox(height: 4), // Adjust spacing
+                  Icon(Icons.place, size: 20), 
+                  SizedBox(height: 4), 
                   Text(
                     "All",
-                    style: TextStyle(fontSize: 12), // Smaller text size
+                    style: TextStyle(fontSize: 12),
                   ),
                 ],
               ),

@@ -12,13 +12,12 @@ class AuthenticationWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.active) {
           User? user = snapshot.data;
           if (user == null) {
-            return SignInScreen(); // User is not logged in
+            return SignInScreen(); 
           } else {
-            return HomePage(); // User is logged in
+            return HomePage(); 
           }
         }
 
-        // Loading state
         return Scaffold(
           body: Center(child: CircularProgressIndicator()),
         );

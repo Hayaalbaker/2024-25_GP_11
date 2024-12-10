@@ -92,13 +92,12 @@ class BookmarkedReviewsScreen extends StatelessWidget {
             return Center(child: Text('No bookmarked reviews found.'));
           }
 
-          // Extract review IDs from bookmarked documents
           final bookmarkedReviewIds = snapshot.data!.docs
               .map((doc) => doc['bookmark_id'] as String)
               .toList();
 
           return Review_widget(
-            reviewIds: bookmarkedReviewIds, // Pass IDs to Review_widget
+            reviewIds: bookmarkedReviewIds,
           );
         },
       ),

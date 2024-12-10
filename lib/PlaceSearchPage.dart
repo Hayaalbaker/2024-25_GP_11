@@ -42,7 +42,7 @@ void _validatePlaceSelection() {
     });
   } else {
     setState(() {
-      _placeErrorText = null; // Clear error if valid
+      _placeErrorText = null; 
     });
   }
 }
@@ -102,7 +102,7 @@ void _validatePlaceSelection() {
                                   selectedPlaceName = null;
                                   selectedPlaceId = null;
                                 } else {
-                                  _placeErrorText = null; // Clear error
+                                  _placeErrorText = null; 
                                   selectedPlaceName = value;
                                   selectedPlaceId = places
                                       .firstWhere((place) =>

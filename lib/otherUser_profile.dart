@@ -79,7 +79,6 @@ class _OtherUserProfileScreenState extends State<OtherUserProfileScreen> with Si
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            // Profile Picture and User Info
             Stack(
               alignment: Alignment.bottomRight,
               children: [

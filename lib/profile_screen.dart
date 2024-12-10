@@ -170,7 +170,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                         ),
                       );
                       if (result != null) {
-                        // If result is not null, refresh profile data
                         setState(() {
                           _displayName = result['name'] ?? _displayName;
                           _profileImageUrl =

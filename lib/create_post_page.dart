@@ -185,13 +185,13 @@ void dispose() {
 }
 
 void _validateRating() {
-  if (Rating == 0) { // Check if rating is not selected
+  if (Rating == 0) { 
     setState(() {
-      _ratingErrorText = 'Please select a rating.'; // Display error
+      _ratingErrorText = 'Please select a rating.'; 
     });
   } else {
     setState(() {
-      _ratingErrorText = null; // Clear error if rating is valid
+      _ratingErrorText = null; 
     });
   }
 }
@@ -203,7 +203,7 @@ void _validatePlaceSelection() {
     });
   } else {
     setState(() {
-      _placeErrorText = null; // Clear error if valid
+      _placeErrorText = null; 
     });
   }
 }
@@ -217,7 +217,7 @@ Future<void> saveReview() async {
       await newReviewRef.set({
         'Review_Text': ReviewText,
         'user_uid': user_uid,
-        'placeId': selectedPlaceId, // Use selectedPlaceId
+        'placeId': selectedPlaceId, 
         'Rating': Rating,
         'Post_Date': FieldValue.serverTimestamp(),
         'Like_count': LikeCount,
@@ -295,7 +295,7 @@ Widget build(BuildContext context) {
                     });
                   },
                 ),
-                if (_ratingErrorText != null) // Display error if any
+                if (_ratingErrorText != null) 
                   Text(
                     _ratingErrorText!,
                     style: TextStyle(color: Colors.red),
@@ -327,7 +327,7 @@ Widget build(BuildContext context) {
                             selectedPlaceId = places.firstWhere(
                                 (place) =>
                                     place['name'] == selectedPlace)['id'];
-                            _placeErrorText = null; // Clear error
+                            _placeErrorText = null; 
                           });
                         },
                         fieldViewBuilder: (BuildContext context,
@@ -347,15 +347,14 @@ Widget build(BuildContext context) {
                         },
                       ),
                       if (_placeErrorText != null)
-                        linktoaddpage(), // Call the link widget when needed
+                        linktoaddpage(), 
                     ],
                   ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                 // Validate both the place and rating before submitting
                 _validatePlaceSelection();
-                 _validateRating(); // Validate rating
+                 _validateRating(); 
                 if (_formKey.currentState!.validate() &&
                     _placeErrorText == null) {
                   saveReview();

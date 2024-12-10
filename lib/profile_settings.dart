@@ -6,9 +6,7 @@ import 'signin_screen.dart';
 import 'delete_user.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
-  // ignore: unused_field
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  // ignore: unused_field
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
@@ -101,7 +99,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
         _emailController.text = user.email ?? '';
         _selectedCountry = userDoc['country'];
         _selectedCity = userDoc['city'];
-        _hasUnsavedChanges = false; // Reset when data is loaded
+        _hasUnsavedChanges = false; 
       });
     }
   }
@@ -136,11 +134,11 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
                 Text('You have unsaved changes. Do you want to discard them?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false), // Stay
+                onPressed: () => Navigator.of(context).pop(false), 
                 child: Text('Cancel'),
               ),
               TextButton(
-                onPressed: () => Navigator.of(context).pop(true), // Discard
+                onPressed: () => Navigator.of(context).pop(true), 
                 child: Text('Discard'),
               ),
             ],
@@ -276,7 +274,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   Future<void> _changePassword() async {
     User? user = _auth.currentUser;
     try {
-      // Re-authenticate the user
       String email = user!.email!;
       AuthCredential credential = EmailAuthProvider.credential(
         email: email,
@@ -284,13 +281,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       );
       await user.reauthenticateWithCredential(credential);
 
-      // Validate password requirements
       if (_validatePasswordRequirements(_newPasswordController.text)) {
-        // Update password
         await user.updatePassword(_newPasswordController.text);
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Password changed successfully!')));
-        Navigator.pop(context); // Return to Profile Settings
+        Navigator.pop(context); 
       } else {
         setState(() {
           _errorMessage =
@@ -298,7 +293,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         });
       }
     } catch (e) {
-      // Handle reauthentication failure (wrong current password)
       setState(() {
         _errorMessage = 'Incorrect current password. Please try again.';
       });
@@ -363,7 +357,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       obscureText: true,
                     ),
                     SizedBox(height: 20),
-                    // Password requirements display
                     Column(
                       children: [
                         _passwordRequirement('At least 8 characters',
@@ -390,7 +383,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 ),
               ),
             ),
-            // Change Password Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(

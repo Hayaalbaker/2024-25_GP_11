@@ -5,8 +5,8 @@ import 'view_Place.dart';
 
 class Places_widget extends StatelessWidget {
   final List<String>? placeIds;
-  final String? filterCategory; // Added category filter
-  Places_widget({this.placeIds,this.filterCategory}); // Updated constructor
+  final String? filterCategory; 
+  Places_widget({this.placeIds,this.filterCategory}); 
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class Places_widget extends StatelessWidget {
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 500),
-          child: PlacesList(placeIds: placeIds,filterCategory: filterCategory), // Pass placeIds to PlacesList
+          child: PlacesList(placeIds: placeIds,filterCategory: filterCategory), 
         ),
       ),
     );
@@ -23,8 +23,8 @@ class Places_widget extends StatelessWidget {
 
 class PlacesList extends StatelessWidget {
   final List<String>? placeIds;
-  final String? filterCategory; // Added category filter
-  PlacesList({this.placeIds, this.filterCategory}); // Constructor to accept placeIds
+  final String? filterCategory; 
+  PlacesList({this.placeIds, this.filterCategory}); 
 
   @override
   Widget build(BuildContext context) {
@@ -32,13 +32,13 @@ class PlacesList extends StatelessWidget {
       stream: placeIds != null && placeIds!.isNotEmpty
           ? FirebaseFirestore.instance
               .collection('places')
-              .where(FieldPath.documentId, whereIn: placeIds) // Filter by placeIds
+              .where(FieldPath.documentId, whereIn: placeIds) 
               .where(
                 'category',
                 isEqualTo: filterCategory != null && filterCategory != "All Categories"
                     ? filterCategory
                     : null,
-              ) // Add category filter dynamically
+              ) 
               .orderBy('created_at', descending: true)
               .snapshots()
           : FirebaseFirestore.instance
@@ -48,7 +48,7 @@ class PlacesList extends StatelessWidget {
                 isEqualTo: filterCategory != null && filterCategory != "All Categories"
                     ? filterCategory
                     : null,
-              ) // Add category filter dynamically
+              ) 
               .orderBy('created_at', descending: true)
               .snapshots(),
       builder: (context, snapshot) {
@@ -63,7 +63,6 @@ class PlacesList extends StatelessWidget {
               String placeName = doc['place_name'];
               String category = doc['category'];
 
-              // StreamBuilder for bookmark state
               return StreamBuilder<bool>(
                 stream: BookmarkService().bookmarkStream(placeId, 'places'),
                 builder: (context, bookmarkSnapshot) {
@@ -94,7 +93,7 @@ class PlacesList extends StatelessWidget {
                                       ? (Uri.tryParse(imageUrl)?.isAbsolute == true
                                           ? NetworkImage(imageUrl) as ImageProvider<Object>
                                           : AssetImage(imageUrl) as ImageProvider<Object>)
-                                      : AssetImage('images/place_default_image.png'), // Fallback image
+                                      : AssetImage('images/place_default_image.png'), 
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -127,7 +126,7 @@ class PlacesList extends StatelessWidget {
                             ),
                             onPressed: () async {
                               print('Toggling bookmark for place: $placeId');
-                              await BookmarkService().toggleBookmark(placeId, 'places'); // Pass 'places' as type
+                              await BookmarkService().toggleBookmark(placeId, 'places'); 
                             },
                           ),
                         ],

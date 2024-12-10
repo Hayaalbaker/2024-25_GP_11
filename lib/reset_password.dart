@@ -58,7 +58,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     });
 
     if (emailError != null) {
-      return; // Stop if there's an error
+      return; 
     }
 
     try {
@@ -68,7 +68,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
           behavior: SnackBarBehavior.floating, 
           margin: EdgeInsets.only(top: 50, left: 20, right: 20),),
       );
-      Navigator.pop(context); // Go back after sending the email
+      Navigator.pop(context); 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}'),

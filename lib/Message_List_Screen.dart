@@ -39,13 +39,12 @@ class MessageListScreen extends StatelessWidget {
               String lastMessage = decoders ?? '';
               Timestamp timestamp = chatData['timestamp'] ?? Timestamp.now();
 
-              // Fix: Handle unreadCount being a map
               int unreadCount = 0;
               if (chatData['unreadCount'] is Map) {
                 unreadCount = chatData['unreadCount'][currentUserId] ?? 0;
               } else {
                 unreadCount =
-                    0; // Fallback if unreadCount is not a map or doesn't exist
+                    0;
               }
 
               return FutureBuilder(

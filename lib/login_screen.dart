@@ -102,7 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? selectedCountry;
   String? selectedCity;
-  bool agreeToLocalGuide = false; // Local guide option
+  bool agreeToLocalGuide = false; 
   bool isLoading = false;
 
   final Map<String, List<String>> countryCityMap = {
@@ -142,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 onChanged: (String? newValue) {
                   setState(() {
                     selectedCountry = newValue;
-                    selectedCity = null; // Reset city when country changes
+                    selectedCity = null; 
                   });
                 },
                 items: countryCityMap.keys

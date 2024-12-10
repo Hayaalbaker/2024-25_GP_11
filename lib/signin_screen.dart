@@ -17,9 +17,9 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
-  bool obscureText = true; // For show/hide password functionality
-  String? emailError; // Error message for email
-  String? passwordError; // Error message for password
+  bool obscureText = true; 
+  String? emailError; 
+  String? passwordError; 
 
   @override
   void dispose() {
@@ -29,13 +29,11 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _handleLogin() async {
-    // Reset all error messages
     setState(() {
       emailError = null;
       passwordError = null;
     });
 
-    // Validate email
     if (emailController.text.isEmpty ||
         !RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text)) {
       setState(() {
@@ -43,16 +41,14 @@ class _SignInScreenState extends State<SignInScreen> {
       });
     }
 
-    // Validate password
     if (passwordController.text.isEmpty) {
       setState(() {
         passwordError = 'Please enter your password.';
       });
     }
 
-    // Check if there are any errors
     if (emailError != null || passwordError != null) {
-      return; // Exit if there are errors
+      return; 
     }
 
     setState(() {

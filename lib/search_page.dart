@@ -8,17 +8,17 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController; // TabController for managing tabs
+  late TabController _tabController; 
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // Initialize TabController
+    _tabController = TabController(length: 2, vsync: this); 
   }
 
   @override
   void dispose() {
-    _tabController.dispose(); // Dispose of the TabController
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -49,8 +49,8 @@ class _SearchPageState extends State<SearchPage> with SingleTickerProviderStateM
             child: TabBarView(
               controller: _tabController,
               children: [
-                UserSearchPage(), // Replace with your reviews page widget
-                PlaceSearchPage(), // Replace with your places page widget
+                UserSearchPage(), 
+                PlaceSearchPage(), 
               ],
             ),
           ),

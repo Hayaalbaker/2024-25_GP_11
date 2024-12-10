@@ -48,7 +48,6 @@ class _PlaceFormState extends State<PlaceForm> {
   TextEditingController _placeNameController = TextEditingController();
   TextEditingController _categoryController = TextEditingController();
 
-  // Main categories for the first dropdown
   final List<String> mainCategories = [
     'Restaurants',
     'Parks',
@@ -56,7 +55,6 @@ class _PlaceFormState extends State<PlaceForm> {
     'Children',
   ];
 
-  // Subcategories map
   final Map<String, List<String>> subCategories = {
     'Restaurants': [
       'Seafood Restaurants',
@@ -91,7 +89,6 @@ class _PlaceFormState extends State<PlaceForm> {
     ],
   };
 
-  // Image paths map
   final Map<String, String> categoryImages = {
     'restaurants': 'images/Restaurant.png',
     'parks': 'images/Park.png',
@@ -106,7 +103,7 @@ class _PlaceFormState extends State<PlaceForm> {
 
   bool check_values = false;
   final FirestoreService _firestoreService =
-      FirestoreService(); // Create an instance of FirestoreService
+      FirestoreService(); 
 
   @override
   void initState() {
@@ -138,19 +135,15 @@ class _PlaceFormState extends State<PlaceForm> {
   }
 
   Future<bool> doesPlaceExist() async {
-    // Normalize the input data
     String lowerCasePlaceName =
         placeName.replaceAll(RegExp(r'\s+'), '').toLowerCase();
     String lowerCaseCategory =
         category.replaceAll(RegExp(r'\s+'), '').toLowerCase();
-// Fetch all documents from the 'places' collection
     QuerySnapshot allPlaces =
         await FirebaseFirestore.instance.collection('places').get();
 
     try {
-// Query Firestore
 
-      // Combine filtering for both place_name and category
       List<QueryDocumentSnapshot> matchingPlaces = allPlaces.docs.where((doc) {
         String dbPlaceName = doc['place_name']
             .toString()
@@ -163,7 +156,6 @@ class _PlaceFormState extends State<PlaceForm> {
         return dbPlaceName == lowerCasePlaceName &&
             dbCategory == lowerCaseCategory;
       }).toList();
-      // Return true if a match is found, false otherwise
       return matchingPlaces.isNotEmpty;
     } catch (e) {
       print("Error querying Firestore: $e");
@@ -184,28 +176,23 @@ class _PlaceFormState extends State<PlaceForm> {
           return;
         }
 
-        // Generate Firestore document reference
         DocumentReference newPlaceRef =
             FirebaseFirestore.instance.collection('places').doc();
 
         String imageUrl;
 
         if (imageFile != null) {
-          // Create a Firebase Storage reference
           final storageRef = FirebaseStorage.instance.ref();
           final imageRef = storageRef
               .child('places/${DateTime.now().toIso8601String()}.jpg');
 
-          // Upload the image file
           await imageRef.putFile(File(imageFile!.path));
           imageUrl = await imageRef.getDownloadURL();
         } else {
-          // Use default image URL if no image is uploaded
           imageUrl = categoryImages[category.toLowerCase()] ??
-              'images/place_default_image.png'; // Fallback for unexpected category
+              'images/place_default_image.png'; 
         }
 
-        // Save place details in Firestore
         await newPlaceRef.set({
           'placeId': newPlaceRef.id,
           'place_name': placeName,
@@ -217,14 +204,13 @@ class _PlaceFormState extends State<PlaceForm> {
           'Neighborhood': Neighborhood,
           'Street': Street,
           'user_uid': userID,
-          'imageUrl': imageUrl, // Save the uploaded image URL
+          'imageUrl': imageUrl, 
         });
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Place Added: $placeName Successfully!'),
         ));
 
-        // Reset the form
         _formKey.currentState!.reset();
         setState(() {
           imageFile = null;
@@ -367,10 +353,10 @@ class _PlaceFormState extends State<PlaceForm> {
                   setState(() {
                     selectedMainCategory = value!;
                     availableSubCategories =
-                        subCategories[value]; // Update available subcategories
-                    selectedSubCategory = null; // Reset subcategory
+                        subCategories[value]; 
+                    selectedSubCategory = null; 
                     selectedImagePath =
-                        categoryImages[value]; // Update image path
+                        categoryImages[value]; 
                   });
                 },
                 validator: (value) {
