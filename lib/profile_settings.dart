@@ -104,24 +104,80 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
     }
   }
 
-  Future<void> _updateUserInfo() async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      await _firestore.collection('users').doc(user.uid).update({
-        'user_name': _usernameController.text.trim(),
-        'email': _emailController.text.trim(),
-        'country': _selectedCountry,
-        'city': _selectedCity,
-      });
-      setState(() {
-        _hasUnsavedChanges = false;
-      });
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Information updated!'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),));
-    }
+Future<void> _updateUserInfo() async {
+  User? user = _auth.currentUser;
+  String username = _usernameController.text.trim();
+  String email = _emailController.text.trim().toLowerCase();  // Convert email to lowercase
+
+  if (username.isEmpty || email.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Username and email cannot be empty!'),
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+    ));
+    return;
   }
+
+  try {
+    // Check if the new username already exists in Firestore
+    QuerySnapshot usernameSnapshot = await _firestore
+        .collection('users')
+        .where('user_name', isEqualTo: username)
+        .get();
+    
+    // If the username already exists and it's not the current user's username
+    if (usernameSnapshot.docs.isNotEmpty &&
+        usernameSnapshot.docs.first.id != user!.uid) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Username is already taken! Please choose another one.'),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+      ));
+      return;
+    }
+
+    // Check if the new email already exists in Firestore (case-insensitive check)
+    QuerySnapshot emailSnapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .get();
+    
+    // If the email already exists and it's not the current user's email
+    if (emailSnapshot.docs.isNotEmpty &&
+        emailSnapshot.docs.first.id != user!.uid) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Email is already registered! Please use another one.'),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+      ));
+      return;
+    }
+
+    // If no existing username or email, proceed to update user information
+    await _firestore.collection('users').doc(user!.uid).update({
+      'user_name': username,
+      'email': email, 
+      'country': _selectedCountry,
+      'city': _selectedCity,
+    });
+
+    setState(() {
+      _hasUnsavedChanges = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Information updated successfully!'),
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+    ));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Error updating information: $e'),
+      behavior: SnackBarBehavior.floating,
+      margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+    ));
+  }
+}
 
   Future<bool> _onWillPop() async {
     if (_hasUnsavedChanges) {
@@ -270,6 +326,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   TextEditingController _newPasswordController = TextEditingController();
 
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listener to the new password controller
+    _newPasswordController.addListener(_onPasswordChanged);
+  }
+
+  void _onPasswordChanged() {
+    setState(() {});
+  }
 
   Future<void> _changePassword() async {
     User? user = _auth.currentUser;
