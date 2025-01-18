@@ -107,7 +107,7 @@ class _AccountInformationPageState extends State<AccountInformationPage> {
 Future<void> _updateUserInfo() async {
   User? user = _auth.currentUser;
   String username = _usernameController.text.trim();
-  String email = _emailController.text.trim().toLowerCase();  // Convert email to lowercase
+  String email = _emailController.text.trim().toLowerCase(); 
 
   if (username.isEmpty || email.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -119,13 +119,11 @@ Future<void> _updateUserInfo() async {
   }
 
   try {
-    // Check if the new username already exists in Firestore
     QuerySnapshot usernameSnapshot = await _firestore
         .collection('users')
         .where('user_name', isEqualTo: username)
         .get();
     
-    // If the username already exists and it's not the current user's username
     if (usernameSnapshot.docs.isNotEmpty &&
         usernameSnapshot.docs.first.id != user!.uid) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -136,13 +134,11 @@ Future<void> _updateUserInfo() async {
       return;
     }
 
-    // Check if the new email already exists in Firestore (case-insensitive check)
     QuerySnapshot emailSnapshot = await _firestore
         .collection('users')
         .where('email', isEqualTo: email)
         .get();
     
-    // If the email already exists and it's not the current user's email
     if (emailSnapshot.docs.isNotEmpty &&
         emailSnapshot.docs.first.id != user!.uid) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -153,7 +149,6 @@ Future<void> _updateUserInfo() async {
       return;
     }
 
-    // If no existing username or email, proceed to update user information
     await _firestore.collection('users').doc(user!.uid).update({
       'user_name': username,
       'email': email, 
@@ -330,7 +325,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   void initState() {
     super.initState();
-    // Add listener to the new password controller
     _newPasswordController.addListener(_onPasswordChanged);
   }
 

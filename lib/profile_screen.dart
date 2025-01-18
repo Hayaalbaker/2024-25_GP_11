@@ -39,7 +39,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     _loadUserProfile();
   }
 
-  // Load the user profile data
   void _loadUserProfile() async {
     try {
       DocumentSnapshot userDoc =
@@ -53,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           _isLocalGuide = data['local_guide'] == 'yes';
         });
 
-        // Load reviews and bookmarks
         _loadUserReviews(widget.userId);
         _loadUserBookmarks(widget.userId);
       }
@@ -68,7 +66,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
   }
 
-  // Load user reviews
   void _loadUserReviews(String userId) async {
     try {
       var reviewSnapshot = await _firestore
@@ -83,7 +80,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
   }
 
-  // Load user bookmarks
   void _loadUserBookmarks(String userId) async {
     try {
       var bookmarkReviewsSnapshot = await _firestore

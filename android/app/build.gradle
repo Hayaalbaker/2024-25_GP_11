@@ -41,10 +41,8 @@ flutter {
     source = "../.." // Ensure this path points to your Flutter source
 }
 
-// Add your dependencies in a separate dependencies block
 dependencies {
-    // Firebase BOM
-    implementation platform('com.google.firebase:firebase-bom:32.2.0') // Use Firebase BOM for versioning
-    implementation 'com.google.firebase:firebase-firestore' // Firestore dependency
-   
+    implementation platform('com.google.firebase:firebase-bom:32.2.0')
+    implementation 'com.google.firebase:firebase-firestore' 
+    implementation 'com.google.android.libraries.places:places:3.3.0'
 }

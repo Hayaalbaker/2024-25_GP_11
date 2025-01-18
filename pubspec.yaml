@@ -11,6 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_places_api_flutter: ^1.0.0
+  google_maps_flutter: ^2.5.0
+  google_places_flutter: ^2.0.1
+  http: ^1.2.2
   firebase_storage: ^12.3.3
   image_picker: ^1.1.2
   cloud_firestore: ^5.4.3
@@ -20,10 +24,10 @@ dependencies:
   firebase_in_app_messaging: ^0.8.0+8
   info_popup: ^4.3.1
   url_launcher: ^6.3.1
-  intl: ^0.19.0
+  intl: ^0.20.1
   flutter_rating_bar: ^4.0.1
   encrypt: ^5.0.0
-  flutter_reaction_button: ^2.0.2 
+  flutter_reaction_button: ^3.0.0+3 
   ionicons: ^0.2.2
   rating_summary: ^1.0.2+1
   badges: ^3.0.3

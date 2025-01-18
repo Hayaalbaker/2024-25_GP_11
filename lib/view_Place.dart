@@ -6,6 +6,8 @@ import 'bookmark_service.dart';
 import 'create_post_page.dart';
 import 'review_widget.dart';
 import 'package:rating_summary/rating_summary.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ViewPlace extends StatefulWidget {
   final String place_Id;
@@ -50,58 +52,141 @@ class _PlaceScreenState extends State<ViewPlace>
     _fetchRatingSummary();
   }
 
-  Future<void> _loadPlaceProfile() async {
-    if (placeId == null || placeId!.isEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Invalid place ID.'),
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-          ),
-        );
-      });
-      return; 
-    }
+Future<void> _loadPlaceProfile() async {
+  if (placeId == null || placeId!.isEmpty) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid place ID.'),
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
+        ),
+      );
+    });
+    return;
+  }
 
-    try {
-      DocumentSnapshot placeDoc =
-          await _firestore.collection('places').doc(placeId).get();
-      if (placeDoc.exists) {
-        setState(() {
-          var data = placeDoc.data() as Map<String, dynamic>;
-          _placeName = data['place_name'];
-          _description = data['description'] ?? 'description';
-          _location = data['location'] ?? 'location';
-          _category = data['category'] ?? 'category';
-          _subcategory = data['subcategory'] ?? 'subcategory';
-          _neighborhood = data['Neighborhood'] ?? 'Neighborhood';
-          _street = data['Street'] ?? 'Street';
-          _imageUrl = data['imageUrl'] ?? '';
-        });
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Place not found.'),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-            ),
-          );
-        });
-      }
-    } catch (e) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load profile: $e'),
-            behavior: SnackBarBehavior.floating,
-            margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-          ),
-        );
+  try {
+    DocumentSnapshot placeDoc =
+        await _firestore.collection('places').doc(placeId).get();
+    
+    if (placeDoc.exists) {
+      var data = placeDoc.data() as Map<String, dynamic>;
+      setState(() {
+        _placeName = data['place_name'] ?? '';
+        _description = data['description'] ?? 'description';
+        _category = data['category'] ?? 'category';
+        _imageUrl = data['imageUrl'] ?? '';
       });
+    } 
+
+    await _fetchGooglePlaceDetails();
+
+  } catch (e) {
+    print("❌ Error loading place: $e");
+  }
+}
+
+Future<void> _fetchGooglePlaceDetails() async {
+  const String apiKey = "AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY";
+  final String url =
+      "https://maps.googleapis.com/maps/api/place/details/json"
+      "?place_id=$placeId"
+      "&key=$apiKey"
+      "&fields=name,formatted_address,editorial_summary,types,photos,address_components";
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse['status'] == 'OK') {
+        var result = jsonResponse['result'];
+
+        setState(() {
+          _placeName = result['name'] ?? _placeName;
+          _location = result['formatted_address'] ?? _location;
+          _description = result['editorial_summary']?['overview'] ?? "No description available.";
+          _category = _formatCategory(result['types']?[0] ?? _category);
+          _subcategory = _formatSubcategory(result['types'] ?? []);
+          _imageUrl = _extractBestPhoto(result['photos']) ?? _imageUrl;
+
+          if (result['address_components'] != null) {
+            for (var component in result['address_components']) {
+              List types = component['types'];
+              if (types.contains("sublocality") || types.contains("neighborhood")) {
+                _neighborhood = component['long_name'];
+              }
+              if (types.contains("route")) {
+                _street = component['long_name'];
+              }
+            }
+          }
+        });
+
+        print("✅ Updated Place Details: $_placeName, $_category, $_subcategory, $_location, $_neighborhood, $_street");
+      } else {
+        print("❌ Error fetching place details: ${jsonResponse['status']}");
+      }
+    } else {
+      print("❌ HTTP Request Failed: ${response.statusCode}");
+    }
+  } catch (e) {
+    print("❌ Error fetching Google Place details: $e");
+  }
+}
+
+String _formatCategory(String category) {
+  Map<String, String> categoryMapping = {
+    "meal_delivery": "Restaurant",
+    "meal_takeaway": "Restaurant",
+    "food": "Restaurant",
+    "point_of_interest": "Attraction",
+    "store": "Shopping",
+  };
+
+  if (categoryMapping.containsKey(category)) {
+    return categoryMapping[category]!;
+  }
+
+  return category
+      .split('_')
+      .map((word) => word[0].toUpperCase() + word.substring(1))
+      .join(' ');
+}
+
+String _formatSubcategory(List<dynamic> types) {
+  if (types.isEmpty) return "Unknown Subcategory";
+
+  List<String> filteredTypes = [];
+
+  List<String> ignoredTypes = ["point_of_interest", "establishment", "food"];
+  for (String type in types) {
+    if (!ignoredTypes.contains(type)) {
+      filteredTypes.add(type);
     }
   }
+
+  if (filteredTypes.isEmpty) return "Unknown Subcategory";
+
+  return filteredTypes
+      .map((type) => type.replaceAll('_', ' ').split(' ').map((word) => word[0].toUpperCase() + word.substring(1)).join(' '))
+      .join(", ");
+}
+
+String? _extractBestPhoto(List<dynamic>? photos) {
+  if (photos != null && photos.isNotEmpty) {
+    for (var photo in photos) {
+      if (photo.containsKey('photo_reference')) {
+        return "https://maps.googleapis.com/maps/api/place/photo"
+               "?maxwidth=800"
+               "&photoreference=${photo['photo_reference']}"
+               "&key=AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY";  
+      }
+    }
+  }
+  return null;  
+}
 
   Future<void> _launchLocation(String url) async {
     final uri = Uri.parse(url);

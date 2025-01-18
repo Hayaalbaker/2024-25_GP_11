@@ -425,7 +425,7 @@ class _HomePageState extends State<HomePage>
           child: TabBarView(
             children: [
               Places_widget(filterCategory: "All Categories"),
-              Places_widget(filterCategory: "Restaurants"),
+              Places_widget(filterCategory: "Restaurant"),
               Places_widget(filterCategory: "Parks"),
               Places_widget(filterCategory: "Shopping"),
               Places_widget(filterCategory: "Children"),
