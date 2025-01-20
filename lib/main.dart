@@ -9,6 +9,7 @@ import 'auth_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
+     name: "Localize",
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
