@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -59,4 +56,15 @@ class DefaultFirebaseOptions {
     projectId: 'localize-db046',
     storageBucket: 'localize-db046.appspot.com',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDeFntwf7p5pAZGP3ZD1a-HFjX5N8ZwhT0',
+    appId: '1:409368116299:web:07f93af2a0ac7877ef21ce',
+    messagingSenderId: '409368116299',
+    projectId: 'localize-db046',
+    authDomain: 'localize-db046.firebaseapp.com',
+    storageBucket: 'localize-db046.appspot.com',
+    measurementId: 'G-2BWYM1MWH4',
+  );
+
 }
