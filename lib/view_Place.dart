@@ -74,7 +74,7 @@ Future<void> _loadPlaceProfile() async {
       var data = placeDoc.data() as Map<String, dynamic>;
       setState(() {
         _placeName = data['place_name'] ?? '';
-        _description = data['description'] ?? 'description';
+        _description = (data['description'] ?? 'description').trim();
         _category = data['category'] ?? 'category';
         _imageUrl = data['imageUrl'] ?? '';
       });
@@ -106,7 +106,7 @@ Future<void> _fetchGooglePlaceDetails() async {
         setState(() {
           _placeName = result['name'] ?? _placeName;
           _location = result['formatted_address'] ?? _location;
-          _description = result['editorial_summary']?['overview'] ?? "No description available.";
+          _description = (result['editorial_summary']?['overview'] ?? "No description available.").trim();
           _category = _formatCategory(result['types']?[0] ?? _category);
           _subcategory = _formatSubcategory(result['types'] ?? []);
           _imageUrl = _extractBestPhoto(result['photos']) ?? _imageUrl;
@@ -188,14 +188,17 @@ String? _extractBestPhoto(List<dynamic>? photos) {
   return null;  
 }
 
-  Future<void> _launchLocation(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
+Future<void> _launchLocation(String address) async {
+  // Encode the address for URL usage
+  final encodedAddress = Uri.encodeComponent(address);
+  final googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=$encodedAddress";
+
+  if (await canLaunch(googleMapsUrl)) {
+    await launch(googleMapsUrl);
+  } else {
+    throw 'Could not launch $googleMapsUrl';
   }
+}
 
   Future<void> _checkIfBookmarked() async {
     final userId = _auth.currentUser?.uid;
