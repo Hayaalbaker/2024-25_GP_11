@@ -32,6 +32,13 @@ void initState() {
   super.initState();
   _loadUserData();
   _loadBookmarks();
+  FirebaseFirestore.instance.collection('Review').get().then((snapshot) {
+  if (snapshot.docs.isEmpty) {
+    print("No reviews found in Firestore.");
+  } else {
+    print("Reviews found: ${snapshot.docs.length}");
+  }
+});
 }
 
 Future<void> _loadBookmarks() async {
@@ -173,11 +180,16 @@ Future<void> toggleBookmark(String reviewId) async {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('Review')
-          .where('user_uid', isEqualTo: widget.userId)
-          .orderBy('Post_Date', descending: true)
-          .snapshots(),
+      stream: widget.userId != null
+    ? FirebaseFirestore.instance
+        .collection('Review')
+        .where('user_uid', isEqualTo: widget.userId)
+        .orderBy('Post_Date', descending: true)
+        .snapshots()
+    : FirebaseFirestore.instance
+        .collection('Review')
+        .orderBy('Post_Date', descending: true)
+        .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -235,15 +247,18 @@ Future<void> toggleBookmark(String reviewId) async {
 
                 if (asyncSnapshot.hasData) {
                   final userDoc = asyncSnapshot.data![0];
-                  final placeDoc = asyncSnapshot.data![1];
                   final Name =
                       (userDoc.data() as Map<String, dynamic>?)?['Name'] ??
                           'Unknown User';
                   final profileImageUrl = (userDoc.data()
                           as Map<String, dynamic>?)?['profileImageUrl'] ??
                       'images/default_profile.png';
-                  final placeName = placeDoc['place_name'];
-                  final userData = userDoc.data() as Map<String, dynamic>?;
+final placeDoc = asyncSnapshot.data![1];
+
+final placeName = placeDoc.exists && placeDoc.data() != null
+    ? (placeDoc.data() as Map<String, dynamic>)['place_name'] ?? 'Unknown Place'
+    : 'Unknown Place';
+                      final userData = userDoc.data() as Map<String, dynamic>?;
                   final _isLocalGuide = userData != null &&
                       userData.containsKey('local_guide') &&
                       userData['local_guide'] == 'yes';

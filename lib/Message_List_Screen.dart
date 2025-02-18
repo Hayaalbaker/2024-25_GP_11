@@ -36,7 +36,7 @@ class MessageListScreen extends StatelessWidget {
                   .firstWhere((id) => id != currentUserId);
               String decoders =
                   AESHelper.decryptMessage(chatData['lastMessage']);
-              String lastMessage = decoders ?? '';
+              String lastMessage = decoders;
               Timestamp timestamp = chatData['timestamp'] ?? Timestamp.now();
 
               int unreadCount = 0;

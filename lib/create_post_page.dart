@@ -68,14 +68,14 @@ void initState() {
     if (widget.placeId != null && places.isNotEmpty) {
       final place = places.firstWhere(
         (place) => place['id'] == widget.placeId,
-        orElse: () => {},
-      );
-      if (place.isNotEmpty) {
-        setState(() {
-          selectedPlaceId = widget.placeId;
-          selectedPlaceName = place['name'];
-        });
-      }
+        orElse: () => {'id': '', 'name': 'Unknown Place'}, 
+        );
+        if (place['id']!.isNotEmpty) {
+          setState(() {
+            selectedPlaceId = widget.placeId;
+            selectedPlaceName = place['name'];
+          });
+        }
     }
   });
     // Add a listener to the FocusNode
@@ -110,24 +110,24 @@ void _validatePlaceName() {
 
 
   Future<void> _loadUserData() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        user_uid = user.uid;
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to load user data: $e'),
-          behavior: SnackBarBehavior.floating, 
-          margin: EdgeInsets.only(top: 50, left: 20, right: 20),
-      ));
-    }
-  }
-
- Future<void> fetchPlaces() async {
   try {
-    final querySnapshot =
-        await FirebaseFirestore.instance.collection('places').get();
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        user_uid = user.uid; 
+      });
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Failed to load user data: $e'),
+    ));
+  }
+}
+
+Future<void> fetchPlaces() async {
+  try {
+    final querySnapshot = await FirebaseFirestore.instance.collection('places').get();
+    
     setState(() {
       places = querySnapshot.docs.map((doc) {
         return {
@@ -136,10 +136,33 @@ void _validatePlaceName() {
         };
       }).toList();
     });
+
+    print("Places loaded: ${places.length}");
+    for (var place in places) {
+      print("Place ID: ${place['id']}, Name: ${place['name']}");
+    }
+
+    if (widget.placeId != null) {
+      final place = places.firstWhere(
+        (place) => place['id'] == widget.placeId,
+        orElse: () => {'id': '', 'name': 'Unknown Place'},
+      );
+
+      if (place['id']!.isNotEmpty) {
+        setState(() {
+          selectedPlaceId = widget.placeId;
+          selectedPlaceName = place['name'];
+          print("Selected Place ID: $selectedPlaceId, Name: $selectedPlaceName");
+        });
+      } else {
+        print("No matching place found for ID: ${widget.placeId}");
+      }
+    }
   } catch (e) {
     print('Error fetching places: $e');
   }
 }
+
 /*
   Future<void> saveReview() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
@@ -207,7 +230,31 @@ void _validatePlaceSelection() {
     });
   }
 }
+
 Future<void> saveReview() async {
+  if (selectedPlaceId == null || selectedPlaceId!.isEmpty) {
+    setState(() {
+      _placeErrorText = 'Please select a valid place before posting.';
+    });
+    print("Error: No selected place.");
+    return;
+  }
+
+  if (ReviewText.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Please enter a review text.'))
+    );
+    return;
+  }
+
+  if (Rating == 0) {
+    setState(() {
+      _ratingErrorText = 'Please select a rating.';
+    });
+    print("Error: No rating selected.");
+    return;
+  }
+
   if (_formKey.currentState != null && _formKey.currentState!.validate()) {
     _formKey.currentState!.save();
     try {
@@ -217,12 +264,13 @@ Future<void> saveReview() async {
       await newReviewRef.set({
         'Review_Text': ReviewText,
         'user_uid': user_uid,
-        'placeId': selectedPlaceId, 
+        'placeId': selectedPlaceId,  
         'Rating': Rating,
         'Post_Date': FieldValue.serverTimestamp(),
         'Like_count': LikeCount,
       });
 
+      print("Review posted successfully!");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Review posted successfully!'),
       ));
@@ -234,11 +282,13 @@ Future<void> saveReview() async {
         ),
       );
     } catch (e) {
+      print("Failed to post review: $e");
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Failed to post review: $e')));
     }
   }
 }
+
 @override
 Widget build(BuildContext context) {
   return Scaffold(
@@ -322,14 +372,27 @@ Widget build(BuildContext context) {
                                   textEditingValue.text.toLowerCase()));
                         },
                         onSelected: (String selectedPlace) {
+                        final foundPlace = places.firstWhere(
+                          (place) => place['name'] == selectedPlace,
+                          orElse: () => {'id': '', 'name': 'Unknown Place'},
+                        );
+
+                        if (foundPlace['id']!.isNotEmpty) {
                           setState(() {
-                            selectedPlaceName = selectedPlace;
-                            selectedPlaceId = places.firstWhere(
-                                (place) =>
-                                    place['name'] == selectedPlace)['id'];
-                            _placeErrorText = null; 
+                            selectedPlaceName = foundPlace['name'];
+                            selectedPlaceId = foundPlace['id'];
+                            _placeErrorText = null;
+                            print("Place selected: ID = $selectedPlaceId, Name = $selectedPlaceName");
                           });
-                        },
+                        } else {
+                          setState(() {
+                            _placeErrorText = 'Invalid place selection.';
+                            selectedPlaceName = null;
+                            selectedPlaceId = null;
+                          });
+                          print("Error: Invalid place selection.");
+                        }
+                      },
                         fieldViewBuilder: (BuildContext context,
                             TextEditingController textEditingController,
                             FocusNode focusNode,

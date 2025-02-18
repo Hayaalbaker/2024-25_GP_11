@@ -22,23 +22,27 @@ class InterestsScreen extends StatefulWidget {
 }
 
 class _InterestsScreenState extends State<InterestsScreen> {
-  List<String> interests = ['Restaurants', 'Parks', 'Shopping', 'Children'];
+  List<String> interests = ['Restaurants', 'Parks', 'Shopping', 'Edutainment'];
 
   Map<String, List<String>> selectedSubInterests = {
     'Restaurants': [],
     'Parks': [],
     'Shopping': [],
-    'Children': [],
+    'Edutainment': [],
   };
 
-  List<String> restaurantTypes = [
-    'Seafood restaurants',
-    'Vegan restaurants',
-    'Indian restaurants',
-    'Italian restaurants',
-    'Lebanese Restaurants',
-    'Traditional Saudi restaurants',
-    'Fast food'
+List<String> restaurantTypes = [
+    "Hong Restaurant",
+    "Indian Restaurant",
+    "Seafood Restaurant",
+    "Italian Restaurant",
+    "Lebanese Restaurant",
+    "Pizza Restaurant",
+    "Korean Restaurant",
+    "Sushi Restaurant",
+    "Hamburger Restaurant",
+    "French Restaurant",
+    "Grill Restaurant",
   ];
 
   List<String> parkTypes = [
@@ -48,22 +52,23 @@ class _InterestsScreenState extends State<InterestsScreen> {
   ];
 
   List<String> shoppingTypes = [
-    'Traditional Markets',
-    'Modern Markets',
-    'Food Markets',
-    'Clothing Markets',
-    'Perfume Markets',
-    'Jewelry Markets',
-    'Electronics Markets',
-    'Pet Markets',
-    'Gift and Souvenir Markets',
-    'Home Goods Markets',
+    'Clothing store ',
+    'Shoes store',
+    'Furniture store',
+    'Electronics store',
+    'Cosmetics store',
+    'Pet store',
+    'Jewellery store',
   ];
 
-  List<String> childrenTypes = [
-    'Recreational Centers',
-    'Sports Facilities',
-    'Educational Workshops',
+  List<String> edutainmentTypes = [
+    'artial art club',
+    'Horse academy',
+    'Swimming academy',
+    'Pottery classes',
+    'Football academy',
+    'Yoga studio'
+    'Art studio',
   ];
 
   final FirestoreService firestoreService = FirestoreService();
@@ -171,7 +176,7 @@ class _InterestsScreenState extends State<InterestsScreen> {
       case 'Shopping':
         types = shoppingTypes;
       case 'Children':
-        types = childrenTypes;
+        types = edutainmentTypes;
       default:
         types = [];
     }

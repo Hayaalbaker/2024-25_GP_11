@@ -12,27 +12,41 @@ class _UserSearchPageState extends State<UserSearchPage> {
   List<QueryDocumentSnapshot> _searchResults = [];
   bool _isSearching = false;
   String? _noResultsMessage;
-  void _searchUsers() async {
-    String searchQuery = _searchController.text.trim();
+
+  void _searchUsers(String query) async {
+    String searchQuery = query.trim().toLowerCase();
     if (searchQuery.isNotEmpty) {
       setState(() {
         _isSearching = true;
         _noResultsMessage = null;
       });
 
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where('user_name', isEqualTo: searchQuery)
-          .get();
+      try {
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .where('user_name', isGreaterThanOrEqualTo: searchQuery)
+            .where('user_name', isLessThan: searchQuery + '\uf8ff')
+            .get();
 
+        setState(() {
+          _searchResults = snapshot.docs;
+          _isSearching = false;
+
+          if (_searchResults.isEmpty) {
+            _noResultsMessage =
+                'No users found with usernames containing "$searchQuery".';
+          }
+        });
+      } catch (e) {
+        setState(() {
+          _isSearching = false;
+          _noResultsMessage = 'Error occurred while searching: $e';
+        });
+      }
+    } else {
       setState(() {
-        _searchResults = snapshot.docs;
-        _isSearching = false;
-
-        if (_searchResults.isEmpty) {
-          _noResultsMessage =
-              'No users found with the username "$searchQuery".';
-        }
+        _searchResults = [];
+        _noResultsMessage = null;
       });
     }
   }
@@ -51,11 +65,10 @@ class _UserSearchPageState extends State<UserSearchPage> {
               controller: _searchController,
               decoration: InputDecoration(
                 labelText: 'Enter username',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: _searchUsers,
-                ),
               ),
+              onChanged: (value) {
+                _searchUsers(value);
+              },
             ),
             const SizedBox(height: 10),
             _isSearching

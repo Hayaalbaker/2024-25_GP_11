@@ -58,6 +58,8 @@ Query _getPlacesQuery() {
     placesQuery = placesQuery.where('category', isEqualTo: widget.filterCategory);
   }
 
+  placesQuery = placesQuery.where('category', isNotEqualTo: "Shopping");
+
   return placesQuery.orderBy('created_at', descending: true);
 }
 
@@ -174,12 +176,12 @@ Future<void> _fetchRiyadhPlaces() async {
 
   do {
     final String url =
-        "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-        "?location=24.7136,46.6753"
-        "&radius=25000000"
-        "&type=restaurant|cafe|bakery|park|amusement_park|shopping_mall|store|supermarket|zoo|aquarium|library"
-        "&key=$apiKey"
-        "&pagetoken=$nextPageToken";
+    "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+    "?location=24.7136,46.6753"
+    "&radius=25000000"
+    "&type=park|amusement_park|botanical_garden|wildlife_park|heritage_park|sports_complex|waterfront_park|desert_park"
+    "&key=$apiKey"
+    "&pagetoken=$nextPageToken";
 
     try {
       final response = await http.get(Uri.parse(url));
