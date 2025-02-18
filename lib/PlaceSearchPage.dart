@@ -106,7 +106,7 @@ class _PlaceSearchPageState extends State<PlaceSearchPage> {
             if (_placeErrorText != null) linktoaddpage(),
             const SizedBox(height: 20),
             Expanded(
-              child: Places_widget(
+              child: PlacesWidget(
                 placeIds: selectedPlaceId != null ? [selectedPlaceId!] : [],
               ),
             ),

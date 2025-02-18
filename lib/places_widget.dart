@@ -1,15 +1,28 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:localize/main.dart';
 import 'bookmark_service.dart';
 import 'view_Place.dart';
 
-class Places_widget extends StatelessWidget {
+class PlacesList extends StatefulWidget {
   final List<String>? placeIds;
   final String? filterCategory;
 
-  Places_widget({this.placeIds, this.filterCategory});
+  PlacesList({this.placeIds, this.filterCategory});
+
+  @override
+  _PlacesListState createState() => _PlacesListState();
+}
+
+class PlacesWidget extends StatelessWidget {
+  final List<String>? placeIds;
+  final String? filterCategory;
+
+  PlacesWidget({this.placeIds, this.filterCategory});
 
   @override
   Widget build(BuildContext context) {
@@ -24,78 +37,147 @@ class Places_widget extends StatelessWidget {
   }
 }
 
-class PlacesList extends StatefulWidget {
-  final List<String>? placeIds;
-  final String? filterCategory;
-
-  PlacesList({this.placeIds, this.filterCategory});
-
-  @override
-  _PlacesListState createState() => _PlacesListState();
-}
-
 class _PlacesListState extends State<PlacesList> {
-  final String googleApiKey = "AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY"; 
-  Map<String, Map<String, dynamic>> googlePlaceData = {};
+  List<String> userInterests = [];
+  List<Map<String, dynamic>> recommendedPlaces = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchRiyadhPlaces();
+    _fetchRecommendedPlaces();
+  }
+
+  Future<void> _fetchRecommendedPlaces() async {
+    try {
+      List<Map<String, dynamic>> places = await sendUserIdToServer();
+
+      debugPrint("✅ Retrieved data from the server: $places");
+
+      if (!mounted) return;
+      setState(() {
+        recommendedPlaces = places;
+      });
+    } catch (e) {
+      debugPrint("❌ Error while fetching recommendations: $e");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> sendUserIdToServer() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return [];
+
+      final url = Uri.parse('http://10.0.2.2:5000/api/receiveUserId');
+      final response = await http
+          .post(
+        url,
+        headers: {"Content-Type": "application/json", "Connection": "close"},
+        body: jsonEncode({"userId": user.uid}),
+      )
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        throw TimeoutException("⏳ Server did not respond in time.");
+      });
+
+      debugPrint("📥 Server response: ${response.statusCode}");
+      debugPrint("📤 Raw response body: ${response.body}");
+
+      try {
+        final data = jsonDecode(response.body);
+        if (data is! Map || !data.containsKey('recommendations')) {
+          debugPrint("⚠️ Invalid JSON format");
+          return [];
+        }
+        return List<Map<String, dynamic>>.from(data['recommendations']);
+      } catch (e) {
+        debugPrint("❌ JSON parsing error: $e");
+        return [];
+      }
+    } catch (e) {
+      debugPrint("❌ Error while connecting to the server: $e");
+      return [];
+    }
+  }
+
+  Query _getPlacesQuery() {
+    Query placesQuery = FirebaseFirestore.instance.collection('places');
+
+    if (widget.filterCategory != null &&
+        widget.filterCategory != "All Categories") {
+      placesQuery =
+          placesQuery.where('category', isEqualTo: widget.filterCategory);
+    }
+
+    return placesQuery.orderBy('created_at', descending: true);
   }
 
   @override
   Widget build(BuildContext context) {
-    List<String>? categories;
-    if (widget.filterCategory != null && widget.filterCategory != "All Categories") {
-      categories = [widget.filterCategory!]; 
-    }
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: recommendedPlaces.length,
+            itemBuilder: (context, index) {
+              var place = recommendedPlaces[index];
+              return _buildPlaceItem(
+                context,
+                place['id'] ?? 'unknown_id',
+                place['place_name'] ?? 'Unknown Place',
+                place['category'] ?? 'Unknown Category',
+                place['imageUrl'] ?? '',
+              );
+            },
+          ),
+        ),
+        Expanded(
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _getPlacesQuery().snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('❌ Error: ${snapshot.error}'));
+              }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text('⚠️ No available places.'));
+              }
 
-Query _getPlacesQuery() {
-  Query placesQuery = FirebaseFirestore.instance.collection('places');
+              final List<DocumentSnapshot> documents = snapshot.data!.docs;
+              return ListView.builder(
+                itemCount: documents.length,
+                itemBuilder: (context, index) {
+                  var doc = documents[index];
+                  if (!doc.exists) return const SizedBox();
 
-  if (widget.filterCategory != null && widget.filterCategory != "All Categories") {
-    placesQuery = placesQuery.where('category', isEqualTo: widget.filterCategory);
-  }
-
-  placesQuery = placesQuery.where('category', isNotEqualTo: "Shopping");
-
-  return placesQuery.orderBy('created_at', descending: true);
-}
-
-
-return StreamBuilder<QuerySnapshot>(
-  stream: _getPlacesQuery().snapshots(),
-  builder: (context, snapshot) {
-    if (snapshot.hasData) {
-      print("🔥 Firestore places count: ${snapshot.data!.docs.length}");
-      final List<DocumentSnapshot> documents = snapshot.data!.docs;
-
-      return ListView.builder(
-        itemCount: documents.length,
-        itemBuilder: (context, index) {
-          var doc = documents[index];
-          String placeId = doc.id;
-          String imageUrl = doc['imageUrl'] ?? '';
-          String placeName = doc['place_name'] ?? 'Unknown Place';
-          String category = doc['category'] ?? 'Unknown Category';
-
-          print("📍 Firestore Place: $placeName - Category: $category");
-
-          return _buildPlaceItem(context, placeId, placeName, category, imageUrl);
-        },
-      );
-    } else if (snapshot.hasError) {
-      return Center(child: Text('Error: ${snapshot.error}'));
-    } else {
-      return Center(child: CircularProgressIndicator());
-    }
-  },
-);
+                  return _buildPlaceItem(
+                    context,
+                    doc.id,
+                    doc['place_name'] ?? 'Unknown Place',
+                    doc['category'] ?? 'Unknown Category',
+                    doc['imageUrl'] ?? '',
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildPlaceItem(
-      BuildContext context, String placeId, String placeName, String category, String imageUrl) {
+    BuildContext context,
+    String placeId,
+    String placeName,
+    String category,
+    String imageUrl,
+  ) {
+    if (placeId.isEmpty) {
+      debugPrint("⚠️ Skipping item due to empty placeId!");
+      return const SizedBox();
+    }
+
     return StreamBuilder<bool>(
       stream: BookmarkService().bookmarkStream(placeId, 'places'),
       builder: (context, bookmarkSnapshot) {
@@ -123,10 +205,9 @@ return StreamBuilder<QuerySnapshot>(
                       shape: BoxShape.rectangle,
                       image: DecorationImage(
                         image: imageUrl.isNotEmpty
-                            ? (Uri.tryParse(imageUrl)?.isAbsolute == true
-                                ? NetworkImage(imageUrl) as ImageProvider<Object>
-                                : AssetImage(imageUrl) as ImageProvider<Object>)
-                            : AssetImage('images/place_default_image.png'),
+                            ? NetworkImage(imageUrl)
+                            : const AssetImage('images/place_default_image.png')
+                                as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -155,10 +236,9 @@ return StreamBuilder<QuerySnapshot>(
                 IconButton(
                   icon: Icon(
                     isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                    color: isBookmarked ? Color(0xFF800020) : Colors.grey,
+                    color: isBookmarked ? const Color(0xFF800020) : Colors.grey,
                   ),
                   onPressed: () async {
-                    print('Toggling bookmark for place: $placeId');
                     await BookmarkService().toggleBookmark(placeId, 'places');
                   },
                 ),
@@ -169,162 +249,4 @@ return StreamBuilder<QuerySnapshot>(
       },
     );
   }
-
-Future<void> _fetchRiyadhPlaces() async {
-  const String apiKey = "AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY";
-  String nextPageToken = "";
-
-  do {
-    final String url =
-    "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-    "?location=24.7136,46.6753"
-    "&radius=25000000"
-    "&type=park|amusement_park|botanical_garden|wildlife_park|heritage_park|sports_complex|waterfront_park|desert_park"
-    "&key=$apiKey"
-    "&pagetoken=$nextPageToken";
-
-    try {
-      final response = await http.get(Uri.parse(url));
-      print("📡 Fetching Riyadh Places...");
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-
-        if (jsonResponse['status'] == 'OK') {
-          List<dynamic> places = jsonResponse['results'];
-
-          for (var place in places) {
-            String placeId = place['place_id'];
-            String placeName = place['name'];
-            List<dynamic>? types = place['types'];
-
-            print("📍 Found Place: $placeName - Categories: $types"); 
-
-            await _fetchGooglePlaceDetails(placeId);
-          }
-
-          nextPageToken = jsonResponse.containsKey("next_page_token")
-              ? jsonResponse["next_page_token"]
-              : "";
-
-          if (nextPageToken.isNotEmpty) {
-            await Future.delayed(Duration(seconds: 2)); 
-          }
-
-        } else {
-          print("❌ Google API Error: ${jsonResponse['status']}");
-          break;
-        }
-      } else {
-        print("❌ HTTP Request Failed: ${response.statusCode}");
-        break;
-      }
-    } catch (e) {
-      print("❌ Error Fetching Places: $e");
-      break;
-    }
-  } while (nextPageToken.isNotEmpty);
-}
-}
-
-Future<void> _fetchGooglePlaceDetails(String placeId) async {
-  const String apiKey = "AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY"; 
-  final String url =
-      "https://maps.googleapis.com/maps/api/place/details/json"
-      "?place_id=$placeId"
-      "&key=$apiKey"
-      "&fields=name,formatted_address,editorial_summary,types,photos";
-
-  try {
-    final response = await http.get(Uri.parse(url));
-    print("📡 Fetching place details for: $placeId");
-
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      if (jsonResponse['status'] == 'OK') {
-        var result = jsonResponse['result'];
-
-        DocumentSnapshot placeDoc = await FirebaseFirestore.instance
-            .collection('places')
-            .doc(placeId)
-            .get();
-
-        if (placeDoc.exists) {
-          print("⚠️ Skipping (Already Exists): ${result['name']}");
-          return;
-        }
-
-        String placeName = result['name'] ?? "Unknown Place";
-        String formattedAddress = result['formatted_address'] ?? "Unknown Address";
-        String description = result['editorial_summary']?['overview'] ?? "No description available.";
-        List<dynamic>? types = result['types'];
-        String category = types != null && types.isNotEmpty ? _formatCategory(types[0]) : "Unknown Category";
-        String imageUrl = _extractBestPhoto(result['photos']) ?? "";
-
-        var placeDetails = {
-          'place_name': placeName,
-          'imageUrl': imageUrl,
-          'location': formattedAddress,
-          'category': category,
-          'created_at': FieldValue.serverTimestamp(),
-        };
-
-        await FirebaseFirestore.instance
-            .collection('places')
-            .doc(placeId)
-            .set(placeDetails);
-
-        print("✅ Added New Place: $placeName - Category: $category");
-
-      } else {
-        print("❌ Google API Error: ${jsonResponse['status']}");
-      }
-    } else {
-      print("❌ HTTP Request Failed: ${response.statusCode}");
-    }
-  } catch (e) {
-    print("❌ Error Fetching Google Place Details: $e");
-  }
-}
-
-String _formatCategory(String category) {
-  Map<String, String> categoryMapping = {
-    "meal_delivery": "Restaurant",
-    "meal_takeaway": "Restaurant",
-    "food": "Restaurant",
-    "point_of_interest": "Attraction",
-    "store": "Shopping",
-    "shopping_mall": "Shopping",
-    "bakery": "Bakery",
-    "cafe": "Cafe",
-    "park": "Park",
-    "amusement_park": "Amusement Park",
-    "zoo": "Zoo",
-    "aquarium": "Aquarium",
-    "library": "Library",
-    "supermarket": "Supermarket",
-  };
-
-  if (categoryMapping.containsKey(category)) {
-    return categoryMapping[category]!;
-  }
-
-  return category
-      .split('_')
-      .map((word) => word[0].toUpperCase() + word.substring(1))
-      .join(' ');
-}
-
-String? _extractBestPhoto(List<dynamic>? photos) {
-  if (photos != null && photos.isNotEmpty) {
-    for (var photo in photos) {
-      if (photo.containsKey('photo_reference')) {
-        return "https://maps.googleapis.com/maps/api/place/photo"
-               "?maxwidth=800"
-               "&photoreference=${photo['photo_reference']}"
-               "&key=AIzaSyAx6eDEuqKkXedTk9GdpznubrILROuuVuY";  
-      }
-    }
-  }
-  return null;  
 }

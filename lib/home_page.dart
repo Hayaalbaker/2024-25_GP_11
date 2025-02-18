@@ -424,11 +424,11 @@ class _HomePageState extends State<HomePage>
         Expanded(
           child: TabBarView(
             children: [
-              Places_widget(filterCategory: "All Categories"),
-              Places_widget(filterCategory: "Restaurant"),
-              Places_widget(filterCategory: "Parks"),
-              Places_widget(filterCategory: "Shopping"),
-              Places_widget(filterCategory: "Children"),
+              PlacesWidget(filterCategory: "All Categories"),
+              PlacesWidget(filterCategory: "Restaurant"),
+              PlacesWidget(filterCategory: "Parks"),
+              PlacesWidget(filterCategory: "Shopping"),
+              PlacesWidget(filterCategory: "Children"),
             ],
           ),
         ),

@@ -141,7 +141,7 @@ class BookmarkedPlacesScreen extends StatelessWidget {
               .toList();
 
 
-          return Places_widget(
+          return PlacesWidget(
             placeIds: bookmarkedPlaceIds,  
           );
         },
