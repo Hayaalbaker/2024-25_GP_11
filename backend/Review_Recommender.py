@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime
 
-cred = credentials.Certificate(r"C:\flutterdev\flutterapps\2024-25_GP_11-main\localize-db046-firebase-adminsdk-a36y8-64508c72f2.json")
+cred = credentials.Certificate(r"C:\Users\Afnan\Desktop\flutter\2024-25_GP_11\localize-db046-firebase-adminsdk-a36y8-49f6a0c2f8 - Copy.json")
 firebase_admin.initialize_app(cred)
 
 app = Flask(__name__)
@@ -21,8 +21,18 @@ def recommend_reviews(user_interests):
         for doc in users_ref:
             guide_data = doc.to_dict()
             guide_interests = guide_data.get('interests', [])
-            if any(interest in user_interests for interest in guide_interests):
+            user_interests = {interest.strip().lower() for interest in user_interests}
+            guide_interests = {interest.strip().lower() for interest in guide_interests}
+
+            user_interests_set = set(user_interests)  
+            guide_interests_set = set(guide_interests)  
+
+
+
+
+            if any(interest in user_interests for interest in guide_interests): 
                 local_guide_ids.append(doc.id)
+                print(f"Match found: User interests: {user_interests} -> Guide interests: {guide_interests}")
 
         if not local_guide_ids:
             print("⚠️ No relevant local guides found!")
@@ -36,12 +46,33 @@ def recommend_reviews(user_interests):
         places_df['category'] = places_df['category'].fillna('Unknown').str.lower()
         places_df['subcategory'] = places_df['subcategory'].fillna('Unknown').str.lower()
         
+
+
+
+        
         matching_places = places_df[places_df['subcategory'].isin(user_interests) | places_df['category'].isin(user_interests)]
-        matching_place_ids = matching_places['id'].tolist()
+        matching_place_ids = matching_places['placeId'].tolist()
 
         print("📥 Fetching relevant reviews...")
-        reviews_ref = db.collection('Review').where('user_uid', 'in', local_guide_ids).get()
-        reviews_data = [doc.to_dict() for doc in reviews_ref]
+        if len(local_guide_ids) < 30:
+            reviews_ref = db.collection('Review').where('user_uid', 'in', local_guide_ids).get()
+            reviews_data = [doc.to_dict() for doc in reviews_ref]
+        else:
+            batch_size = 30  # Firestore 'IN' query limit
+            reviews_data = []  # Store all reviews
+
+            # Split `local_guide_ids` into chunks of 30
+            for i in range(0, len(local_guide_ids), batch_size):
+                batch_ids = local_guide_ids[i:i + batch_size]  # Get a batch of up to 30 IDs
+                
+                reviews_ref = db.collection('Review').where('user_uid', 'in', batch_ids).get()
+                
+                reviews_data.extend([doc.to_dict() for doc in reviews_ref])
+
+        print(f"Total reviews fetched: {len(reviews_data)}")
+
+
+
 
         if not reviews_data:
             print("⚠️ No reviews found!")
@@ -49,7 +80,7 @@ def recommend_reviews(user_interests):
 
         reviews_df = pd.DataFrame(reviews_data)
         reviews_df['Post_Date'] = pd.to_datetime(reviews_df['Post_Date'], errors='coerce')
-        reviews_df['like_count'] = reviews_df['like_count'].fillna(0)
+        reviews_df['Like_count'] = reviews_df['Like_count'].fillna(0)
         
         required_columns = ['Review_Text', 'like_count', 'Rating', 'Post_Date', 'placeId']
         for col in required_columns:
