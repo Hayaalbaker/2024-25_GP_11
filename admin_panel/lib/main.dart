@@ -1,30 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'theme/theme.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; 
 
-void main() {
-  runApp(const AdminPanelApp());
+import 'screens/dashboard_screen.dart';
+import 'screens/reviews_screen.dart';
+import 'screens/places_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/main_layout.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
-class AdminPanelApp extends StatelessWidget {
-  const AdminPanelApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final GoRouter _router = GoRouter(
+    final GoRouter router = GoRouter(
+      initialLocation: '/dashboard',
       routes: [
-        GoRoute(path: '/', builder: (context, state) => const LoginScreen()),
-        GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        ShellRoute(
+          builder: (context, state, child) => MainLayout(child: child),
+          routes: [
+            GoRoute(
+              path: '/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+            GoRoute(
+              path: '/reviews',
+              builder: (context, state) => const ReviewsScreen(),
+            ),
+            GoRoute(
+              path: '/places',
+              builder: (context, state) => const PlacesScreen(),
+            ),
+          ],
+        ),
       ],
     );
 
     return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Admin Panel',
-      theme: AppTheme.theme(),
-      routerConfig: _router,
-    );
+  routerConfig: router,
+  title: 'Admin Panel',
+  theme: ThemeData(
+    primarySwatch: Colors.deepOrange,
+    useMaterial3: true, 
+  ),
+  debugShowCheckedModeBanner: false,
+);
   }
 }
