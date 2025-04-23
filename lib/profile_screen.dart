@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'edit_profile_screen.dart';
 import 'bookmarks.dart';
+import 'report_service.dart';
 import 'review_widget.dart';
 import 'message_screen.dart';
 
@@ -114,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           ),
         ),
         actions: [
-          if (!_isCurrentUser)
+          if (!_isCurrentUser) ...[
             IconButton(
               icon: Icon(Icons.message),
               onPressed: () {
@@ -129,6 +130,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 );
               },
             ),
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'report') {
+                  ReportService().navigateToReportScreen(context, widget.userId, 'User');
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'report',
+                  child: Text('Report'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
       body: Padding(
