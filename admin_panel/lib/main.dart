@@ -1,3 +1,4 @@
+import 'package:admin_panel/screens/users_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -43,6 +44,10 @@ class MyApp extends StatelessWidget {
             GoRoute(
               path: '/places',
               builder: (context, state) => const PlacesScreen(),
+            ),
+            GoRoute(
+              path: '/users',
+              builder: (context, state) => const UsersScreen(),
             ),
           ],
         ),

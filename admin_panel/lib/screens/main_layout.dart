@@ -51,6 +51,7 @@ class MainLayout extends StatelessWidget {
                 sidebarButton(label: "Dashboard", icon: Icons.dashboard, route: "/dashboard"),
                 sidebarButton(label: "Reviews", icon: Icons.rate_review, route: "/reviews"),
                 sidebarButton(label: "Places", icon: Icons.place, route: "/places"),
+                sidebarButton(label: "Users", icon: Icons.person, route: "/users"),
                 const Spacer(),
                 sidebarButton(label: "Sign Out", icon: Icons.logout, route: "/"),
                 const SizedBox(height: 20),

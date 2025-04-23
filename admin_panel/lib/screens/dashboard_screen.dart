@@ -15,6 +15,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int totalReports = 0;
   int resolvedReports = 0;
+  int userReports = 0;
+  int reviewReports = 0;
+  int placeReports = 0;
+  int totalUsers = 0;
+  int totalPlaces = 0;
+  int totalReviews = 0;
 
   @override
   void initState() {
@@ -23,52 +29,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchStats() async {
-    final all = await FirebaseFirestore.instance.collection('reports').get();
-    final resolved = await FirebaseFirestore.instance
+    final reportSnapshot = await FirebaseFirestore.instance.collection('reports').get();
+    final resolvedSnapshot = await FirebaseFirestore.instance
         .collection('reports')
         .where('Status', whereIn: ['Warning Sent', 'Deleted'])
         .get();
 
+    final userSnap = await FirebaseFirestore.instance.collection('users').get();
+    final placeSnap = await FirebaseFirestore.instance.collection('places').get();
+    final reviewSnap = await FirebaseFirestore.instance.collection('Review').get();
+
+    final reports = reportSnapshot.docs;
+    int userCount = 0;
+    int placeCount = 0;
+    int reviewCount = 0;
+
+    for (var doc in reports) {
+      final type = doc['Report_Target_Type'] ?? 'Review';
+      if (type == 'User') {
+        userCount++;
+      } else if (type == 'Place') {
+        placeCount++;
+      } else {
+        reviewCount++;
+      }
+    }
+
     setState(() {
-      totalReports = all.size;
-      resolvedReports = resolved.size;
+      totalReports = reports.length;
+      resolvedReports = resolvedSnapshot.size;
+      userReports = userCount;
+      placeReports = placeCount;
+      reviewReports = reviewCount;
+      totalUsers = userSnap.size;
+      totalPlaces = placeSnap.size;
+      totalReviews = reviewSnap.size;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    double resolutionRate = totalReports == 0 ? 0 : (resolvedReports / totalReports) * 100;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         sectionHeader("Dashboard"),
 
-        // Stats Section
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           child: Column(
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: _buildStatCard(Icons.bar_chart, "Total Reports", totalReports, Colors.blue),
-                  ),
+                  Expanded(child: _buildStatCard(Icons.people, "Users", totalUsers, Colors.teal)),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(Icons.check_circle, "Resolved Reports", resolvedReports, Colors.green),
-                  ),
+                  Expanded(child: _buildStatCard(Icons.location_on, "Places", totalPlaces, Colors.deepPurple)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(
-                    child: _buildStatCard(Icons.pending_actions, "Suggested Places", 11, Colors.orange),
-                  ),
+                  Expanded(child: _buildStatCard(Icons.reviews, "Reviews", totalReviews, Colors.indigo)),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatCard(Icons.add_location_alt, "Added Places", 6, Colors.deepPurple),
-                  ),
+                  Expanded(child: _buildStatCard(Icons.flag, "Total Reports", totalReports, Colors.red)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildStatCard(Icons.check, "Resolved", resolvedReports, Colors.green)),
+                  Expanded(child: _buildStatCard(Icons.percent, "Resolution %", resolutionRate.toStringAsFixed(1), Colors.orange)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildStatCard(Icons.person_off, "User Reports", userReports, Colors.cyan)),
+                  Expanded(child: _buildStatCard(Icons.comment, "Review Reports", reviewReports, Colors.amber)),
+                  Expanded(child: _buildStatCard(Icons.place, "Place Reports", placeReports, Colors.pink)),
                 ],
               ),
             ],
@@ -78,9 +117,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String title, int count, Color color) {
+  Widget _buildStatCard(IconData icon, String title, dynamic value, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -88,12 +128,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(backgroundColor: color.withOpacity(0.1), child: Icon(icon, color: color)),
+          CircleAvatar(
+            backgroundColor: color.withOpacity(0.1),
+            child: Icon(icon, color: color),
+          ),
           const SizedBox(width: 12),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-            Text('$count', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          ]),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+              Text('$value', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ],
       ),
     );

@@ -27,6 +27,7 @@ class ReportService {
         'Status': 'Pending',
         'ReportedBy': userId,
         'Review_ID': reviewId,
+        'Report_Target_Type': 'Review',
       });
 
       ScaffoldMessenger.of(context).showSnackBar(

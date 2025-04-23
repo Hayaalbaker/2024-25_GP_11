@@ -188,10 +188,16 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
               if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
 
               final grouped = <String, List<QueryDocumentSnapshot>>{};
-              for (final doc in snapshot.data!.docs) {
-                final reviewId = doc['Review_ID'];
-                grouped.putIfAbsent(reviewId, () => []).add(doc);
-              }
+for (final doc in snapshot.data!.docs) {
+  final dataMap = doc.data() as Map<String, dynamic>;
+
+  if (dataMap['Report_Target_Type'] != 'Review') continue;
+
+  if (!dataMap.containsKey('Review_ID')) continue;
+
+  final reviewId = dataMap['Review_ID'];
+  grouped.putIfAbsent(reviewId, () => []).add(doc);
+}
 
               final reviewIds = grouped.keys.toList();
               if (reviewIds.isEmpty) return const Center(child: Text("No reports found."));
