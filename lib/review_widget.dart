@@ -403,7 +403,7 @@ final placeName = placeDoc.exists && placeDoc.data() != null
                                   _showDeleteConfirmationDialog(review_id);
                                 }
                               } else if (value == 'report') {
-                                _reportService.navigateToReportScreen(context, review_id); 
+                                _reportService.navigateToReportScreen(context, review_id, 'Review');
                               }
                             },
                             itemBuilder: (BuildContext context) {

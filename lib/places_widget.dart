@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:localize/main.dart';
 import 'bookmark_service.dart';
+import 'report_service.dart';
 import 'view_Place.dart';
 
 class PlacesList extends StatefulWidget {
@@ -242,6 +243,20 @@ class _PlacesListState extends State<PlacesList> {
                     await BookmarkService().toggleBookmark(placeId, 'places');
                   },
                 ),
+                PopupMenuButton<String>(
+  icon: Icon(Icons.more_vert, color: Colors.grey[700]),
+  onSelected: (value) {
+  if (value == 'report') {
+    ReportService().navigateToReportScreen(context, placeId, 'Place');
+  }
+},
+  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+    const PopupMenuItem<String>(
+      value: 'report',
+      child: Text('Report'),
+    ),
+  ],
+),
               ],
             ),
           ),
