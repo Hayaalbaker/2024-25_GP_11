@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dashboard_screen.dart';
+import 'package:admin_panel/utils/warning_service.dart';
+
 
 class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
@@ -36,66 +38,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     : lower.contains('warning')
                         ? Colors.amber
                         : Colors.blueGrey;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
       child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Future<void> showWarningDialog(String userId, String reportId) async {
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Send Warning"),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: const InputDecoration(border: OutlineInputBorder(), hintText: "Enter warning..."),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-          ElevatedButton(
-            onPressed: () async {
-              final message = controller.text.trim();
-              if (message.isEmpty) return;
-
-              final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-              final userEmail = userDoc['email'] ?? 'No email';
-              final adminEmail = FirebaseAuth.instance.currentUser?.email ?? 'Unknown Admin';
-
-              await FirebaseFirestore.instance.collection('warnings').add({
-                'userId': userId,
-                'userEmail': userEmail,
-                'message': message,
-                'date': FieldValue.serverTimestamp(),
-              });
-
-              await http.post(
-                Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-                headers: {'origin': 'http://localhost', 'Content-Type': 'application/json'},
-                body: json.encode({
-                  'service_id': 'service_5lj8e5w',
-                  'template_id': 'template_0qns40h',
-                  'user_id': '0tNpevs6M08p6KJEJ',
-                  'template_params': {'to_email': userEmail, 'message': message}
-                }),
-              );
-
-              await FirebaseFirestore.instance.collection('reports').doc(reportId).update({
-                'Status': 'Warning Sent',
-                'ReviewedBy': adminEmail,
-              });
-
-              Navigator.pop(context);
-            },
-            child: const Text("Send"),
-          )
-        ],
-      ),
     );
   }
 
@@ -136,7 +82,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     final adminEmail = FirebaseAuth.instance.currentUser?.email ?? 'Unknown Admin';
 
                     if (value == 'Warning') {
-                      await showWarningDialog(reviewOwnerId, reportId);
+                      await WarningService.sendWarning(context, reviewOwnerId, reportId);
                     } else if (value == 'Reject') {
                       await FirebaseFirestore.instance.collection('reports').doc(reportId).update({
                         'Status': 'Rejected',
