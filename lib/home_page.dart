@@ -54,9 +54,7 @@ class _HomePageState extends State<HomePage>
 
   void _signOut() async {
     try {
-      await FirebaseAuth.instance.signOut(); 
-      print("User signed out");
-
+      await FirebaseAuth.instance.signOut();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => WelcomeScreen()),
       );
@@ -96,15 +94,11 @@ class _HomePageState extends State<HomePage>
                 },
               ),
               ListTile(
-                leading: Icon(Icons.add_location_alt,
-                    color: const Color(0xFF800020)), 
+                leading: Icon(Icons.add_location_alt, color: _iconColor),
                 title: Text('Add a Place'),
                 onTap: () {
-                  Navigator.pop(context); 
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AddPlacePage()),
-                  ); 
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => AddPlacePage()));
                 },
               ),
             ],
@@ -116,7 +110,7 @@ class _HomePageState extends State<HomePage>
 
   @override
   void dispose() {
-    _tabController.dispose(); 
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -124,128 +118,93 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     List<Widget> _pages = [
       NestedScrollView(
-        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-          return <Widget>[
-            SliverAppBar(
-              expandedHeight: 200,
-              floating: false,
-              pinned: true,
-              stretch: true,
-              automaticallyImplyLeading: false,
-              actions: [
-                SizedBox(
-                  width: 45,
-                  child: IconButton(
-                    icon: Stack(
-                      children: [
-                        Icon(Icons.message_sharp),
-                        StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('chats')
-                              .where('participants',
-                                  arrayContains:
-                                      FirebaseAuth.instance.currentUser!.uid)
-                              .snapshots(),
-                          builder:
-                              (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                            if (!snapshot.hasData ||
-                                snapshot.data!.docs.isEmpty) {
-                              return SizedBox();
-                            }
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverAppBar(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            stretch: true,
+            automaticallyImplyLeading: false,
+            actions: [
+              SizedBox(
+                width: 45,
+                child: IconButton(
+                  icon: Stack(
+                    children: [
+                      Icon(Icons.message_sharp),
+                      StreamBuilder(
+                        stream: FirebaseFirestore.instance
+                            .collection('chats')
+                            .where('participants', arrayContains: FirebaseAuth.instance.currentUser!.uid)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) return SizedBox();
 
-                            int unreadUsersCount =
-                                snapshot.data!.docs.where((doc) {
-                              final data = doc.data() as Map<String, dynamic>?;
-                              final unreadCount =
-                                  data?['unreadCount'] as Map<String, dynamic>?;
+                          int unreadUsersCount = snapshot.data!.docs.where((doc) {
+                            final data = doc.data() as Map<String, dynamic>?;
+                            final unreadCount = data?['unreadCount'] as Map<String, dynamic>?;
+                            return unreadCount != null &&
+                                unreadCount[FirebaseAuth.instance.currentUser!.uid] != null &&
+                                unreadCount[FirebaseAuth.instance.currentUser!.uid] > 0;
+                          }).length;
 
-                              return unreadCount != null &&
-                                  unreadCount[FirebaseAuth
-                                          .instance.currentUser!.uid] !=
-                                      null &&
-                                  unreadCount[FirebaseAuth
-                                          .instance.currentUser!.uid] >
-                                      0;
-                            }).length;
-
-                            return unreadUsersCount > 0
-                                ? Positioned(
-                                    right: -2,
-                                    top: -6,
-                                    child: Container(
-                                      padding: EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Text(
-                                        '$unreadUsersCount',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                : SizedBox();
-                          },
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MessageListScreen(
-                            currentUserId:
-                                FirebaseAuth.instance.currentUser!.uid,
-                          ),
-                        ),
-                      );
-                    },
+                          return unreadUsersCount > 0
+                              ? Positioned(
+                                  right: -2,
+                                  top: -6,
+                                  child: Container(
+                                    padding: EdgeInsets.all(4),
+                                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                                    child: Text('$unreadUsersCount', style: TextStyle(color: Colors.white, fontSize: 10)),
+                                  ),
+                                )
+                              : SizedBox();
+                        },
+                      ),
+                    ],
                   ),
-                ),
-              ],
-              flexibleSpace: FlexibleSpaceBar(
-                centerTitle: true,
-                collapseMode: CollapseMode.parallax,
-                background: Image.network(
-                  "https://images.pexels.com/photos/1885719/pexels-photo-1885719.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
-                  fit: BoxFit.cover,
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => MessageListScreen(currentUserId: FirebaseAuth.instance.currentUser!.uid),
+                  )),
                 ),
               ),
-            ),
-            SliverPersistentHeader(
-              delegate: _SliverAppBarDelegate(
-                TabBar(
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  labelColor: Color(0xFF800020),
-                  unselectedLabelColor: Colors.grey,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.rate_review), text: "Reviews"),
-                    Tab(icon: Icon(Icons.place), text: "Places"),
-                  ],
-                ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: true,
+              collapseMode: CollapseMode.parallax,
+              background: Image.network(
+                "https://images.pexels.com/photos/1885719/pexels-photo-1885719.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+                fit: BoxFit.cover,
               ),
-              pinned: true,
             ),
-          ];
-        },
+          ),
+          SliverPersistentHeader(
+            delegate: _SliverAppBarDelegate(
+              TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.label,
+                labelColor: _iconColor,
+                unselectedLabelColor: Colors.grey,
+                tabs: const [
+                  Tab(icon: Icon(Icons.rate_review), text: "Reviews"),
+                  Tab(icon: Icon(Icons.place), text: "Places"),
+                ],
+              ),
+            ),
+            pinned: true,
+          ),
+        ],
         body: TabBarView(
           controller: _tabController,
           children: [
-            Review_widget(), 
-                Container(
-      padding: EdgeInsets.zero, 
-      child: viewPlaces(),
-    ),
+            Review_widget(),
+            Container(padding: EdgeInsets.zero, child: viewPlaces()),
           ],
         ),
       ),
-      SearchPage(), 
-      CreatePostPage(ISselectplace: false), 
-      ActivityPage(), 
+      SearchPage(),
+      CreatePostPage(ISselectplace: false),
+      ActivityPage(),
       ProfileScreen(userId: FirebaseAuth.instance.currentUser!.uid),
     ];
 
@@ -325,125 +284,54 @@ class _HomePageState extends State<HomePage>
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ),
-      floatingActionButton: GestureDetector(
-        onTap: _onCreatePost, 
-        child: FloatingActionButton(
-          elevation: 4.0,
-          onPressed: _onCreatePost, 
-          backgroundColor: _iconColor, 
-          child: Icon(Icons.add,
-              color: Colors.white), 
-        ),
+      floatingActionButton: FloatingActionButton(
+        elevation: 4.0,
+        onPressed: _onCreatePost,
+        backgroundColor: _iconColor,
+        child: Icon(Icons.add, color: Colors.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation
-          .centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
- 
-
   }
- Widget viewPlaces() {
-  return DefaultTabController(
-    length: 5, 
-    child: Column(
-      children: [
-        TabBar(
-          isScrollable: true, 
-          indicatorSize: TabBarIndicatorSize.label,
-          labelColor: Color(0xFF800020),
-          unselectedLabelColor: Colors.grey,
-          padding: EdgeInsets.zero,
-          labelPadding: EdgeInsets.symmetric(horizontal: 8.0),
-          tabs: const [
-            Tab(
-              child: Column(
-                mainAxisSize: MainAxisSize.min, 
-                children: [
-                  Icon(Icons.place, size: 20), 
-                  SizedBox(height: 4), 
-                  Text(
-                    "All",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Tab(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.restaurant, size: 20),
-                  SizedBox(height: 4),
-                  Text(
-                    "Restaurants",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Tab(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.park, size: 20),
-                  SizedBox(height: 4),
-                  Text(
-                    "Parks",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Tab(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.shopping_bag, size: 20),
-                  SizedBox(height: 4),
-                  Text(
-                    "Shopping",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            Tab(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.child_care, size: 20),
-                  SizedBox(height: 4),
-                  Text(
-                    "Children",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            children: [
-              PlacesWidget(filterCategory: "All Categories"),
-              PlacesWidget(filterCategory: "Restaurant"),
-              PlacesWidget(filterCategory: "Parks"),
-              PlacesWidget(filterCategory: "Shopping"),
-              PlacesWidget(filterCategory: "Children"),
+
+  Widget viewPlaces() {
+    return DefaultTabController(
+      length: 5,
+      child: Column(
+        children: [
+          TabBar(
+            isScrollable: true,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelColor: _iconColor,
+            unselectedLabelColor: Colors.grey,
+            tabs: const [
+              Tab(icon: Icon(Icons.place, size: 20), child: Text("All", style: TextStyle(fontSize: 12))),
+              Tab(icon: Icon(Icons.restaurant, size: 20), child: Text("Restaurants", style: TextStyle(fontSize: 12))),
+              Tab(icon: Icon(Icons.park, size: 20), child: Text("Parks", style: TextStyle(fontSize: 12))),
+              Tab(icon: Icon(Icons.shopping_bag, size: 20), child: Text("Shopping", style: TextStyle(fontSize: 12))),
+              Tab(icon: Icon(Icons.child_care, size: 20), child: Text("Edutainment", style: TextStyle(fontSize: 12))),
             ],
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-
+          Expanded(
+            child: TabBarView(
+              children: [
+                PlacesWidget(filterCategory: "All Categories"),
+                PlacesWidget(filterCategory: "Restaurants"),
+                PlacesWidget(filterCategory: "Parks"),
+                PlacesWidget(filterCategory: "Shopping"),
+                PlacesWidget(filterCategory: "Edutainment"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
-  _SliverAppBarDelegate(this._tabBar);
-
   final TabBar _tabBar;
+  _SliverAppBarDelegate(this._tabBar);
 
   @override
   double get minExtent => _tabBar.preferredSize.height;
