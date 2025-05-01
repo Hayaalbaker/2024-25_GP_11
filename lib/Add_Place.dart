@@ -177,7 +177,7 @@ class _PlaceFormState extends State<PlaceForm> {
         }
 
         DocumentReference newPlaceRef =
-            FirebaseFirestore.instance.collection('places').doc();
+            FirebaseFirestore.instance.collection('pending_places').doc();
 
         String imageUrl;
 
@@ -206,9 +206,17 @@ class _PlaceFormState extends State<PlaceForm> {
           'user_uid': userID,
           'imageUrl': imageUrl, 
         });
+        //notf
+        await FirebaseFirestore.instance.collection('Notifications').add({
+          'receiverUid': userID,
+          'message': 'Your place "$placeName" is pending admin approval.',
+          'isRead': false,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        //notf
 
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Place Added: $placeName Successfully!'),
+          content: Text('Place submitted successfully and is pending admin approval.'),
         ));
 
         _formKey.currentState!.reset();
