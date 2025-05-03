@@ -37,7 +37,8 @@ dependencies:
   googleapis: ^13.2.0
   grpc: ^4.0.1
   cached_network_image: ^3.4.1
-
+  collection: ^1.17.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
