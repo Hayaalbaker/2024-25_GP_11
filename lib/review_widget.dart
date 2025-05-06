@@ -9,6 +9,11 @@ import 'database.dart';
 import 'profile_screen.dart';
 import 'report_service.dart';
 import 'view_Place.dart';
+import 'package:localize/main.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:collection/collection.dart';
 
 class Review_widget extends StatefulWidget {
   final String? place_Id;
@@ -26,12 +31,16 @@ class _Review_widgetState extends State<Review_widget> {
   final ReportService _reportService = ReportService();
   final FirestoreService _firestoreService = FirestoreService();
   Map<String, bool> bookmarkedReviews = {};
+   // List<String> userInterests = [];
+  List<Map<String, dynamic>> recommendedReviews = [];
 
 @override
 void initState() {
   super.initState();
   _loadUserData();
   _loadBookmarks();
+  _fetchRecommendedReviews();
+
   FirebaseFirestore.instance.collection('Review').get().then((snapshot) {
   if (snapshot.docs.isEmpty) {
     print("No reviews found in Firestore.");
@@ -177,6 +186,62 @@ Future<void> toggleBookmark(String reviewId) async {
     );
   }
 
+//////////////////
+
+  Future<void> _fetchRecommendedReviews() async {
+    try {
+      List<Map<String, dynamic>> _reviews = await sendUserIdToServer();
+
+      debugPrint("✅ Retrieved data from the server: $_reviews");
+
+      if (!mounted) return;
+      setState(() {
+        recommendedReviews = _reviews;
+      });
+    } catch (e) {
+      debugPrint("❌ Error while fetching recommendations: $e");
+    }
+  }
+
+  
+  Future<List<Map<String, dynamic>>> sendUserIdToServer() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return [];
+
+      final url = Uri.parse('http://192.168.0.236:5000/api/recommendReviews');
+      final response = await http
+          .post(
+        url,
+        headers: {"Content-Type": "application/json", "Connection": "close"},
+        body: jsonEncode({"userId": user.uid}),
+      )
+          .timeout(const Duration(seconds: 10), onTimeout: () {
+        throw TimeoutException("⏳ Server did not respond in time.");
+      });
+
+      debugPrint("📥 Server response: ${response.statusCode}");
+      debugPrint("📤 Raw response body: ${response.body}");
+
+      try {
+        final data = jsonDecode(response.body);
+        print(data);
+        if (data is! Map || !data.containsKey('recommendations')) {
+          debugPrint("⚠️ Invalid JSON format");
+          return [];
+        }
+        return List<Map<String, dynamic>>.from(data['recommendations']);
+      } catch (e) {
+        debugPrint("❌ JSON parsing error: $e");
+        return [];
+      }
+    } catch (e) {
+      debugPrint("❌ Error while connecting to the server: $e");
+      return [];
+    }
+  }
+//////////////////////////////
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
@@ -220,13 +285,48 @@ Future<void> toggleBookmark(String reviewId) async {
             endIndent: 16,
           ),
           itemBuilder: (context, index) {
+
+          String review_id;
+          String reviewText;
+          String placeId;
+          String userUid;
+          int rating;
+          List? likeCount;
+
+          if (recommendedReviews.isEmpty) {
             var doc = filteredDocs[index];
-            String review_id = doc.id;
-            String reviewText = doc['Review_Text'];
-            String placeId = doc['placeId'];
-            String userUid = doc['user_uid'];
-            int rating = doc['Rating'];
-            List? likeCount = doc['Like_count'];
+            review_id = doc.id;
+            reviewText = doc['Review_Text'];
+            placeId = doc['placeId'];
+            userUid = doc['user_uid'];
+            rating = doc['Rating'];
+            likeCount = doc['Like_count'];
+          } else {
+            var doc = recommendedReviews[index];
+            review_id = doc['id'];
+
+            // Find the corresponding document in filteredDocs
+            var matchingDoc = filteredDocs.firstWhereOrNull((d) => d.id == review_id);
+
+            if (matchingDoc != null) {
+              reviewText = matchingDoc['Review_Text'];
+              placeId = matchingDoc['placeId'];
+              userUid = matchingDoc['user_uid'];
+              rating = matchingDoc['Rating'];
+              likeCount = matchingDoc['Like_count'];
+            } else {
+              // Handle the case where no matching document is found
+              reviewText = doc['Review_Text'];
+              placeId = doc['placeId'];
+              userUid = doc['user_uid'];
+              rating = doc['Rating'];
+              likeCount = doc['Like_count'];
+            }
+          }
+
+
+
+
 
             return FutureBuilder(
               future: Future.wait([

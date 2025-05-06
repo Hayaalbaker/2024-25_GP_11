@@ -1,3 +1,4 @@
+// ✅ Adjusted to match dashboard UI styling and visually separate approved places
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'PlaceDetailsPage.dart';
@@ -6,8 +7,7 @@ class ReviewPendingPlacesPage extends StatefulWidget {
   const ReviewPendingPlacesPage({super.key});
 
   @override
-  State<ReviewPendingPlacesPage> createState() =>
-      _ReviewPendingPlacesPageState();
+  State<ReviewPendingPlacesPage> createState() => _ReviewPendingPlacesPageState();
 }
 
 class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
@@ -19,30 +19,23 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
   }
 
   Stream<QuerySnapshot> getApprovedPlacesStream() {
-    return FirebaseFirestore.instance
-        .collection('places')
-        .limit(100)
-        .snapshots();
+    return FirebaseFirestore.instance.collection('places').limit(100).snapshots();
   }
 
   Future<void> approvePlace(DocumentSnapshot doc) async {
     if (!mounted) return;
     try {
-      await FirebaseFirestore.instance
-          .collection('places')
-          .doc(doc.id)
-          .set(doc.data() as Map<String, dynamic>);
+      await FirebaseFirestore.instance.collection('places').doc(doc.id).set(doc.data() as Map<String, dynamic>);
       await doc.reference.delete();
       await FirebaseFirestore.instance.collection('Notifications').add({
         'receiverUid': doc['user_uid'],
-        'message':
-            'Your place "${doc['place_name']}" has been approved and added.',
+        'message': '✅ Your place "${doc['place_name']}" has been approved and added.',
         'isRead': false,
         'timestamp': FieldValue.serverTimestamp(),
       });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Place Approved and moved to Places')),
+        const SnackBar(content: Text('✅ Place Approved and moved to Places')),
       );
     } catch (e) {
       print('Error approving place: $e');
@@ -56,8 +49,7 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: const [
               Icon(Icons.close, color: Colors.red),
@@ -88,20 +80,14 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
               label: const Text('Reject'),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('rejected_places')
-                    .doc(doc.id)
-                    .set({
+                await FirebaseFirestore.instance.collection('rejected_places').doc(doc.id).set({
                   ...doc.data() as Map<String, dynamic>,
                   'rejection_reason': reasonController.text,
                 });
                 await doc.reference.delete();
-                await FirebaseFirestore.instance
-                    .collection('Notifications')
-                    .add({
+                await FirebaseFirestore.instance.collection('Notifications').add({
                   'receiverUid': doc['user_uid'],
-                  'message':
-                      '❌ Your place "${doc['place_name']}" was rejected. Reason: ${reasonController.text}',
+                  'message': '❌ Your place "${doc['place_name']}" was rejected. Reason: ${reasonController.text}',
                   'isRead': false,
                   'timestamp': FieldValue.serverTimestamp(),
                 });
@@ -132,16 +118,12 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6)],
         ),
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor: showActions
-                  ? Colors.orange.withOpacity(0.1)
-                  : Colors.green.withOpacity(0.1),
+              backgroundColor: showActions ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1),
               child: Icon(
                 showActions ? Icons.assignment_turned_in : Icons.verified,
                 color: showActions ? Colors.orange : Colors.green,
@@ -157,24 +139,19 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
                       Expanded(
                         child: Text(
                           data['place_name'] ?? 'Unnamed',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                       if (!showActions)
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.green.shade100,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
                             'Approved',
-                            style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
                           ),
                         ),
                     ],
@@ -233,9 +210,7 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: isSearching
-                  ? getApprovedPlacesStream()
-                  : getPendingPlacesStream(),
+              stream: isSearching ? getApprovedPlacesStream() : getPendingPlacesStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -247,8 +222,7 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
                 final docs = isSearching
                     ? snapshot.data!.docs.where((doc) {
                         final data = doc.data() as Map<String, dynamic>;
-                        final placeName =
-                            data['place_name']?.toString().toLowerCase() ?? '';
+                        final placeName = data['place_name']?.toString().toLowerCase() ?? '';
                         return placeName.contains(_searchQuery);
                       }).toList()
                     : snapshot.data!.docs;
@@ -260,8 +234,7 @@ class _ReviewPendingPlacesPageState extends State<ReviewPendingPlacesPage> {
                 return ListView.builder(
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
-                    return buildPlaceCard(docs[index],
-                        showActions: !isSearching);
+                    return buildPlaceCard(docs[index], showActions: !isSearching);
                   },
                 );
               },
